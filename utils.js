@@ -33,6 +33,7 @@ function initOrLoadConfig(filename) {
 
 function saveConfig(filename, config) {
     fs.writeFileSync(filename, JSON.stringify(config, null, 2))
+    console.log("saved config")
 }
 
 module.exports = {shortenFilename, initOrLoadConfig, saveConfig}

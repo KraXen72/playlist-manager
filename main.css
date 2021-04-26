@@ -20,7 +20,7 @@ body {
 .matter-textfield-outlined > input:focus, .matter-textfield-outlined > textarea:focus {
     border-top-color: transparent !important;
 }
-#main-grid * {
+#main-grid *, #settings-body * {
     --matter-helper-theme: 165, 117, 98 !important;
     --matter-onsurface-rgb: 163, 165, 170 !important;
 }
@@ -78,8 +78,93 @@ body {
     background: var(--bg-secondary);
     border-top-left-radius: 1rem;
     padding: 0.6rem 0 0.5rem 0.6rem;
+    display: flex;
+    align-items: center;
 }
 
+/*buttons*/
+#select-folder {
+    flex-grow: 1;
+}
+#settings {
+    margin-right: .5rem;
+    cursor: pointer;
+    user-select: none;
+}
+#gen {
+    transition: color 0.5s;
+}
+
+/*settings*/
+#settings-body {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid #a57562;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    min-width: 40rem;
+    background: var(--bg-primary)
+}
+.settingsclose {
+    position: absolute;
+    height: 2rem;
+    width: 2rem;
+    top: 1rem;
+    right: 1rem;
+    font-weight: bold;
+}
+#settings-body h1 {
+    display: flex;
+}
+
+/*pills*/
+.pill {
+    max-height: 2rem;
+    background-color: gray;
+    border-radius: 100rem;
+    width: max-content;
+    padding: 0.3rem;
+    color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    margin: 0 0.3rem 0.3rem 0;
+}
+.closepill {
+    background-color: darkgray;
+    border-radius:100rem;
+    border: none;
+    margin-left: 0.3rem;
+    outline: none !important;
+}
+.closepill:active {
+    background-color: rgb(124, 124, 124);
+}
+#settings-exts {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+#settings-exts-bar {
+    display: flex;
+}
+#settings-exts-bar label {
+    flex-grow: 1;
+}
+.settings-button {
+    height: auto !important;
+    max-height: unset !important;
+    margin-top: 6px;
+    margin-left: 0.3rem;
+}
+#settings-submit {
+    margin-top: 0.3rem;
+}
+
+  
 /*small extract from w3 css*/
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
 /* Extract from normalize.css by Nicolas Gallagher and Jonathan Neal git.io/normalize */

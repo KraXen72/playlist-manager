@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
     <title>Hello World!</title>
     <link rel="stylesheet" href="matter.css">
+    <link rel="stylesheet" href="node_modules/material-design-icons/iconfont/material-icons.css">
     <link rel="stylesheet" type="text/css" href="main.css">
   </head>
   <body>
@@ -30,7 +29,20 @@
           <button class="matter-button-outlined" id="folder-open">Select</button>
           <span id="selected-folder">No Folder Selected</span>
         </span>
+        <span class="material-icons" id="settings">settings</span>
       </div>
+    </div>
+    <div id="settings-body" hidden>
+      <h1>Settings</h1>
+      <button class="closepill settingsclose" id="settings-close">&times;</button>
+      <hr>
+      <p>Extensions considered music files</p>
+      <div id="settings-exts"></div>
+      <div id="settings-exts-bar">
+        <label class="matter-textfield-outlined"><input id="settings-exts-input" placeholder=" "/><span>Add more</span></label>
+        <button id="settings-exts-add" class="matter-button-outlined settings-button">Add</button>
+      </div>
+      <button id="settings-submit" class="matter-button-outlined">Save</button>
     </div>
   </body>
 </html>
