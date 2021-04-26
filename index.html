@@ -6,23 +6,32 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
     <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
     <title>Hello World!</title>
-    <link rel="stylesheet" type="text/css" href="main.css">
     <link rel="stylesheet" href="matter.css">
+    <link rel="stylesheet" type="text/css" href="main.css">
   </head>
   <body>
     <div id="main-grid">
       <div id="title">
         <h4>playlist-manager</h4>
       </div>
-      <div id="sidebar"></div>
-      <div id="playlist-title"></div>
-      <div id="playlist-bar"></div>
+      <div id="sidebar">
+        <button class="matter-button-outlined">Generate</button>
+      </div>
+      <div id="playlist-title">
+        <h4>New Playlist</h4>
+      </div>
+      <div id="playlist-bar-wrapper">
+        <div id="playlist-bar"></div>
+      </div>
       <div id="command-line"></div>
       <div id="main-screen"></div>
-      <div id="button-bar"></div>
+      <div id="button-bar">
+        <span id="select-folder">
+          <button class="matter-button-outlined" id="folder-open">Select</button>
+          <span id="selected-folder">No Folder Selected</span>
+        </span>
+      </div>
     </div>
-    <!-- You can also require other files to run in this process -->
-    <script src="./renderer.js"></script>
   </body>
 </html>
   
