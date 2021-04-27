@@ -12,15 +12,16 @@ const mm = require('music-metadata');
 
 var slash = process.platform === 'win32' ? "\\" : "/"
 var config = utils.initOrLoadConfig("./config.json")
-console.log(config)
+console.log("config: ", config)
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
     if (config.maindir !== "") {selectfolder(null, config)}
     document.getElementById("folder-open").addEventListener("click", selectfolder)
-    document.getElementById("gen").addEventListener("click",() => {gen()})
+    document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('settings').addEventListener("click", initSettings)
+    document.getElementById('prg').addEventListener("click", purgePlaylists)
 
 })
 
@@ -198,4 +199,47 @@ async function getEXTINF(song, onlysong) {
     //console.log(extinf)
 
     return extinf
+}
+
+function purgePlaylists() {
+    let playlists = []
+
+    walk.filesSync(config.maindir, (basedir, filename) => {
+        playlists.push({ filename, "fullpath": basedir + slash + filename})
+    })
+    playlists = playlists.filter(playlist => {
+        let splitarr = playlist.filename.split(".")
+        let ext = splitarr[splitarr.length - 1]
+        if (ext.toLowerCase() === "m3u" ) {
+            return true
+        } else {
+            return false
+        }
+    })
+    if (playlists.length > 0) {
+        //console.log(playlists)
+
+        let playliststr = playlists.map(playlist => playlist.filename).join(", ")
+        let prgbtn = document.getElementById("prg")
+
+        let message = `Are you sure you want to delete all these playlists?
+        ${playliststr}`
+
+        let decision = window.confirm(message)
+        if (decision == true) {
+            let delpaths = playlists.map(p => p.fullpath)
+            delpaths.forEach(p => {
+                fs.unlinkSync(p, (err) => console.log(err))
+            })
+            console.log("deleted sucessfully")
+            prgbtn.style.color = "green"
+            setTimeout(() => {prgbtn.style.color = ""}, 1000)
+        } else (
+            console.log("cancelled deleting")
+        )
+    } else {
+        alert("no playlists found, nothing deleted.")
+    }
+
+   
 }
