@@ -15,7 +15,7 @@ body {
     display: grid;
     width: 100vw;
     height: 100vh;
-    grid-template: 3rem auto min-content / minmax(12rem, 15%) minmax(18rem, 25%) auto;
+    grid-template: 3rem auto min-content / minmax(15rem, 20%) minmax(18rem, 25%) auto;
 }
 .matter-textfield-outlined > input:focus, .matter-textfield-outlined > textarea:focus {
     border-top-color: transparent !important;
@@ -103,21 +103,31 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     border: 2px solid #a57562;
-    padding: 1rem;
+    padding: 0rem 1rem 1rem 1rem;
     border-radius: 0.5rem;
     min-width: 40rem;
-    background: var(--bg-primary)
+    background: var(--bg-primary);
+    max-height: 90%;
+    overflow-y: auto;
 }
 .settingsclose {
     position: absolute;
     height: 2rem;
     width: 2rem;
-    top: 1rem;
+    top: 2rem;
     right: 1rem;
     font-weight: bold;
+    z-index: 5;
 }
-#settings-body h1 {
+#settings-header {
     display: flex;
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    background: var(--bg-primary);
+    z-index: 3;
+    padding: 0.5rem;
+    border-bottom: 2px solid var(--bg-secondary)
 }
 
 /*pills*/
@@ -143,15 +153,16 @@ body {
 .closepill:active {
     background-color: rgb(124, 124, 124);
 }
-#settings-exts {
+#settings-exts, #settings-ign {
     display: flex;
     flex-wrap: wrap;
     width: 100%;
 }
-#settings-exts-bar {
+.settings-bar {
     display: flex;
+    width: 100%;
 }
-#settings-exts-bar label {
+.settings-bar label {
     flex-grow: 1;
 }
 .settings-button {

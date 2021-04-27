@@ -24,7 +24,8 @@ function initOrLoadConfig(filename) {
     } else {
         config = {
             "maindir": "",
-            "exts": ["mp3"]
+            "exts": ["mp3"], 
+            "ignore": []
         }
         fs.writeFileSync(filename, JSON.stringify(config, null, 2))
     }

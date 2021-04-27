@@ -48,27 +48,33 @@ function initSettings() {
     //closeSettings()
     if (body.style.display !== "block") {
         body.style.display = "block"
-        fillSettingPills("settings-exts", config.exts)
-
         document.getElementById('settings-close').onclick = closeSettings
-        document.getElementById('settings-exts-add').onclick = () => {addPill('settings-exts', 'settings-exts-input')}
         document.getElementById("settings-submit").onclick = saveSettings
+
+        fillSettingPills("settings-exts", config.exts)
+        document.getElementById('settings-exts-add').onclick = () => {addPill('settings-exts', 'settings-exts-input')}
+        
+        fillSettingPills("settings-ign", config.ignore)
+        document.getElementById('settings-ign-add').onclick = () => {addPill('settings-ign', 'settings-ign-input')}
+        document.getElementById('settings-ign-pick').onclick = () => {pickFolderAndFillInput('settings-ign-input')}
+
     }
 }
 function closeSettings() {
     document.getElementById("settings-body").style.display = "none"
 }
 function saveSettings() {
-    let exts = []
-    document.getElementById("settings-exts").querySelectorAll(".pillval").forEach(pill => exts.push(pill.innerText))
-    console.log(exts)
-    config.exts = exts
+    config.exts = [...document.getElementById("settings-exts").querySelectorAll(".pillval")].map(pill => pill.innerText)
+    config.ignore = [...document.getElementById("settings-ign").querySelectorAll(".pillval")].map(pill => pill.innerText)
+    
     utils.saveConfig("./config.json", config)
 }
 
 //settings pills
+//add a pill to wrapper
 function addPill(wrapperid, inputid) {
     add = document.getElementById(inputid).value
+    if (document.getElementById(wrapperid).innerText == "Nothing found"){document.getElementById(wrapperid).innerHTML = ""} //clear the nothing found
     if (add !== "") {
         document.getElementById(wrapperid).innerHTML += 
     `<div class="pill"><span class="pillval">${add}</span><button class="closepill" onclick="this.parentElement.remove()">&times;</button></div>`
@@ -76,12 +82,28 @@ function addPill(wrapperid, inputid) {
     }
     
 }
+//fill a wrapper with pills from an array
 function fillSettingPills(wrapperid, settingarr) {
     document.getElementById(wrapperid).innerHTML = ""
-    for (let i = 0; i < settingarr.length; i++) {
-        document.getElementById(wrapperid).innerHTML +=
-        `<div class="pill"><span class="pillval">${settingarr[i]}</span><button class="closepill" onclick="this.parentElement.remove()">&times;</button></div>`   
+    if (settingarr.length > 0) {
+        for (let i = 0; i < settingarr.length; i++) {
+            document.getElementById(wrapperid).innerHTML +=
+        `<div class="pill"><span class="pillval">${settingarr[i]}</span><button class="closepill" onclick="this.parentElement.remove()">&times;</button></div>` 
+        }
+    } else {
+        document.getElementById(wrapperid).innerHTML = `Nothing found`
     }
+}
+//pick a folder using electron dialog and then add the folder name to the #${inputid} input
+async function pickFolderAndFillInput(inputid) {
+    pick = await dialog.showOpenDialog({properties: ['openDirectory']})
+    console.log(pick)
+    if (pick.canceled == false) {
+        let fullpath = pick.filePaths[0]
+        let splitarr = fullpath.split(slash)
+        document.getElementById(inputid).value = splitarr[splitarr.length - 1]
+    }
+    
 }
 
 /*playlist handling*/
@@ -95,6 +117,18 @@ async function gen() {
     walk.dirsSync(config.maindir, (basedir, filename, stats) => {
         alldirs.push({basedir, filename, "fullpath": basedir + slash + filename, stats})
     })
+    if (config.ignore.length > 0) { //if there are some folders to ignore, then filter out the folders
+        alldirs = alldirs.filter(dir => {
+           for (let i = 0; i < config.ignore.length; i++) { //traditional for loop so i can return out of filter and not forEach
+               const word = config.ignore[i];
+               if (dir.fullpath.includes(word)) { //if the full path includes the blacklisted word, filter the dir out.
+                   return false
+               }
+           }
+           return true
+        })
+    }
+    console.log(alldirs)
 
     for (let i = 0; i < alldirs.length; i++) {
         const dir = alldirs[i];

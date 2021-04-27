@@ -33,15 +33,25 @@
       </div>
     </div>
     <div id="settings-body" hidden>
-      <h1>Settings</h1>
-      <button class="closepill settingsclose" id="settings-close">&times;</button>
-      <hr>
-      <p>Extensions considered music files</p>
+      <div id="settings-header">
+        <h1>Settings</h1>
+        <button class="closepill settingsclose" id="settings-close">&times;</button>
+      </div>
+      <p>File extensions considered music files</p>
       <div id="settings-exts"></div>
-      <div id="settings-exts-bar">
+      <div id="settings-exts-bar" class="settings-bar">
         <label class="matter-textfield-outlined"><input id="settings-exts-input" placeholder=" "/><span>Add more</span></label>
         <button id="settings-exts-add" class="matter-button-outlined settings-button">Add</button>
       </div>
+      <hr>
+      <p>Folders to ignore when generating (if folder contains any of these words it's ignored)</p>
+      <div id="settings-ign"></div>
+      <div id="settings-ign-bar" class="settings-bar">
+        <label class="matter-textfield-outlined"><input id="settings-ign-input" placeholder=" "/><span>Add more</span></label>
+        <button id="settings-ign-pick" class="matter-button-outlined settings-button">Pick folder</button>
+        <button id="settings-ign-add" class="matter-button-outlined settings-button">Add</button>
+      </div>
+      <hr>
       <button id="settings-submit" class="matter-button-outlined">Save</button>
     </div>
   </body>
