@@ -9,24 +9,27 @@ const utils = require('./utils.js')
 
 const walk = require('fs-walk')
 const mm = require('music-metadata');
+const Autocomplete = require('@trevoreyre/autocomplete-js')
 
 var slash = process.platform === 'win32' ? "\\" : "/"
 var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
 
+var allSongs = []
+
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
     if (config.maindir !== "") {selectfolder(null, config)}
+
     document.getElementById("folder-open").addEventListener("click", selectfolder)
     document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('settings').addEventListener("click", initSettings)
     document.getElementById('prg').addEventListener("click", purgePlaylists)
-
 })
 
+//select main dir
 async function selectfolder(mouseevent, inputconfig) {
-
     if (typeof inputconfig === "undefined") { //clicked on the pick button
         pick = await dialog.showOpenDialog({properties: ['openDirectory']})
         console.log(pick)
@@ -41,7 +44,24 @@ async function selectfolder(mouseevent, inputconfig) {
 
     document.getElementById("selected-folder").innerText = utils.shortenFilename(config.maindir.toString(), 40)
     document.getElementById("gen").removeAttribute("disabled")
+    document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
+
+    fetchAllSongs()
 }
+
+//autocomplete
+function setupAutocomplete() {
+    new Autocomplete('#autocomplete', {
+        search: input => {
+          if (input.length < 1) { return [] }
+          return allSongs.filter(song => {
+            const regex = RegExp(input, 'gi');
+            return song.filename.match(regex)
+          }).slice(0, 10).map(song => song.filename)
+        }
+      })  
+}
+
 
 //settings
 function initSettings() {
@@ -201,6 +221,47 @@ async function getEXTINF(song, onlysong) {
     return extinf
 }
 
+async function fetchAllSongs() {
+    let genbutton = document.getElementById("gen")
+    genbutton.setAttribute("disabled", "true")
+    let songs = []
+    walk.filesSync(config.maindir, (basedir, filename) => {
+        songs.push({ filename, "fullpath": basedir + slash + filename})
+    })
+    songs = songs.filter(song => {
+        let splitarr = song.filename.split(".")
+        let ext = splitarr[splitarr.length - 1]
+        if (config.exts.includes(ext.toLowerCase()) ) {
+            return true
+        } else {
+            return false
+        }
+    })
+    //read every song and add their tag to the big object
+    /*
+    for (let i = 0; i < songs.length; i++) {
+        const song = songs[i];
+        let tag = await mm.parseFile(song.fullpath, {"skipCovers": false, "duration": false})
+        if (tag.common.picture !== undefined) {
+            song.pic = tag.common.picture[0]
+        } 
+    }*/
+    if (songs.length > 0) {
+        console.log(songs)
+        document.getElementById("command-line-input").removeAttribute("disabled")
+        document.getElementById("input-placeholder").innerHTML = "Start typing a name of a song..."
+        genbutton.removeAttribute("disabled")
+
+        allSongs = songs
+
+        setupAutocomplete()
+    } else {
+        document.getElementById("input-placeholder").innerHTML = "No songs found in this folder, check settings"
+    }
+    
+}
+
+//delete all generated playlists
 function purgePlaylists() {
     let playlists = []
 

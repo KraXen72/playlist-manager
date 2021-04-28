@@ -2,7 +2,6 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <title>Hello World!</title>
     <link rel="stylesheet" href="matter.css">
     <link rel="stylesheet" href="node_modules/material-design-icons/iconfont/material-icons.css">
@@ -26,8 +25,17 @@
       <div id="playlist-bar-wrapper">
         <div id="playlist-bar"></div>
       </div>
-      <div id="command-line"></div>
-      <div id="main-screen"></div>
+      <div id="command-line">
+        <div id="autocomplete" class="autocomplete">
+          <label class="matter-textfield-outlined" id="command-line-label">
+            <input placeholder=" " id="command-line-input" spellcheck="false" type="text" class="autocomplete-input" disabled>
+            <span class="noselect" id="input-placeholder">Select a folder first</span>
+            <ul class="autocomplete-result-list"></ul>
+          </label>
+        </div>
+      </div>
+      <div id="main-screen">
+      </div>
       <div id="button-bar">
         <span id="select-folder">
           <button class="matter-button-outlined" id="folder-open">Select</button>
@@ -41,17 +49,17 @@
         <h1>Settings</h1>
         <button class="closepill settingsclose" id="settings-close">&times;</button>
       </div>
-      <p>File extensions considered music files</p>
+      <p>File extensions considered music files: <a href="https://github.com/borewit/music-metadata#features" target="_blank" style="float: right">all supported audio file types</a></p>
       <div id="settings-exts"></div>
       <div id="settings-exts-bar" class="settings-bar">
-        <label class="matter-textfield-outlined"><input id="settings-exts-input" placeholder=" "/><span>Add more</span></label>
+        <label class="matter-textfield-outlined"><input id="settings-exts-input" placeholder=" "/><span class="noselect">Add more</span></label>
         <button id="settings-exts-add" class="matter-button-outlined settings-button">Add</button>
       </div>
       <hr>
       <p>Folders to ignore when generating (if folder contains any of these words it's ignored)</p>
       <div id="settings-ign"></div>
       <div id="settings-ign-bar" class="settings-bar">
-        <label class="matter-textfield-outlined"><input id="settings-ign-input" placeholder=" "/><span>Add more</span></label>
+        <label class="matter-textfield-outlined"><input id="settings-ign-input" placeholder=" "/><span class="noselect">Add more</span></label>
         <button id="settings-ign-pick" class="matter-button-outlined settings-button">Pick folder</button>
         <button id="settings-ign-add" class="matter-button-outlined settings-button">Add</button>
       </div>

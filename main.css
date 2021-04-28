@@ -15,7 +15,7 @@ body {
     display: grid;
     width: 100vw;
     height: 100vh;
-    grid-template: 3rem auto max-content / minmax(15rem, 20%) minmax(18rem, 25%) auto;
+    grid-template: max-content auto max-content / minmax(15rem, 20%) minmax(18rem, 25%) auto;
 }
 .matter-textfield-outlined > input:focus, .matter-textfield-outlined > textarea:focus {
     border-top-color: transparent !important;
@@ -76,13 +76,32 @@ body {
 #main-screen {
     grid-row: 2 / 3;
     grid-column: 3 / 4;
-    background: var(--bg-primary)
+    background: var(--bg-primary);
 }
+#suggestions-wrapper {
+    width: 100%;
+    display: flex;
+}
+.autocomplete-result-list {
+    position: absolute;
+}
+
+
 #command-line {
     grid-row: 1 / 2;
     grid-column: 3 / 4;
     background: var(--bg-secondary);
 }
+#command-line-label {
+    margin-bottom: 6px;
+    width: 100%;
+    margin-right: 6px;
+}
+#command-line-wrapper, #autocomplete {
+    width: 100%;
+    display: flex;
+}
+
 #button-bar {
     grid-row: 3 / 4;
     grid-column: 3 / 4;
@@ -185,6 +204,56 @@ body {
 }
 #settings-submit {
     margin-top: 0.3rem;
+}
+
+.noselect {
+    user-select: none !important;
+}
+
+/*autocomplete*/
+.autocomplete-result-list {
+    margin: 0;
+    border: 1px solid rgba(0, 0, 0, .12);
+    padding: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: #282828;
+    list-style: none;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, .16)
+}
+
+[data-position=below] .autocomplete-result-list {
+    margin-top: -1px;
+    border-top-color: transparent;
+    border-radius: 0 0 8px 8px;
+}
+
+[data-position=above] .autocomplete-result-list {
+    margin-bottom: -1px;
+    border-bottom-color: transparent;
+    border-radius: 8px 8px 0 0;
+}
+
+.autocomplete-result {
+    cursor: default;
+    padding: 5px;
+    /*background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iOCIvPjxwYXRoIGQ9Ik0yMSAyMWwtNC00Ii8+PC9zdmc+");*/
+    background-repeat: no-repeat;
+    background-position: 12px
+}
+
+.autocomplete-result:hover,
+.autocomplete-result[aria-selected=true] {
+    background-color: rgba(165, 117, 98, 0.2)
+}
+
+@keyframes rotate {
+    0% {
+        transform: translateY(-50%) rotate(0deg)
+    }
+    to {
+        transform: translateY(-50%) rotate(359deg)
+    }
 }
 
   
