@@ -59,9 +59,45 @@ function setupAutocomplete() {
           return allSongs.filter(song => {
             const regex = RegExp(input, 'gi');
             return song.filename.match(regex)
-          }).slice(0, 10).map(song => song.filename)
-        }
+          }).slice(0, 10) //returns first 10 matches as an object
+        },
+        onUpdate: (results, selectedIndex) => { //this will later update the song preview thingy
+            /*if (results.length == 0) {
+                updatePreview("", true)
+            }*/
+            if (selectedIndex > -1) {
+                console.log(`${results.length} results`)
+                console.log(`Selected:`, results[selectedIndex])
+                updatePreview(results[selectedIndex], false)
+            }
+        },
+        onSubmit: result => { //final pick
+            console.log("final pick: ", result)
+            updatePreview(result, false)
+        },
+        autoSelect: true,
+        getResultValue: result => result.filename //show the filename in the result
       })  
+}
+
+//preview
+async function updatePreview(song, empty) {
+    if (empty == false) {
+        let tag = await mm.parseFile(song.fullpath)
+        let picture = tag.common.picture[0]
+        console.log(tag)
+
+        document.getElementById("sp-cover").style.backgroundImage = `url("data:${picture.format};base64,${picture.data.toString('base64')}")`
+        document.getElementById("sp-title").textContent = tag.common.title.toString()
+        document.getElementById("sp-artist").textContent = "By: " + tag.common.artist.toString()
+        document.getElementById("sp-album").textContent = "Album: " + tag.common.album.toString()
+    } else {
+        document.getElementById("sp-cover").style.backgroundImage = `url("")`
+        document.getElementById("sp-title").textContent = ""
+        document.getElementById("sp-artist").textContent = ""
+        document.getElementById("sp-album").textContent = ""
+    }
+    
 }
 
 //settings
@@ -166,7 +202,6 @@ function newPlaylist() {
 
         }
     }
-
     canc.onclick = () => {
         sub.style.display = "none"
         canc.style.display = "none"
@@ -177,12 +212,6 @@ function newPlaylist() {
         scrap.style.display = "flex"
         newbtn.style.display = "flex"
     }
-
-
-
-
-
-
 }
 
 /*playlist handling - file manipulation etc*/

@@ -93,13 +93,10 @@ body {
     grid-row: 2 / 3;
     grid-column: 3 / 4;
     background: var(--bg-primary);
-}
-#suggestions-wrapper {
-    width: 100%;
     display: flex;
-}
-.autocomplete-result-list {
-    position: absolute;
+    flex-direction: row;
+    align-items: flex-end;
+    padding: 1rem;
 }
 
 
@@ -235,8 +232,46 @@ body {
     user-select: none !important;
 }
 
+/*song preview*/
+#song-preview {
+    display: grid;
+    grid-template-rows: 0.3fr 1.5fr 0fr 1fr 0fr 1fr 0.3fr;
+    grid-template-columns: 8rem auto;
+    height: 8rem;
+    width: 100%;
+}
+#sp-cover {
+    grid-row: 1 / 8;
+    grid-column: 1 / 2;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0.5rem;
+    border-radius: 0.5rem;
+}
+#sp-title {
+    grid-row: 2 / 3;
+    grid-column:  2 / 3;
+    display: flex;
+    align-items: center;
+    font-size: 1.3rem;
+}
+#sp-artist {
+    grid-row: 4 / 5;
+    grid-column: 2 / 3;
+    display: flex;
+    align-items: flex-start;
+}
+#sp-album {
+    grid-row: 6 / 7;
+    grid-column: 2/ 3;
+    display: flex;
+    align-items: center;
+}
+
 /*autocomplete*/
 .autocomplete-result-list {
+    position: absolute;
     margin: 0;
     border: 1px solid rgba(0, 0, 0, .12);
     padding: 0;
