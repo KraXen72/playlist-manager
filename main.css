@@ -78,6 +78,7 @@ body {
     text-align: center;
     margin-right: 0.5rem;
     overflow: ellipsis;
+    width: 100%;
 }
 #playlist-name-wrapper {
     margin-right: 0.5rem;
@@ -144,6 +145,8 @@ body {
     align-items:center;
     width: min-content;
     min-width: 0px;
+    max-width: min-content;
+    padding: 0px 8px 0px 8px !important;
 }
 
 /*settings*/
