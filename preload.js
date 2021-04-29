@@ -16,6 +16,7 @@ var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
 
 var allSongs = []
+var playlistName = "Untitled Playlist"
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -26,6 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('settings').addEventListener("click", initSettings)
     document.getElementById('prg').addEventListener("click", purgePlaylists)
+    document.getElementById('new').addEventListener("click", newPlaylist)
 })
 
 //select main dir
@@ -61,7 +63,6 @@ function setupAutocomplete() {
         }
       })  
 }
-
 
 //settings
 function initSettings() {
@@ -128,6 +129,63 @@ async function pickFolderAndFillInput(inputid) {
 }
 
 /*playlist handling*/
+
+/*new playlist*/
+
+function newPlaylist() {
+    let newbtn = document.getElementById("new")
+    let titleh = document.getElementById("titleh")
+    let inp = document.getElementById("playlist-name-input")
+    let sub = document.getElementById("playlist-name-submit")
+    let canc = document.getElementById("playlist-name-cancel")
+    let scrap = document.getElementById("scrap")
+    let wrap = document.getElementById("playlist-name-wrapper")
+
+    wrap.style.display = "block"
+    scrap.style.display = "none"
+    sub.style.display = "flex"
+    canc.style.display = "flex"
+    newbtn.style.display = "none"
+    titleh.style.display = "none"
+
+    sub.onclick = () => {
+        if (inp.value.replaceAll(" ", "") !== "") {
+            playlistName = inp.value
+
+            sub.style.display = "none"
+            canc.style.display = "none"
+            titleh.style.display = "block"
+            wrap.style.display = "none"
+
+            sub.onclick = ""
+            canc.onclick = ""
+            scrap.removeAttribute("disabled")
+            titleh.textContent = playlistName
+            scrap.style.display = "flex"
+            newbtn.style.display = "flex"
+
+        }
+    }
+
+    canc.onclick = () => {
+        sub.style.display = "none"
+        canc.style.display = "none"
+        titleh.style.display = "block"
+        wrap.style.display = "none"
+        sub.onclick = ""
+        canc.onclick = ""
+        scrap.style.display = "flex"
+        newbtn.style.display = "flex"
+    }
+
+
+
+
+
+
+}
+
+/*playlist handling - file manipulation etc*/
 
 //walk all directories and then call generateM3U()
 async function gen() {

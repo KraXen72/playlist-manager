@@ -71,7 +71,20 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 0px 1rem 0px 1rem;
 }
+#titleh {
+    flex-grow: 1;
+    text-align: center;
+    margin-right: 0.5rem;
+    overflow: ellipsis;
+}
+#playlist-name-wrapper {
+    margin-right: 0.5rem;
+    flex-grow: 1;
+    width: 100%;
+}
+
 
 #main-screen {
     grid-row: 2 / 3;
@@ -124,6 +137,13 @@ body {
 }
 #gen, #prg {
     transition: color 0.5s;
+}
+#scrap, #playlist-name-submit, #playlist-name-cancel, #new {
+    display: flex;
+    justify-content:center;
+    align-items:center;
+    width: min-content;
+    min-width: 0px;
 }
 
 /*settings*/
