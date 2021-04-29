@@ -235,7 +235,7 @@ body {
 /*song preview*/
 #song-preview {
     display: grid;
-    grid-template-rows: 0.3fr 1.5fr 0fr 1fr 0fr 1fr 0.3fr;
+    grid-template-rows: 0.3fr 1.5fr 0fr 0.8fr 0fr 0.8fr 0.3fr;
     grid-template-columns: 8rem auto;
     height: 8rem;
     width: 100%;
@@ -260,7 +260,7 @@ body {
     grid-row: 4 / 5;
     grid-column: 2 / 3;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
 }
 #sp-album {
     grid-row: 6 / 7;
