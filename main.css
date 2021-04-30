@@ -83,7 +83,7 @@ body {
     display: grid;
     grid-template: 1.5rem 1.5rem / 3rem minmax(0%, 100%)
 }
-.songitem-cover {
+.songitem-cover, .songitem-cover-placeholder {
     height: auto;
     width: auto;
     box-sizing:border-box;
@@ -95,6 +95,9 @@ body {
     background-image: url("placeholder.png");
     margin: 0.2rem;
     border-radius: 0.2rem;
+}
+.songitem-cover-placeholder {
+    background-image: url("placeholder.png");
 }
 .songitem-title {
     grid-row: 1 / 2;
@@ -300,15 +303,17 @@ body {
     height: 8rem;
     width: 100%;
 }
-#sp-cover {
+#sp-cover, #sp-cover-placeholder {
     grid-row: 1 / 8;
     grid-column: 1 / 2;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    background-image: url("placeholder.png");
     margin: 0.5rem;
     border-radius: 0.5rem;
+}
+#sp-cover-placeholder {
+    background-image: url("placeholder.png");
 }
 #sp-title {
     grid-row: 2 / 3;

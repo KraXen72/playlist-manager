@@ -90,6 +90,7 @@ function setupAutocomplete() {
 async function updatePreview(song, empty) {
     if (empty == false) {
         let tag = await mm.parseFile(song.fullpath)
+        if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
         let picture = tag.common.picture[0]
         //console.log(tag)
 
@@ -230,6 +231,7 @@ async function addSong(songobj) {
 
     songElem.className = "songitem"
     songElem.innerHTML = `
+    <div class="songitem-cover-placeholder" ></div>
     <div class="songitem-cover cover-${id}" ></div>
     <div class="songitem-title">${tag.title}</div>
     <div class="songitem-aa"><span class="songitem-artist">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album">${tag.album}</span></div>
