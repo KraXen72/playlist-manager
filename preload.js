@@ -12,11 +12,14 @@ const mm = require('music-metadata');
 const Autocomplete = require('@trevoreyre/autocomplete-js')
 
 var slash = process.platform === 'win32' ? "\\" : "/"
+const specialRegex = new RegExp("[^\x00-\x7F]", "gm")
 var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
 
 var allSongs = []
 var playlistName = "Untitled Playlist"
+
+
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -62,21 +65,24 @@ function setupAutocomplete() {
           }).slice(0, 10) //returns first 10 matches as an object
         },
         onUpdate: (results, selectedIndex) => { //this will later update the song preview thingy
-            /*if (results.length == 0) {
-                updatePreview("", true)
-            }*/
             if (selectedIndex > -1) {
-                console.log(`${results.length} results`)
-                console.log(`Selected:`, results[selectedIndex])
                 updatePreview(results[selectedIndex], false)
             }
         },
         onSubmit: result => { //final pick
-            console.log("final pick: ", result)
             updatePreview(result, false)
+            document.getElementById("command-line-input").value = ''
+            addSong(result)
         },
         autoSelect: true,
-        getResultValue: result => result.filename //show the filename in the result
+        getResultValue: result => {
+            let fn = result.filename
+            let splitarr = fn.split(".")
+            let fix = splitarr.slice("0", "-1")
+            let final = fix.join(".")
+
+            return final
+        } //show the filename in the result
       })  
 }
 
@@ -85,7 +91,7 @@ async function updatePreview(song, empty) {
     if (empty == false) {
         let tag = await mm.parseFile(song.fullpath)
         let picture = tag.common.picture[0]
-        console.log(tag)
+        //console.log(tag)
 
         document.getElementById("sp-cover").style.backgroundImage = `url("data:${picture.format};base64,${picture.data.toString('base64')}")`
         document.getElementById("sp-title").textContent = tag.common.title.toString()
@@ -214,6 +220,27 @@ function newPlaylist() {
     }
 }
 
+async function addSong(songobj) {
+    console.log(songobj)
+    let tag = await getEXTINF(songobj.fullpath, songobj.filename, true, false)
+    console.log("tag: ", tag)
+
+    let songElem = document.createElement("div")
+    let id = Date.now().toString()
+
+    songElem.className = "songitem"
+    songElem.innerHTML = `
+    <div class="songitem-cover cover-${id}" ></div>
+    <div class="songitem-title">${tag.title}</div>
+    <div class="songitem-aa"><span class="songitem-artist">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album">${tag.album}</span></div>
+    <div class="songitem-filename" hidden>${songobj.filename}</div>
+    `
+
+    document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
+
+    document.getElementById("playlist-bar").appendChild(songElem)
+}
+
 /*playlist handling - file manipulation etc*/
 
 //walk all directories and then call generateM3U()
@@ -278,7 +305,7 @@ async function generateM3U(folder, useEXTINF) {
         if (config.exts.includes(extarr[extarr.length - 1])) {   
             if (useEXTINF == true) {
                 //get info about the song
-                let extinf = await getEXTINF(basedir + slash + song, song)
+                let extinf = await getEXTINF(basedir + slash + song, song, false, true)
                 allsongs.push(extinf.toString())
                 allsongs.push(filename.toString())
             } else {
@@ -294,18 +321,30 @@ async function generateM3U(folder, useEXTINF) {
 }
 
 //read the file and get it's metadata
-async function getEXTINF(song, onlysong) {
-    const metadata = await mm.parseFile(song, {"skipCovers": true, "duration": false})
-    //console.log(metadata)
+async function getEXTINF(song, onlysong, returnObj, skipCovers) {
+    const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
+    console.log("metadata: ",metadata)
 
     const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
+    const album = metadata.common.album == undefined ? "Unknown Album" : metadata.common.album
     const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
+    if (skipCovers == false) {
+        const pic = mm.selectCover(metadata.common.picture)
+        var cover = ""
+        if (pic !== undefined) {
+            cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
+        }
+    }
+    
 
     //console.log(extinf)
-
-    return extinf
+    if (returnObj == true) {
+        return {artist, title, album, duration, cover}
+    } else {
+        return extinf
+    }
 }
 
 async function fetchAllSongs() {
