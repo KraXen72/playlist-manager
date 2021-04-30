@@ -17,7 +17,9 @@ var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
 
 var allSongs = []
+var currPlaylist = []
 var playlistName = "Untitled Playlist"
+var mainsearch = ""
 
 
 
@@ -42,21 +44,29 @@ async function selectfolder(mouseevent, inputconfig) {
             console.log("didn't cancel")
             config.maindir = pick.filePaths[0]
             utils.saveConfig("./config.json", config)
-        }
+
+            document.getElementById("selected-folder").innerText = utils.shortenFilename(config.maindir.toString(), 40)
+            document.getElementById("gen").removeAttribute("disabled")
+            document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
+            fetchAllSongs()
+        } 
     } else { //loaded from config
         config.maindir = inputconfig.maindir
+
+        document.getElementById("selected-folder").innerText = utils.shortenFilename(config.maindir.toString(), 40)
+        document.getElementById("gen").removeAttribute("disabled")
+        document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
+        fetchAllSongs()
     }
 
-    document.getElementById("selected-folder").innerText = utils.shortenFilename(config.maindir.toString(), 40)
-    document.getElementById("gen").removeAttribute("disabled")
-    document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
+    
 
-    fetchAllSongs()
+    
 }
 
 //autocomplete
 function setupAutocomplete() {
-    new Autocomplete('#autocomplete', {
+    mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
           if (input.length < 1) { return [] }
           return allSongs.filter(song => {
@@ -181,15 +191,14 @@ function newPlaylist() {
     let inp = document.getElementById("playlist-name-input")
     let sub = document.getElementById("playlist-name-submit")
     let canc = document.getElementById("playlist-name-cancel")
-    let scrap = document.getElementById("scrap")
     let wrap = document.getElementById("playlist-name-wrapper")
 
     wrap.style.display = "block"
-    scrap.style.display = "none"
     sub.style.display = "flex"
     canc.style.display = "flex"
     newbtn.style.display = "none"
     titleh.style.display = "none"
+    inp.focus()
 
     sub.onclick = () => {
         if (inp.value.replaceAll(" ", "") !== "") {
@@ -199,12 +208,9 @@ function newPlaylist() {
             canc.style.display = "none"
             titleh.style.display = "block"
             wrap.style.display = "none"
-
             sub.onclick = ""
             canc.onclick = ""
-            scrap.removeAttribute("disabled")
             titleh.textContent = playlistName
-            scrap.style.display = "flex"
             newbtn.style.display = "flex"
 
         }
@@ -216,7 +222,6 @@ function newPlaylist() {
         wrap.style.display = "none"
         sub.onclick = ""
         canc.onclick = ""
-        scrap.style.display = "flex"
         newbtn.style.display = "flex"
     }
 }
@@ -224,6 +229,7 @@ function newPlaylist() {
 async function addSong(songobj) {
     //console.log(songobj)
     let tag = await getEXTINF(songobj.fullpath, songobj.filename, true, false)
+    songobj.tag = tag
     //console.log("tag: ", tag)
 
     let songElem = document.createElement("div")
@@ -237,10 +243,14 @@ async function addSong(songobj) {
     <div class="songitem-aa"><span class="songitem-artist">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album">${tag.album}</span></div>
     <div class="songitem-filename" hidden>${songobj.filename}</div>
     `
-
     document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
-
     document.getElementById("playlist-bar").appendChild(songElem)
+    
+    songobj.tag.cover = ""
+    currPlaylist.push(songobj)
+    console.log(currPlaylist)
+
+    
 }
 
 /*playlist handling - file manipulation etc*/
@@ -343,7 +353,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
 
     //console.log(extinf)
     if (returnObj == true) {
-        return {artist, title, album, duration, cover}
+        return {artist, title, album, duration, cover, extinf}
     } else {
         return extinf
     }

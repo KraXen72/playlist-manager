@@ -201,7 +201,7 @@ body {
 #gen, #prg {
     transition: color 0.5s;
 }
-#scrap, #playlist-name-submit, #playlist-name-cancel, #new {
+#scrap, #playlist-name-submit, #playlist-name-cancel, #new, .mdiconbutton {
     display: flex;
     justify-content:center;
     align-items:center;
@@ -209,6 +209,12 @@ body {
     min-width: min-content;
     max-width: min-content;
     padding: 0px 8px 0px 8px !important;
+}
+.ml {
+    margin-left: .2rem
+}
+.mr {
+    margin-right: .2rem
 }
 
 /*settings*/
