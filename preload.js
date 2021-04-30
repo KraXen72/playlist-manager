@@ -222,9 +222,9 @@ function newPlaylist() {
 }
 
 async function addSong(songobj) {
-    console.log(songobj)
+    //console.log(songobj)
     let tag = await getEXTINF(songobj.fullpath, songobj.filename, true, false)
-    console.log("tag: ", tag)
+    //console.log("tag: ", tag)
 
     let songElem = document.createElement("div")
     let id = Date.now().toString()
@@ -265,7 +265,7 @@ async function gen() {
            return true
         })
     }
-    console.log(alldirs)
+    //console.log(alldirs)
 
     for (let i = 0; i < alldirs.length; i++) {
         const dir = alldirs[i];
@@ -325,7 +325,7 @@ async function generateM3U(folder, useEXTINF) {
 //read the file and get it's metadata
 async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
-    console.log("metadata: ",metadata)
+    //console.log("metadata: ",metadata)
 
     const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
