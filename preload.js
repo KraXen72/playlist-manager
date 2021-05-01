@@ -57,11 +57,7 @@ async function selectfolder(mouseevent, inputconfig) {
         document.getElementById("gen").removeAttribute("disabled")
         document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
         fetchAllSongs()
-    }
-
-    
-
-    
+    } 
 }
 
 //autocomplete
@@ -97,24 +93,24 @@ function setupAutocomplete() {
 }
 
 //preview
-async function updatePreview(song, empty) {
+async function updatePreview(song, empty) { 
+    let tag = {} //artist, title, album, duration, cover, extinf, coverobj
     if (empty == false) {
-        let tag = await mm.parseFile(song.fullpath)
         if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
-        let picture = tag.common.picture[0]
-        //console.log(tag)
-
-        document.getElementById("sp-cover").style.backgroundImage = `url("data:${picture.format};base64,${picture.data.toString('base64')}")`
-        document.getElementById("sp-title").textContent = tag.common.title.toString()
-        document.getElementById("sp-artist").textContent = "By: " + tag.common.artist.toString()
-        document.getElementById("sp-album").textContent = "Album: " + tag.common.album.toString()
+        tag = await getEXTINF(song.fullpath, song.filename, true, false)
     } else {
-        document.getElementById("sp-cover").style.backgroundImage = `url("")`
-        document.getElementById("sp-title").textContent = ""
-        document.getElementById("sp-artist").textContent = ""
-        document.getElementById("sp-album").textContent = ""
+        tag = {
+            artist: "",
+            title: "",
+            album: "",
+            cover: ""
+        }
     }
-    
+    document.getElementById("sp-cover").style.backgroundImage = `url("${tag.cover}")`
+    document.getElementById("sp-title").textContent = tag.title
+    document.getElementById("sp-artist").textContent = tag.artist
+    document.getElementById("sp-album").textContent = tag.album
+
 }
 
 //settings
@@ -235,10 +231,14 @@ async function addSong(songobj) {
     let songElem = document.createElement("div")
     let id = Date.now().toString()
 
+    if (tag.coverobj !== false) {
+        fs.writeFileSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`, tag.coverobj.data)
+    }
+
     songElem.className = "songitem"
     songElem.innerHTML = `
     <div class="songitem-cover-placeholder" ></div>
-    <div class="songitem-cover cover-${id}" ></div>
+    <div class="songitem-cover cover-${id}" style="background-image: url('covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}')" ></div>
     <div class="songitem-title" title="${utils.fixQuotes(tag.title)}">${tag.title}</div>
     <div class="songitem-aa">
         <span class="songitem-artist" title="${utils.fixQuotes(tag.artist)}">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(tag.album)}">${tag.album}</span>
@@ -247,7 +247,7 @@ async function addSong(songobj) {
     <div class="songitem-filename" hidden>${songobj.filename}</div>
     `
     document.getElementById("playlist-bar").appendChild(songElem)
-    document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
+    //document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
 
     songobj.tag.cover = ""
     currPlaylist.push(songobj)
@@ -339,7 +339,7 @@ async function generateM3U(folder, useEXTINF) {
 //read the file and get it's metadata
 async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
-    console.log("metadata: ",metadata)
+    //console.log("metadata: ",metadata)
 
     const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
@@ -349,11 +349,14 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     if (skipCovers == false) {
         const pic = mm.selectCover(metadata.common.picture)
         var cover = ""
-        if (pic !== undefined) {
-            cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
-
+        if (pic !== undefined && pic !== null) {
             let frmt = pic.format.replaceAll("image/", "")
-            fs.writeFileSync(`covers${slash}cover1.${frmt}`, pic.data)
+
+            cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
+            coverobj = {frmt, "data": pic.data }
+        } else {
+            cover = ""
+            coverobj = false
         }
     }
 
@@ -362,7 +365,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     
     //console.log(extinf)
     if (returnObj == true) {
-        return {artist, title, album, duration, cover, extinf}
+        return {artist, title, album, duration, cover, extinf, coverobj}
     } else {
         return extinf
     }
