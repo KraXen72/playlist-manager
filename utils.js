@@ -44,7 +44,9 @@ function fixQuotes(str) {
 
 function clearFolder(path) {
     let files = fs.readdirSync(path).filter(f => fs.lstatSync(path + slash + f).isFile() )
-    console.log(files)
+    files.forEach(f => {
+        fs.unlinkSync(path + slash + f)
+    })
 }
 
 module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder}
