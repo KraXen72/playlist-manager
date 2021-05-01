@@ -229,7 +229,8 @@ async function addSong(songobj) {
     //console.log("tag: ", tag)
 
     let songElem = document.createElement("div")
-    let id = Date.now().toString()
+    let remElem = document.createElement("div")
+    let id = Date.now().toString() 
 
     if (tag.coverobj !== false) {
         fs.writeFileSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`, tag.coverobj.data)
@@ -243,18 +244,33 @@ async function addSong(songobj) {
     <div class="songitem-aa">
         <span class="songitem-artist" title="${utils.fixQuotes(tag.artist)}">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(tag.album)}">${tag.album}</span>
     </div>
-    <div class="songitem-more"><i class="material-icons">more_vert</i></div>
     <div class="songitem-filename" hidden>${songobj.filename}</div>
     `
+    
+
+    remElem.classList.add("songitem-remove")
+    remElem.innerHTML = `<i class="material-icons">remove</i>`
+    remElem.onclick = () => {
+        for (let i = 0; i < currPlaylist.length; i++) {
+            const song = currPlaylist[i];
+            if (songobj.fullpath == song.fullpath) {
+                currPlaylist.splice(i, 1)
+                break;
+            }
+        }
+        console.log(tag)
+        fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)
+        songElem.remove()
+    }
+
+    songElem.appendChild(remElem)
     document.getElementById("playlist-bar").appendChild(songElem)
-    //document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
 
     songobj.tag.cover = ""
+    songobj.tag.coverobj.data = ""
+
     currPlaylist.push(songobj)
     console.log(currPlaylist)
-    
-    
-    
 }
 
 /*playlist handling - file manipulation etc*/

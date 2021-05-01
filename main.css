@@ -99,7 +99,7 @@ body {
 .songitem-cover-placeholder {
     background-image: url("placeholder.png");
 }
-.songitem-more {
+.songitem-remove {
     grid-row: 1 / 3;
     grid-column: 3 / 4;
     width: 100%;
