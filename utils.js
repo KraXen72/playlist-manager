@@ -1,4 +1,5 @@
 const fs = require('fs');
+const slash = process.platform === 'win32' ? "\\" : "/"
 
 
 function shortenFilename(str, len) {
@@ -37,4 +38,13 @@ function saveConfig(filename, config) {
     console.log("saved config")
 }
 
-module.exports = {shortenFilename, initOrLoadConfig, saveConfig}
+function fixQuotes(str) {
+    return str.replaceAll('"', "&quot;")
+}
+
+function clearFolder(path) {
+    let files = fs.readdirSync(path).filter(f => fs.lstatSync(path + slash + f).isFile() )
+    console.log(files)
+}
+
+module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder}

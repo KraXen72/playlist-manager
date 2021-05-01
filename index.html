@@ -22,13 +22,13 @@
       </div>
       <div id="playlist-title">
         <h4 id="titleh">Untitled Playlist</h4>
-        <button class="matter-button-outlined" id="new"><i class="material-icons">edit</i></button>
+        <button class="matter-button-outlined" id="new" title="rename playlist"><i class="material-icons">edit</i></button>
         <label class="matter-textfield-standard" id = "playlist-name-wrapper" hidden> 
           <input placeholder=" " id="playlist-name-input" maxlength="35">
           <span>Enter playlist name</span>
         </label>
-        <button class="matter-button-outlined" id="playlist-name-submit" style = "display: none"><i class="material-icons">check</i></button>
-        <button class="matter-button-outlined" id="playlist-name-cancel" style = "display: none"><i class="material-icons">close</i></button>
+        <button class="matter-button-outlined" id="playlist-name-submit" style = "display: none" title = "rename"><i class="material-icons">check</i></button>
+        <button class="matter-button-outlined" id="playlist-name-cancel" style = "display: none" title = "cancel"><i class="material-icons">close</i></button>
       </div>
       <div id="playlist-bar-wrapper">
         <div id="playlist-scroll-wrap">
@@ -54,14 +54,14 @@
         </div>
       </div>
       <div id="button-bar">
-        <button class="matter-button-outlined" id="save">Save Playlist</button>
-        <button class="matter-button-outlined mdiconbutton ml" id="cancel"><i class="material-icons">close</i></button>
+        <button class="matter-button-outlined mdiconbutton" id="save" title = "save playlist"><i class="material-icons">save</i></button>
+        <button class="matter-button-outlined mdiconbutton ml" id="cancel" title = "discard playlist"><i class="material-icons">close</i></button>
         <span class="ml mr">|</span>
         <span id="select-folder">
-          <button class="matter-button-outlined" id="folder-open">Select</button>
+          <button class="matter-button-outlined" id="folder-open" title = "Select directory with all your music">Select</button>
           <span id="selected-folder">No Folder Selected</span>
         </span>
-        <span class="material-icons" id="settings">settings</span>
+        <span class="material-icons" id="settings" title="settings">settings</span>
       </div>
     </div>
     <div id="settings-body" hidden>

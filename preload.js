@@ -11,7 +11,7 @@ const walk = require('fs-walk')
 const mm = require('music-metadata');
 const Autocomplete = require('@trevoreyre/autocomplete-js')
 
-var slash = process.platform === 'win32' ? "\\" : "/"
+const slash = process.platform === 'win32' ? "\\" : "/"
 const specialRegex = new RegExp("[^\x00-\x7F]", "gm")
 var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
@@ -69,20 +69,20 @@ function setupAutocomplete() {
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
           if (input.length < 1) { return [] }
-          return allSongs.filter(song => {
+          return allSongs.filter(song => { //find matches
             const regex = RegExp(input, 'gi');
             return song.filename.match(regex)
+          }).filter(song => { //filter out things already in playlist to avoid duplicates
+            for (let i = 0; i < currPlaylist.length; i++) {if (song.filename == currPlaylist[i].filename) {return false} };return true
           }).slice(0, 10) //returns first 10 matches as an object
         },
-        onUpdate: (results, selectedIndex) => { //this will later update the song preview thingy
-            if (selectedIndex > -1) {
-                updatePreview(results[selectedIndex], false)
-            }
+        onUpdate: (results, selectedIndex) => { 
+            if (selectedIndex > -1) { updatePreview(results[selectedIndex], false) } //update the song preview
         },
         onSubmit: result => { //final pick
-            updatePreview(result, false)
-            document.getElementById("command-line-input").value = ''
-            addSong(result)
+            updatePreview(result, false) //update preview
+            document.getElementById("command-line-input").value = '' //clear the input
+            addSong(result) //add the song to current playlist
         },
         autoSelect: true,
         getResultValue: result => {
@@ -239,17 +239,21 @@ async function addSong(songobj) {
     songElem.innerHTML = `
     <div class="songitem-cover-placeholder" ></div>
     <div class="songitem-cover cover-${id}" ></div>
-    <div class="songitem-title">${tag.title}</div>
-    <div class="songitem-aa"><span class="songitem-artist">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album">${tag.album}</span></div>
+    <div class="songitem-title" title="${utils.fixQuotes(tag.title)}">${tag.title}</div>
+    <div class="songitem-aa">
+        <span class="songitem-artist" title="${utils.fixQuotes(tag.artist)}">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(tag.album)}">${tag.album}</span>
+    </div>
+    <div class="songitem-more"><i class="material-icons">more_vert</i></div>
     <div class="songitem-filename" hidden>${songobj.filename}</div>
     `
-    document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
     document.getElementById("playlist-bar").appendChild(songElem)
-    
+    document.getElementById("imgsrc").innerHTML += `.cover-${id} {background-image: url('${tag.cover}')}`
+
     songobj.tag.cover = ""
     currPlaylist.push(songobj)
     console.log(currPlaylist)
-
+    
+    
     
 }
 
@@ -335,7 +339,7 @@ async function generateM3U(folder, useEXTINF) {
 //read the file and get it's metadata
 async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
-    //console.log("metadata: ",metadata)
+    console.log("metadata: ",metadata)
 
     const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
@@ -347,10 +351,15 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
         var cover = ""
         if (pic !== undefined) {
             cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
+
+            let frmt = pic.format.replaceAll("image/", "")
+            fs.writeFileSync(`covers${slash}cover1.${frmt}`, pic.data)
         }
     }
-    
 
+   
+
+    
     //console.log(extinf)
     if (returnObj == true) {
         return {artist, title, album, duration, cover, extinf}
@@ -392,6 +401,7 @@ async function fetchAllSongs() {
 
         allSongs = songs
 
+        utils.clearFolder("./covers")
         setupAutocomplete()
     } else {
         document.getElementById("input-placeholder").innerHTML = "No songs found in this folder, check settings"
