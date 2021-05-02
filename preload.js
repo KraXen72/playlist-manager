@@ -31,6 +31,17 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prg').addEventListener("click", purgePlaylists)
     document.getElementById('new').addEventListener("click", newPlaylist)
     document.getElementById('cancel').addEventListener("click", discardPlaylist)
+
+    document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
+        if(e.which == 9){
+            let song = allSongs[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] //get the song index from the index attribute
+            console.log(song)
+            e.target.value = ""
+            e.target.focus()
+            updatePreview(song, false)
+            addSong(song)
+        }
+    })
 })
 
 //select main dir
@@ -80,7 +91,7 @@ function setupAutocomplete() {
           }).slice(0, 10) //returns first 10 matches as an object
         },
         onUpdate: (results, selectedIndex) => { 
-            if (selectedIndex > -1) { updatePreview(results[selectedIndex], false) } //update the song preview
+            if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
         },
         onSubmit: result => { //final pick
             updatePreview(result, false) //update preview
@@ -94,7 +105,7 @@ function setupAutocomplete() {
             let fix = splitarr.slice("0", "-1")
             let final = fix.join(".")
 
-            return final
+            return `<span index="${allSongs.indexOf(result)}">${final}</span>`
         } //show the filename in the result
       })  
 }
@@ -291,6 +302,8 @@ async function addSong(songobj) {
 
     songElem.appendChild(remElem)
     document.getElementById("playlist-bar").appendChild(songElem)
+
+    //this briefly selects the image to update it because some images are wierd and don't render on their own
     setTimeout(() => {
         document.getElementById("command-line-input").blur()
         var s = window.getSelection()
