@@ -253,6 +253,7 @@ async function discardPlaylist() {
             utils.clearFolder("./covers")
             document.getElementById("playlist-bar").innerHTML = ""
             currPlaylist = []
+            document.getElementById("song-preview").style.visibility = "hidden"
         }
     }
 }
