@@ -33,6 +33,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('settings').addEventListener("click", initSettings)
     document.getElementById('prg').addEventListener("click", purgePlaylists)
     document.getElementById('new').addEventListener("click", newPlaylist)
+    document.getElementById('cancel').addEventListener("click", discardPlaylist)
 })
 
 //select main dir
@@ -41,23 +42,32 @@ async function selectfolder(mouseevent, inputconfig) {
         pick = await dialog.showOpenDialog({properties: ['openDirectory']})
         console.log(pick)
         if (pick.canceled == false) {
-            console.log("didn't cancel")
-            config.maindir = pick.filePaths[0]
-            utils.saveConfig("./config.json", config)
-
-            document.getElementById("selected-folder").innerText = utils.shortenFilename(config.maindir.toString(), 40)
-            document.getElementById("gen").removeAttribute("disabled")
-            document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
-            fetchAllSongs()
+            //we need to reload the app when picking a new folder. this checks if user wants to proceed or not
+            if (currPlaylist.length > 0) {
+                let msgc = await dialog.showMessageBoxSync({
+                    message: "selecting a new main directory clears your current playlist. do you wish to proceed?",
+                    type: "question",
+                    buttons: ["Discard playlist and Proceed", "Cancel"],
+                    noLink: true
+                })
+                if (msgc == 0) {
+                    config.maindir = pick.filePaths[0]
+                    utils.saveConfig("./config.json", config)
+                    window.location.reload()
+                }
+            } else { //if user didn't make a playlist then just reload without asking
+                config.maindir = pick.filePaths[0]
+                utils.saveConfig("./config.json", config)
+                window.location.reload() 
+            } 
         } 
     } else { //loaded from config
         config.maindir = inputconfig.maindir
-
         document.getElementById("selected-folder").innerText = utils.shortenFilename(config.maindir.toString(), 40)
         document.getElementById("gen").removeAttribute("disabled")
         document.getElementById("input-placeholder").innerHTML = "Getting all songs, plese wait..."
         fetchAllSongs()
-    } 
+    }
 }
 
 //autocomplete
@@ -222,6 +232,23 @@ function newPlaylist() {
     }
 }
 
+async function discardPlaylist() {
+    if (currPlaylist.length > 0) {
+        document.getElementById("command-line-input").blur()
+        let con = await dialog.showMessageBoxSync({
+            message: "do you wish to discard current playlist?",
+            type: "question",
+            buttons: ["Discard playlist", "Cancel"],
+            noLink: true
+        })
+        if (con == 0) {
+            utils.clearFolder("./covers")
+            document.getElementById("playlist-bar").innerHTML = ""
+            currPlaylist = []
+        }
+    }
+}
+
 async function addSong(songobj) {
     //console.log(songobj)
     let tag = await getEXTINF(songobj.fullpath, songobj.filename, true, false)
@@ -249,7 +276,7 @@ async function addSong(songobj) {
     
 
     remElem.classList.add("songitem-remove")
-    remElem.innerHTML = `<i class="material-icons">remove</i>`
+    remElem.innerHTML = `<i class="material-icons">close</i>`
     remElem.onclick = () => {
         for (let i = 0; i < currPlaylist.length; i++) {
             const song = currPlaylist[i];
@@ -258,7 +285,6 @@ async function addSong(songobj) {
                 break;
             }
         }
-        console.log(tag)
         fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)
         songElem.remove()
     }
