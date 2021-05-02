@@ -278,6 +278,7 @@ async function addSong(songobj) {
     remElem.classList.add("songitem-remove")
     remElem.innerHTML = `<i class="material-icons">close</i>`
     remElem.onclick = () => {
+        if (currPlaylist.length == 1) { document.getElementById("song-preview").style.visibility = "hidden" }
         for (let i = 0; i < currPlaylist.length; i++) {
             const song = currPlaylist[i];
             if (songobj.fullpath == song.fullpath) {

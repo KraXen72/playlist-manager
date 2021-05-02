@@ -107,6 +107,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
 }
 .songitem-title {
     grid-row: 1 / 2;
@@ -318,7 +319,7 @@ body {
 #song-preview {
     display: grid;
     grid-template-rows: 0.3fr 1.5fr 0fr 0.8fr 0fr 0.8fr 0.3fr;
-    grid-template-columns: 8rem auto;
+    grid-template-columns: 8rem 1fr;
     height: 8rem;
     width: 100%;
 }
@@ -337,9 +338,11 @@ body {
 #sp-title {
     grid-row: 2 / 3;
     grid-column:  2 / 3;
-    display: flex;
-    align-items: center;
     font-size: 1.3rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    padding-top: 0.5rem;
 }
 #sp-artist {
     grid-row: 4 / 5;
