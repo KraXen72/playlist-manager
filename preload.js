@@ -73,7 +73,7 @@ function setupAutocomplete() {
         search: input => {
           if (input.length < 1) { return [] }
           return allSongs.filter(song => { //find matches
-            const regex = RegExp(input, 'gi');
+            const regex = new RegExp(input, 'gi');
             return song.filename.match(regex)
           }).filter(song => { //filter out things already in playlist to avoid duplicates
             for (let i = 0; i < currPlaylist.length; i++) {if (song.filename == currPlaylist[i].filename) {return false} };return true
@@ -262,9 +262,9 @@ async function addSong(songobj) {
 
     songElem.className = "songitem"
     songElem.innerHTML = `
-    <div class="songitem-cover-placeholder" ></div>
     <div class="songitem-cover-wrap">
-        <img class="songitem-cover cover-${id}" src="covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}" onerror = "this.src = 'placeholder.png'"></img>
+        <div class="songitem-cover-placeholder"></div>
+        <img class="songitem-cover cover-${id}" draggable="false" src="covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}" style="background-image: url('covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}') " onerror = "this.src = 'placeholder.png'"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(tag.title)}">${tag.title}</div>
     <div class="songitem-aa">
@@ -291,6 +291,17 @@ async function addSong(songobj) {
 
     songElem.appendChild(remElem)
     document.getElementById("playlist-bar").appendChild(songElem)
+    setTimeout(() => {
+        document.getElementById("command-line-input").blur()
+        var s = window.getSelection()
+        var r = document.createRange();
+        s.removeAllRanges()
+        r.selectNode(songElem.querySelector(".songitem-cover-wrap"));
+        s.addRange(r)
+        
+        setTimeout(() => {s.removeAllRanges();setTimeout(() => {document.getElementById("command-line-input").focus()}, 3)}, 10)
+    }, 2)
+    
 
     songobj.tag.cover = ""
     songobj.tag.coverobj.data = ""
