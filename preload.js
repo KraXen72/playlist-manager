@@ -116,7 +116,7 @@ async function updatePreview(song, empty) {
             cover: ""
         }
     }
-    document.getElementById("sp-cover").style.backgroundImage = `url("${tag.cover}")`
+    document.getElementById("sp-cover").src = `${tag.cover}`
     document.getElementById("sp-title").textContent = tag.title
     document.getElementById("sp-artist").textContent = tag.artist
     document.getElementById("sp-album").textContent = tag.album
