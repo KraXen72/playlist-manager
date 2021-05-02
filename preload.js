@@ -19,9 +19,6 @@ console.log("config: ", config)
 var allSongs = []
 var currPlaylist = []
 var playlistName = "Untitled Playlist"
-var mainsearch = ""
-
-
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -266,7 +263,9 @@ async function addSong(songobj) {
     songElem.className = "songitem"
     songElem.innerHTML = `
     <div class="songitem-cover-placeholder" ></div>
-    <div class="songitem-cover cover-${id}" style="background-image: url('covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}')" ></div>
+    <div class="songitem-cover-wrap">
+        <img class="songitem-cover cover-${id}" src="covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}" onerror = "this.src = 'placeholder.png'"></img>
+    </div>
     <div class="songitem-title" title="${utils.fixQuotes(tag.title)}">${tag.title}</div>
     <div class="songitem-aa">
         <span class="songitem-artist" title="${utils.fixQuotes(tag.artist)}">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(tag.album)}">${tag.album}</span>

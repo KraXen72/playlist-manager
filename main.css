@@ -83,7 +83,7 @@ body {
     display: grid;
     grid-template: 1.5rem 1.5rem / 3rem minmax(0%, 100%) 1.5rem
 }
-.songitem-cover, .songitem-cover-placeholder {
+.songitem-cover-wrap, .songitem-cover-placeholder {
     height: auto;
     width: auto;
     box-sizing:border-box;
@@ -92,8 +92,12 @@ body {
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    background-image: url("placeholder.png");
     margin: 0.2rem;
+    border-radius: 0.3rem;
+}
+.songitem-cover {
+    width: 100%;
+    height: 100%;
     border-radius: 0.3rem;
 }
 .songitem-cover-placeholder {
