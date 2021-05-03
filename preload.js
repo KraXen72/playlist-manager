@@ -19,6 +19,7 @@ console.log("config: ", config)
 var allSongs = []
 var currPlaylist = []
 var playlistName = "Untitled Playlist"
+var specialMode = false
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -31,15 +32,13 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prg').addEventListener("click", purgePlaylists)
     document.getElementById('new').addEventListener("click", newPlaylist)
     document.getElementById('cancel').addEventListener("click", discardPlaylist)
+    document.getElementById('special').addEventListener("click", specialSearch)
 
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if(e.which == 9){
             let song = allSongs[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] //get the song index from the index attribute
-            console.log(song)
-            e.target.value = ""
+            autocompleteSubmit(song)
             e.target.focus()
-            updatePreview(song, false)
-            addSong(song)
         }
     })
 })
@@ -82,21 +81,28 @@ async function selectfolder(mouseevent, inputconfig) {
 function setupAutocomplete() {
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
-          if (input.length < 1) { return [] }
-          return allSongs.filter(song => { //find matches
+          if (input.length < 1 && specialMode == false) { return [] }
+          let res = allSongs.filter(song => { //find matches
             const regex = new RegExp(input, 'gi');
             return song.filename.match(regex)
           }).filter(song => { //filter out things already in playlist to avoid duplicates
             for (let i = 0; i < currPlaylist.length; i++) {if (song.filename == currPlaylist[i].filename) {return false} };return true
-          }).slice(0, 10) //returns first 10 matches as an object
+          })
+          if (specialMode == true) {
+              res = res.filter(song => {
+                const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
+                return song.filename.match(regex)
+              })
+              return res
+          } else {
+              return res.slice(0, 10)
+          }
         },
         onUpdate: (results, selectedIndex) => { 
             if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
         },
         onSubmit: result => { //final pick
-            updatePreview(result, false) //update preview
-            document.getElementById("command-line-input").value = '' //clear the input
-            addSong(result) //add the song to current playlist
+            autocompleteSubmit(result)
         },
         autoSelect: true,
         getResultValue: result => {
@@ -108,6 +114,25 @@ function setupAutocomplete() {
             return `<span index="${allSongs.indexOf(result)}">${final}</span>`
         } //show the filename in the result
       })  
+}
+
+//autocomplete onSubmit
+function autocompleteSubmit(result) {
+    updatePreview(result, false) //update preview
+    document.getElementById("command-line-input").value = '' //clear the input
+    addSong(result) //add the song to current playlist
+}
+
+function specialSearch() {
+    /*if (specialMode == true) {
+        document.getElementById("special").classList.add("matter-button-outlined")
+        document.getElementById("special").classList.remove("matter-button-contained")
+    } else {
+        document.getElementById("special").classList.remove("matter-button-outlined")
+        document.getElementById("special").classList.add("matter-button-contained")
+    }*/
+    document.getElementById("special").classList.toggle("btn-active")
+    specialMode = specialMode == true ? false : true
 }
 
 //preview

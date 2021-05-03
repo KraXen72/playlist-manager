@@ -17,10 +17,10 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
+    "@material-icons/font": "^1.0.8",
     "@trevoreyre/autocomplete-js": "^2.2.0",
     "electron": "^12.0.5",
     "fs-walk": "^0.0.2",
-    "material-design-icons": "^3.0.1",
     "music-metadata": "^7.8.4"
   }
 }

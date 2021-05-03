@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Hello World!</title>
     <link rel="stylesheet" href="matter.css">
-    <link rel="stylesheet" href="node_modules/material-design-icons/iconfont/material-icons.css">
+    <link rel="stylesheet" href="node_modules/@material-icons/font/css/all.css">
     <link rel="stylesheet" type="text/css" href="main.css">
     <style id="imgsrc"></style>
   </head>
@@ -22,13 +22,13 @@
       </div>
       <div id="playlist-title">
         <h4 id="titleh">Untitled Playlist</h4>
-        <button class="matter-button-outlined" id="new" title="rename playlist"><i class="material-icons">edit</i></button>
+        <button class="matter-button-outlined" id="new" title="rename playlist"><i class="material-icons-round md-edit"></i></button>
         <label class="matter-textfield-standard" id = "playlist-name-wrapper" hidden> 
           <input placeholder=" " id="playlist-name-input" maxlength="35">
           <span>Enter playlist name</span>
         </label>
-        <button class="matter-button-outlined" id="playlist-name-submit" style = "display: none" title = "rename"><i class="material-icons">check</i></button>
-        <button class="matter-button-outlined" id="playlist-name-cancel" style = "display: none" title = "cancel"><i class="material-icons">close</i></button>
+        <button class="matter-button-outlined" id="playlist-name-submit" style = "display: none" title = "rename"><i class="material-icons-round md-check"></i></button>
+        <button class="matter-button-outlined" id="playlist-name-cancel" style = "display: none" title = "cancel"><i class="material-icons-round md-close"></i></button>
       </div>
       <div id="playlist-bar-wrapper">
         <div id="playlist-scroll-wrap">
@@ -42,7 +42,13 @@
             <span class="noselect" id="input-placeholder">Select a folder first</span>
             <ul class="autocomplete-result-list"></ul>
           </label>
+          <button id = "special" class="matter-button-outlined mdiconbutton" title = "find songs with hard to type titles"><i class="material-icons-round md-emoji_symbols"></i></button>
+          <button id = "mode-toggle" class="matter-button-outlined mdiconbutton ml" title = "search by artist / search by title">
+            <i class="material-icons-round md-person_search"></i>
+            <i class="material-icons-round md-library_music" hidden></i>
+          </button>
         </div>
+        
       </div>
       <div id="main-screen">
         <div id="song-preview" style="visibility:hidden">
@@ -54,14 +60,14 @@
         </div>
       </div>
       <div id="button-bar">
-        <button class="matter-button-outlined mdiconbutton" id="save" title = "save playlist"><i class="material-icons">save</i></button>
-        <button class="matter-button-outlined mdiconbutton ml" id="cancel" title = "discard playlist"><i class="material-icons">close</i></button>
+        <button class="matter-button-outlined mdiconbutton" id="save" title = "save playlist"><i class="material-icons-round md-save"></i></button>
+        <button class="matter-button-outlined mdiconbutton ml" id="cancel" title = "discard playlist"><i class="material-icons-round md-close"></i></button>
         <span class="ml mr">|</span>
         <span id="select-folder">
           <button class="matter-button-outlined" id="folder-open" title = "Select directory with all your music">Select</button>
           <span id="selected-folder">No Folder Selected</span>
         </span>
-        <span class="material-icons" id="settings" title="settings">settings</span>
+        <span class="material-icons-round md-settings" id="settings" title="settings"></span>
       </div>
     </div>
     <div id="settings-body" hidden>
