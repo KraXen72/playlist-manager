@@ -17,8 +17,13 @@ var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
 
 var allSongs = []
+var allPlaylists = []
 var currPlaylist = []
+
 var playlistName = "Untitled Playlist"
+var lastPlaylistName = "" //so we don't have to prompt to save every time
+var savePath = ""
+
 var specialMode = false
 
 /* ui and other handling */
@@ -27,12 +32,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (config.maindir !== "") {selectfolder(null, config)}
 
     document.getElementById("folder-open").addEventListener("click", selectfolder)
-    document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('settings').addEventListener("click", initSettings)
+    document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('prg').addEventListener("click", purgePlaylists)
     document.getElementById('new').addEventListener("click", newPlaylist)
-    document.getElementById('cancel').addEventListener("click", discardPlaylist)
     document.getElementById('special').addEventListener("click", specialSearch)
+    document.getElementById('cancel').addEventListener("click", discardPlaylist)
+    document.getElementById('save').addEventListener("click", savePlaylistPrompt)
 
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if(e.which == 9){
@@ -78,6 +84,8 @@ async function selectfolder(mouseevent, inputconfig) {
 }
 
 //autocomplete
+
+//autocomplete
 function setupAutocomplete() {
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
@@ -115,45 +123,40 @@ function setupAutocomplete() {
         } //show the filename in the result
       })  
 }
-
 //autocomplete onSubmit
 function autocompleteSubmit(result) {
     updatePreview(result, false) //update preview
     document.getElementById("command-line-input").value = '' //clear the input
     addSong(result) //add the song to current playlist
 }
-
+//special serach
 function specialSearch() {
-    /*if (specialMode == true) {
-        document.getElementById("special").classList.add("matter-button-outlined")
-        document.getElementById("special").classList.remove("matter-button-contained")
-    } else {
-        document.getElementById("special").classList.remove("matter-button-outlined")
-        document.getElementById("special").classList.add("matter-button-contained")
-    }*/
     document.getElementById("special").classList.toggle("btn-active")
     specialMode = specialMode == true ? false : true
 }
 
 //preview
 async function updatePreview(song, empty) { 
+    let index = document.getElementById("song-preview").getAttribute("index")
     let tag = {} //artist, title, album, duration, cover, extinf, coverobj
+    let update = true //if we should update
     if (empty == false) {
         if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
-        tag = await getEXTINF(song.fullpath, song.filename, true, false)
-    } else {
-        tag = {
-            artist: "",
-            title: "",
-            album: "",
-            cover: ""
+        if (song.index !== index) {
+            tag = await getEXTINF(song.fullpath, song.filename, true, false)
+            document.getElementById("song-preview").setAttribute("index", song.index.toString())
+        } else { //its the same song
+            update = false
         }
-    }
-    document.getElementById("sp-cover").src = `${tag.cover}`
-    document.getElementById("sp-title").textContent = tag.title
-    document.getElementById("sp-artist").textContent = tag.artist
-    document.getElementById("sp-album").textContent = tag.album
+        
+    } else { tag = { artist: "", title: "", album: "", cover: "" } } //just clear the preview
 
+    if (update == true) {
+        document.getElementById("sp-cover").src = `${tag.cover}`
+        document.getElementById("sp-title").textContent = tag.title
+        document.getElementById("sp-artist").textContent = tag.artist
+        document.getElementById("sp-album").textContent = tag.album
+    }
 }
 
 //settings
@@ -265,10 +268,10 @@ function newPlaylist() {
     }
 }
 
-async function discardPlaylist() {
+function discardPlaylist() {
     if (currPlaylist.length > 0) {
         document.getElementById("command-line-input").blur()
-        let con = await dialog.showMessageBoxSync({
+        let con = dialog.showMessageBoxSync({
             message: "do you wish to discard current playlist?",
             type: "question",
             buttons: ["Discard playlist", "Cancel"],
@@ -281,6 +284,47 @@ async function discardPlaylist() {
             document.getElementById("song-preview").style.visibility = "hidden"
         }
     }
+}
+
+function savePlaylistPrompt() {
+    if (currPlaylist.length > 0) {
+        if (playlistName == "Untitled Playlist") {
+            dialog.showMessageBoxSync({"message": "Please name your playlist first"})
+        } else {
+            let opts = {
+                title: "Save Playlist",
+                defaultPath: `${config.maindir + slash + playlistName}.m3u`,
+                buttonLabel : "Save Playlist",
+                filters :[{name: 'Playlist', extensions: ['m3u']}]
+
+            }
+            if (playlistName == lastPlaylistName && savePath !== undefined) {
+                savePlaylist()
+            } else {
+                savePath = dialog.showSaveDialogSync(opts)
+                if (savePath !== undefined) { lastPlaylistName = playlistName; savePlaylist() }
+            }
+        }
+    }
+}
+
+function savePlaylist() { //actually save the playlist
+    let lines = getPlaylistContent()
+    fs.writeFileSync(savePath, lines.join("\n"))
+    
+    document.getElementById("save").classList.add("btn-active")
+    setTimeout(() => {document.getElementById("save").classList.remove("btn-active")}, 1000)
+}
+
+function getPlaylistContent() {
+    let play = []
+    play.push("#EXTM3U")
+    for (let i = 0; i < currPlaylist.length; i++) {
+        const song = currPlaylist[i];
+        play.push(song.tag.extinf)
+        play.push(song.relativepath)
+    }
+    return play
 }
 
 async function addSong(songobj) {
@@ -312,7 +356,7 @@ async function addSong(songobj) {
     
 
     remElem.classList.add("songitem-remove")
-    remElem.innerHTML = `<i class="material-icons">close</i>`
+    remElem.innerHTML = `<i class="material-icons-round md-close"></i>`
     remElem.onclick = () => {
         if (currPlaylist.length == 1) { document.getElementById("song-preview").style.visibility = "hidden" }
         for (let i = 0; i < currPlaylist.length; i++) {
@@ -380,11 +424,8 @@ async function gen() {
     //await generateM3U(alldirs[22].fullpath, true)
     console.log("done")
     genbutton.removeAttribute("disabled")
-    genbutton.style.color = "green"
-    setTimeout(() => {
-        genbutton.style.color = ""
-
-    }, 1000)
+    genbutton.classList.add("btn-active")
+    setTimeout(() => { genbutton.classList.remove("btn-active") }, 1000)
 }
 
 //generate a m3u for given folder
@@ -431,13 +472,15 @@ async function generateM3U(folder, useEXTINF) {
 //read the file and get it's metadata
 async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
-    //console.log("metadata: ",metadata)
+    metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number fo warnings
+    console.log("metadata: ",metadata)
 
     const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
     const album = metadata.common.album == undefined ? "Unknown Album" : metadata.common.album
     const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
+
     if (skipCovers == false) {
         const pic = mm.selectCover(metadata.common.picture)
         var cover = ""
@@ -468,7 +511,8 @@ async function fetchAllSongs() {
     genbutton.setAttribute("disabled", "true")
     let songs = []
     walk.filesSync(config.maindir, (basedir, filename) => {
-        songs.push({ filename, "fullpath": basedir + slash + filename})
+        let fp = basedir + slash + filename
+        songs.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
     })
     songs = songs.filter(song => {
         let splitarr = song.filename.split(".")
@@ -479,6 +523,11 @@ async function fetchAllSongs() {
             return false
         }
     })
+    for (let i = 0; i < songs.length; i++) {
+        const song = songs[i];
+        song["index"] = i.toString()
+        
+    }
     //read every song and add their tag to the big object
     /*
     for (let i = 0; i < songs.length; i++) {
@@ -501,7 +550,29 @@ async function fetchAllSongs() {
     } else {
         document.getElementById("input-placeholder").innerHTML = "No songs found in this folder, check settings"
     }
-    
+
+    //playlists
+    let playlists = []
+    walk.filesSync(config.maindir, (basedir, filename) => {
+        let fp = basedir + slash + filename
+        playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
+    })
+    playlists = playlists.filter(playlist => {
+        let splitarr = playlist.filename.split(".")
+        let ext = splitarr[splitarr.length - 1]
+        if (ext.toLowerCase() == "m3u" ) {
+            return true
+        } else {
+            return false
+        }
+    }).map(playlist => {
+        let lines = fs.readFileSync(playlist.fullpath, {"encoding": "utf-8"}).split("\n").filter(line => { if (line == "#EXTM3U" || line.includes("#EXTINF:")) { return false } else { return true } })
+        //filter out extm3u stuff
+
+        playlist.songs = lines
+        return playlist
+    })
+    console.log(playlists)
 }
 
 //delete all generated playlists
@@ -536,8 +607,8 @@ function purgePlaylists() {
                 fs.unlinkSync(p, (err) => console.log(err))
             })
             console.log("deleted sucessfully")
-            prgbtn.style.color = "green"
-            setTimeout(() => {prgbtn.style.color = ""}, 1000)
+            prgbtn.classList.add("btn-active")
+            setTimeout(() => {prgbtn.classList.remove("btn-active")}, 1000)
         } else (
             console.log("cancelled deleting")
         )
