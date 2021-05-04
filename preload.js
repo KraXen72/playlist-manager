@@ -431,9 +431,12 @@ async function gen() {
 //generate a m3u for given folder
 async function generateM3U(folder, useEXTINF) {
     const allsongs = []
+
     if (useEXTINF) {allsongs.push("#EXTM3U")}
     let relativedir = folder.split(slash)
     relativedir = relativedir[relativedir.length -1]
+    let appendname = ""
+    //console.log(relativedir)
 
     let walksongs = []
 
@@ -441,7 +444,6 @@ async function generateM3U(folder, useEXTINF) {
     walk.filesSync(folder, (basedir, filename) => {
         walksongs.push({basedir, filename})
     })
-
     //loop through all of them
     for (let i = 0; i < walksongs.length; i++) {
         const walksong = walksongs[i];
@@ -450,21 +452,25 @@ async function generateM3U(folder, useEXTINF) {
 
         song = filename
         extarr = song.split(".")
+        if (basedir.replace(folder).length > 0) { //stupid fucking piece of shit
+            appendname = basedir.replace(folder, "").replace(slash, "")
+            if (appendname.length > 0) {appendname += slash}
+        }
         //if the song extension is in allowed list
-        if (config.exts.includes(extarr[extarr.length - 1])) {   
+        if (config.exts.includes(extarr[extarr.length - 1])) {
             if (useEXTINF == true) {
                 //get info about the song
                 let extinf = await getEXTINF(basedir + slash + song, song, false, true)
                 allsongs.push(extinf.toString())
-                allsongs.push(filename.toString())
+                allsongs.push(`${appendname}${filename}`)
             } else {
-                allsongs.push(filename.toString())
+                allsongs.push(`${appendname}${filename}`)
             }
         }
     }
-
     //console.log(allsongs)
     let lines = allsongs.join("\n")
+    //console.log(lines)
 
     fs.writeFileSync(`${folder + slash + relativedir}.m3u`, lines)
 }
@@ -473,7 +479,7 @@ async function generateM3U(folder, useEXTINF) {
 async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
     metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number fo warnings
-    console.log("metadata: ",metadata)
+    //console.log("metadata: ",metadata)
 
     const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
@@ -495,9 +501,6 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
         }
     }
 
-   
-
-    
     //console.log(extinf)
     if (returnObj == true) {
         return {artist, title, album, duration, cover, extinf, coverobj}

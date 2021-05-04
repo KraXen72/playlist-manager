@@ -140,6 +140,9 @@ body {
     max-width: auto;
     align-items: center;
     margin-left: 0.2rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
     /*border-bottom: 1px solid #383838;*/
 }
 .songitem-album {
