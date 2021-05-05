@@ -12,6 +12,7 @@ const mm = require('music-metadata');
 const Autocomplete = require('@trevoreyre/autocomplete-js')
 
 const slash = process.platform === 'win32' ? "\\" : "/"
+const bull = `&#8226;`
 const specialRegex = new RegExp("[^\x00-\x7F]", "gm")
 var config = utils.initOrLoadConfig("./config.json")
 console.log("config: ", config)
@@ -19,6 +20,7 @@ console.log("config: ", config)
 var allSongs = []
 var allPlaylists = []
 var currPlaylist = []
+var songsAndPlaylists = []
 
 var playlistName = "Untitled Playlist"
 var lastPlaylistName = "" //so we don't have to prompt to save every time
@@ -42,7 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if(e.which == 9){
-            let song = allSongs[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] //get the song index from the index attribute
+            let song = songsAndPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] //get the song index from the index attribute
             autocompleteSubmit(song)
             e.target.focus()
         }
@@ -90,10 +92,10 @@ function setupAutocomplete() {
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
           if (input.length < 1 && specialMode == false) { return [] }
-          let res = allSongs.filter(song => { //find matches
-            const regex = new RegExp(input, 'gi');
-            return song.filename.match(regex)
-          }).filter(song => { //filter out things already in playlist to avoid duplicates
+          let res = songsAndPlaylists.filter(song => { //find matches
+            return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
+          }
+          ).filter(song => { //filter out things already in playlist to avoid duplicates
             for (let i = 0; i < currPlaylist.length; i++) {if (song.filename == currPlaylist[i].filename) {return false} };return true
           })
           if (specialMode == true) {
@@ -101,10 +103,11 @@ function setupAutocomplete() {
                 const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
                 return song.filename.match(regex)
               })
-              return res
-          } else {
-              return res.slice(0, 10)
           }
+          //sort the results so playlists are on top
+          res.sort((a, b) => { if (a.type == "playlist" && b.type == "song") { return -1 } else if (a.type == "song" && b.type == "playlist") { return 1 } else { return 0} })
+          
+          return specialMode == true ? res : res.slice(0, 10)
         },
         onUpdate: (results, selectedIndex) => { 
             if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
@@ -119,7 +122,7 @@ function setupAutocomplete() {
             let fix = splitarr.slice("0", "-1")
             let final = fix.join(".")
 
-            return `<span index="${allSongs.indexOf(result)}">${final}</span>`
+            return `<span index="${songsAndPlaylists.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
       })  
 }
@@ -138,13 +141,26 @@ function specialSearch() {
 //preview
 async function updatePreview(song, empty) { 
     let index = document.getElementById("song-preview").getAttribute("index")
+    let type = document.getElementById("song-preview").getAttribute("type")
     let tag = {} //artist, title, album, duration, cover, extinf, coverobj
     let update = true //if we should update
     if (empty == false) {
         if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
-        if (song.index !== index) {
-            tag = await getEXTINF(song.fullpath, song.filename, true, false)
+        if (song.index !== index || song.type !== type) {
+            if (song.type == "song") {
+                tag = await getEXTINF(song.fullpath, song.filename, true, false)
+            }  else if (song.type == "playlist") {
+                tag = {
+                    title: song.filename,
+                    artist: `Playlist ${bull} ${song.songs.length / 2} Songs`,
+                    album: utils.shortenFilename(song.fullpath, 60), 
+                    cover: "playlist.png"
+                } 
+            }
+            song.tag = tag
             document.getElementById("song-preview").setAttribute("index", song.index.toString())
+            document.getElementById("song-preview").setAttribute("type", song.type.toString())
+            
         } else { //its the same song
             update = false
         }
@@ -154,7 +170,7 @@ async function updatePreview(song, empty) {
     if (update == true) {
         document.getElementById("sp-cover").src = `${tag.cover}`
         document.getElementById("sp-title").textContent = tag.title
-        document.getElementById("sp-artist").textContent = tag.artist
+        document.getElementById("sp-artist").innerHTML = tag.artist
         document.getElementById("sp-album").textContent = tag.album
     }
 }
@@ -321,31 +337,49 @@ function getPlaylistContent() {
     play.push("#EXTM3U")
     for (let i = 0; i < currPlaylist.length; i++) {
         const song = currPlaylist[i];
-        play.push(song.tag.extinf)
-        play.push(song.relativepath)
+        if (song.type == "song") {
+            play.push(song.tag.extinf)
+            play.push(song.relativepath)
+        } else if (song.type == "playlist") {
+            let spl = song.relativepath.split(slash)
+            let relpath = spl.slice(0, spl.length-1).join(slash)
+            console.log(relpath)
+
+            for (let i = 0; i < song.songs.length; i++) {
+                const item = song.songs[i];
+                if (item.includes("#EXTINF")) {
+                    play.push(item)
+                } else {
+                    play.push([relpath, item].join(slash))
+                }
+            }
+        }
     }
     return play
 }
 
 async function addSong(songobj) {
-    //console.log(songobj)
-    let tag = await getEXTINF(songobj.fullpath, songobj.filename, true, false)
-    songobj.tag = tag
-    //console.log("tag: ", tag)
+    let tag = songobj.tag
 
     let songElem = document.createElement("div")
     let remElem = document.createElement("div")
     let id = Date.now().toString() 
 
-    if (tag.coverobj !== false) {
+    if (tag.coverobj !== false && songobj.type == "song") {
         fs.writeFileSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`, tag.coverobj.data)
+    }
+    let imgpath = ""
+    if (songobj.type == "song") {
+        imgpath = `covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
+    } else if (songobj.type == "playlist") {
+        imgpath = "playlist.png"
     }
 
     songElem.className = "songitem"
     songElem.innerHTML = `
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
-        <img class="songitem-cover cover-${id}" draggable="false" src="covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}" style="background-image: url('covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}') " onerror = "this.src = 'placeholder.png'"></img>
+        <img class="songitem-cover cover-${id}" draggable="false" src="${imgpath}" onerror = "this.src = 'placeholder.png'"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(tag.title)}">${tag.title}</div>
     <div class="songitem-aa">
@@ -353,7 +387,7 @@ async function addSong(songobj) {
     </div>
     <div class="songitem-filename" hidden>${songobj.filename}</div>
     `
-    
+    songElem.setAttribute("index", songobj.index.toString())
 
     remElem.classList.add("songitem-remove")
     remElem.innerHTML = `<i class="material-icons-round md-close"></i>`
@@ -366,8 +400,26 @@ async function addSong(songobj) {
                 break;
             }
         }
-        fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)
+        if (songobj.type == "song"){fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)}
         songElem.remove()
+    }
+    if (songobj.type == "playlist") { //add a print
+        remElem.style.gridColumn = " 4 / 5"
+
+        let printElem = document.createElement("div")
+        printElem.classList.add("songitem-remove")
+        printElem.innerHTML = `<i class="material-icons-round md-queue_music"></i>`
+        printElem.onclick = () => {
+            dialog.showMessageBoxSync({
+                message: `This playlist contains:\n${songobj.songs.filter(line => !line.includes("#EXTINF")).join("\n")}`,
+                type: "info",
+                noLink: true
+            })
+
+        }
+
+        songElem.appendChild(printElem)
+
     }
 
     songElem.appendChild(remElem)
@@ -385,9 +437,10 @@ async function addSong(songobj) {
         setTimeout(() => {s.removeAllRanges();setTimeout(() => {document.getElementById("command-line-input").focus()}, 3)}, 10)
     }, 2)
     
-
-    songobj.tag.cover = ""
-    songobj.tag.coverobj.data = ""
+    if (songobj.type == "song") {
+        songobj.tag.cover = ""
+        songobj.tag.coverobj.data = ""
+    }
 
     currPlaylist.push(songobj)
     console.log(currPlaylist)
@@ -521,6 +574,7 @@ async function fetchAllSongs() {
         let splitarr = song.filename.split(".")
         let ext = splitarr[splitarr.length - 1]
         if (config.exts.includes(ext.toLowerCase()) ) {
+            song["type"] = "song"
             return true
         } else {
             return false
@@ -528,8 +582,7 @@ async function fetchAllSongs() {
     })
     for (let i = 0; i < songs.length; i++) {
         const song = songs[i];
-        song["index"] = i.toString()
-        
+        song["index"] = i.toString() 
     }
     //read every song and add their tag to the big object
     /*
@@ -569,13 +622,23 @@ async function fetchAllSongs() {
             return false
         }
     }).map(playlist => {
-        let lines = fs.readFileSync(playlist.fullpath, {"encoding": "utf-8"}).split("\n").filter(line => { if (line == "#EXTM3U" || line.includes("#EXTINF:")) { return false } else { return true } })
+        let lines = fs.readFileSync(playlist.fullpath, {"encoding": "utf-8"}).split("\n").filter(line => { if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } })
         //filter out extm3u stuff
 
         playlist.songs = lines
+        playlist["type"] = "playlist"
         return playlist
     })
-    console.log(playlists)
+    for (let i = 0; i < playlists.length; i++) {
+        const playlist = playlists[i];
+        playlist["index"] = i.toString()
+    }
+    allPlaylists = playlists
+    //console.log(playlists)
+
+    //combined
+    songsAndPlaylists = [...songs, ...playlists]
+    console.log(songsAndPlaylists)
 }
 
 //delete all generated playlists
