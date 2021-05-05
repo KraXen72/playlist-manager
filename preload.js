@@ -400,6 +400,9 @@ async function addSong(songobj) {
                 break;
             }
         }
+        if (currPlaylist.length == 0) {
+            document.getElementById("openspan").style.display = "block"
+        }
         if (songobj.type == "song"){fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)}
         songElem.remove()
     }
@@ -415,14 +418,15 @@ async function addSong(songobj) {
                 type: "info",
                 noLink: true
             })
-
         }
-
         songElem.appendChild(printElem)
 
     }
 
     songElem.appendChild(remElem)
+    if (currPlaylist.length == 0) {
+        document.getElementById("openspan").style.display = "none"
+    }
     document.getElementById("playlist-bar").appendChild(songElem)
 
     //this briefly selects the image to update it because some images are wierd and don't render on their own
