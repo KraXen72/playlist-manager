@@ -436,6 +436,36 @@ body {
     }
 }
 
+.hr-text {
+    line-height: 1em;
+    position: relative;
+    outline: 0;
+    border: 0;
+    color: black;
+    text-align: center;
+    height: 1.5rem;
+    opacity: .5;
+    margin: 0.3rem;
+}
+.hr-text:before {
+    content: '';
+    background: var(--text);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+}
+.hr-text:after {
+    content: attr(data-content);
+    position: relative;
+    display: inline-block;
+    color: black;
+    padding: 0 .5em;
+    line-height: 1.5em;
+    color: var(--text);
+    background-color: var(--bg-primary);
+}
   
 /*small extract from w3 css*/
 html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
