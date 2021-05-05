@@ -295,10 +295,12 @@ function discardPlaylist() {
         })
         if (con == 0) {
             utils.clearFolder("./covers")
-            document.getElementById("playlist-bar").innerHTML = ""
+            document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
             currPlaylist = []
             document.getElementById("song-preview").style.visibility = "hidden"
+            document.getElementById("openspan").style.display = "block"
         }
+        
     }
 }
 
