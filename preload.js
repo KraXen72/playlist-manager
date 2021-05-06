@@ -34,20 +34,23 @@ var specialMode = false
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
     if (config.maindir !== "") {selectfolder(null, config)}
-
-    document.getElementById("folder-open").addEventListener("click", selectfolder)
-    document.getElementById('settings').addEventListener("click", initSettings)
-    document.getElementById("gen").addEventListener("click",gen)
-    document.getElementById('prg').addEventListener("click", purgePlaylists)
-    document.getElementById('new').addEventListener("click", newPlaylist)
-    document.getElementById('special').addEventListener("click", specialSearch)
+    //bottom bar
     document.getElementById('cancel').addEventListener("click", discardPlaylistPrompt)
     document.getElementById('save').addEventListener("click", savePlaylistPrompt)
-
+    document.getElementById("folder-open").addEventListener("click", selectfolder)
+    document.getElementById('settings').addEventListener("click", initSettings)
+    document.getElementById("printPlaylist").addEventListener("click", () => {console.log("currPlaylist: ", currPlaylist)})
+    //sidebar
+    document.getElementById("gen").addEventListener("click",gen)
+    document.getElementById('prg').addEventListener("click", purgePlaylists)
+    //playlist bar
+    document.getElementById('new').addEventListener("click", renamePlaylist)
+    //search
+    document.getElementById('special').addEventListener("click", specialSearch)
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if(e.which == 9){
             let song = songsAndPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] //get the song index from the index attribute
-            autocompleteSubmit(song)
+            autocompleteSubmit(song, true)
             e.target.focus()
         }
     })
@@ -115,7 +118,7 @@ function setupAutocomplete() {
             if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
         },
         onSubmit: result => { //final pick
-            autocompleteSubmit(result)
+            autocompleteSubmit(result, true)
         },
         autoSelect: true,
         getResultValue: result => {
@@ -129,10 +132,15 @@ function setupAutocomplete() {
       })  
 }
 //autocomplete onSubmit
-function autocompleteSubmit(result) {
-    updatePreview(result, false) //update preview
+async function autocompleteSubmit(result, refocus, update) {
+    if (update !== undefined) {
+        await updatePreview(result, false, update) //update preview without updating, basically just tag song
+    } else {
+        await updatePreview(result, false) //update preview
+    }
+    
     document.getElementById("command-line-input").value = '' //clear the input
-    addSong(result) //add the song to current playlist
+    await addSong(result, refocus) //add the song to current playlist
 }
 //special serach
 function specialSearch() {
@@ -141,13 +149,15 @@ function specialSearch() {
 }
 
 //preview
-async function updatePreview(song, empty) { 
+async function updatePreview(song, empty, updateOverride) { 
     let index = document.getElementById("song-preview").getAttribute("index")
     let type = document.getElementById("song-preview").getAttribute("type")
     let tag = {} //artist, title, album, duration, cover, extinf, coverobj
     let update = true //if we should update
+    if (updateOverride !== undefined) {
+        update = updateOverride
+    }
     if (empty == false) {
-        if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
         if (song.index !== index || song.type !== type) {
             if (song.type == "song") {
                 tag = await getEXTINF(song.fullpath, song.filename, true, false)
@@ -170,6 +180,7 @@ async function updatePreview(song, empty) {
     } else { tag = { artist: "", title: "", album: "", cover: "" } } //just clear the preview
 
     if (update == true) {
+        if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
         document.getElementById("sp-cover").src = `${tag.cover}`
         document.getElementById("sp-title").textContent = tag.title
         document.getElementById("sp-artist").innerHTML = tag.artist
@@ -245,7 +256,7 @@ async function pickFolderAndFillInput(inputid) {
 
 /*new playlist*/
 
-function newPlaylist() {
+function renamePlaylist() {
     let newbtn = document.getElementById("new")
     let titleh = document.getElementById("titleh")
     let inp = document.getElementById("playlist-name-input")
@@ -367,7 +378,7 @@ function getPlaylistContent() {
 }
 
 //add a song to the current playlist
-async function addSong(songobj) {
+async function addSong(songobj, refocus) {
     let tag = songobj.tag
 
     let songElem = document.createElement("div")
@@ -437,7 +448,7 @@ async function addSong(songobj) {
     document.getElementById("playlist-bar").appendChild(songElem)
 
     //this briefly selects the image to update it because some images are wierd and don't render on their own
-    setTimeout(() => {
+    setTimeout((refocus) => {
         document.getElementById("command-line-input").blur()
         var s = window.getSelection()
         var r = document.createRange();
@@ -445,7 +456,11 @@ async function addSong(songobj) {
         r.selectNode(songElem.querySelector(".songitem-cover-wrap"));
         s.addRange(r)
         
-        setTimeout(() => {s.removeAllRanges();setTimeout(() => {document.getElementById("command-line-input").focus()}, 3)}, 10)
+        setTimeout((refocus) => {s.removeAllRanges();setTimeout((refocus) => {
+            if (refocus == true) {
+                document.getElementById("command-line-input").focus()
+            }
+        }, 3)}, 10)
     }, 2)
     
     if (songobj.type == "song") {
@@ -454,7 +469,6 @@ async function addSong(songobj) {
     }
 
     currPlaylist.push(songobj)
-    console.log(currPlaylist)
 }
 //return the innerhtml for a songitem element
 function generateSongitem(val) {
@@ -703,19 +717,31 @@ async function fetchAllSongs() {
 
         editElem.classList.add("songitem-remove")
         editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
-        editElem.onclick = () => {
+        editElem.onclick = async () => {
             console.log(playlist)
-            let con = dialog.showMessageBoxSync({
-                message: `do you wish to discard current playlist and load '${playlist.filename}'?`,
-                type: "question",
-                buttons: [`Discard playlist and Load '${playlist.filename}'`, "Cancel"],
-                noLink: true
-            })
+            let con = -1
+            if (currPlaylist.length == 0) {
+                con = 0
+            } else {
+                con = dialog.showMessageBoxSync({
+                    message: `do you wish to discard current playlist and load '${playlist.filename}'?`,
+                    type: "question",
+                    buttons: [`Discard playlist and Load '${playlist.filename}'`, "Cancel"],
+                    noLink: true
+                })
+            }
             if (con == 0) {
                 discardPlaylist()
                 let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
                 for (let i = 0; i < onlysongs.length; i++) {
                     const song = onlysongs[i];
+                    for (let j = 0; j < songsAndPlaylists.length; j++) {
+                        const compsong = songsAndPlaylists[j];
+                        if (compsong.relativepath == song) {
+                            await autocompleteSubmit(compsong, false, false)
+                            break;
+                        }
+                    }
                     //for loop find a song, push to currPlaylist and break from for loop
                 }
 
@@ -727,7 +753,7 @@ async function fetchAllSongs() {
     })
     if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
 
-    console.log(editablePlaylists)
+    //console.log(editablePlaylists)
 }
 
 //delete all generated playlists
