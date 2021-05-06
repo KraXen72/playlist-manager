@@ -19,12 +19,14 @@ console.log("config: ", config)
 
 var allSongs = []
 var allPlaylists = []
+
 var currPlaylist = []
+var editablePlaylists = []
 var songsAndPlaylists = []
 
 var playlistName = "Untitled Playlist"
 var lastPlaylistName = "" //so we don't have to prompt to save every time
-var savePath = ""
+var savePath = "" 
 
 var specialMode = false
 
@@ -39,7 +41,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prg').addEventListener("click", purgePlaylists)
     document.getElementById('new').addEventListener("click", newPlaylist)
     document.getElementById('special').addEventListener("click", specialSearch)
-    document.getElementById('cancel').addEventListener("click", discardPlaylist)
+    document.getElementById('cancel').addEventListener("click", discardPlaylistPrompt)
     document.getElementById('save').addEventListener("click", savePlaylistPrompt)
 
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
@@ -284,7 +286,7 @@ function newPlaylist() {
     }
 }
 
-function discardPlaylist() {
+function discardPlaylistPrompt() {
     if (currPlaylist.length > 0) {
         document.getElementById("command-line-input").blur()
         let con = dialog.showMessageBoxSync({
@@ -294,15 +296,19 @@ function discardPlaylist() {
             noLink: true
         })
         if (con == 0) {
-            utils.clearFolder("./covers")
-            document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
-            currPlaylist = []
-            document.getElementById("song-preview").style.visibility = "hidden"
-            document.getElementById("openspan").style.display = "block"
+            discardPlaylist()
         }
-        
     }
 }
+//discard the current playlist
+function discardPlaylist() {
+    utils.clearFolder("./covers")
+    document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
+    currPlaylist = []
+    document.getElementById("song-preview").style.visibility = "hidden"
+    document.getElementById("openspan").style.display = "block"
+}
+
 
 function savePlaylistPrompt() {
     if (currPlaylist.length > 0) {
@@ -345,7 +351,7 @@ function getPlaylistContent() {
         } else if (song.type == "playlist") {
             let spl = song.relativepath.split(slash)
             let relpath = spl.slice(0, spl.length-1).join(slash)
-            console.log(relpath)
+            ///console.log(relpath)
 
             for (let i = 0; i < song.songs.length; i++) {
                 const item = song.songs[i];
@@ -360,6 +366,7 @@ function getPlaylistContent() {
     return play
 }
 
+//add a song to the current playlist
 async function addSong(songobj) {
     let tag = songobj.tag
 
@@ -378,17 +385,15 @@ async function addSong(songobj) {
     }
 
     songElem.className = "songitem"
-    songElem.innerHTML = `
-    <div class="songitem-cover-wrap">
-        <div class="songitem-cover-placeholder"></div>
-        <img class="songitem-cover cover-${id}" draggable="false" src="${imgpath}" onerror = "this.src = 'placeholder.png'"></img>
-    </div>
-    <div class="songitem-title" title="${utils.fixQuotes(tag.title)}">${tag.title}</div>
-    <div class="songitem-aa">
-        <span class="songitem-artist" title="${utils.fixQuotes(tag.artist)}">${tag.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(tag.album)}">${tag.album}</span>
-    </div>
-    <div class="songitem-filename" hidden>${songobj.filename}</div>
-    `
+    let siOptions = {
+        coverid: id,
+        coversrc: imgpath,
+        title: tag.title,
+        artist: tag.artist,
+        album: tag.album,
+        filename: songobj.filename
+    }
+    songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index.toString())
 
     remElem.classList.add("songitem-remove")
@@ -450,6 +455,20 @@ async function addSong(songobj) {
 
     currPlaylist.push(songobj)
     console.log(currPlaylist)
+}
+//return the innerhtml for a songitem element
+function generateSongitem(val) {
+    return `
+    <div class="songitem-cover-wrap">
+        <div class="songitem-cover-placeholder" style = "${val.coversrc == "" ? "display: none": ""}"></div>
+        <img class="songitem-cover cover-${val.coverid}" draggable="false" src="${val.coversrc}" onerror = "this.src = 'placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
+    </div>
+    <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${val.title}</div>
+    <div class="songitem-aa">
+        <span class="songitem-artist" title="${utils.fixQuotes(val.artist)}">${val.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(val.album)}">${val.album}</span>
+    </div>
+    <div class="songitem-filename" hidden>${val.filename}</div>
+    `
 }
 
 /*playlist handling - file manipulation etc*/
@@ -600,7 +619,7 @@ async function fetchAllSongs() {
         } 
     }*/
     if (songs.length > 0) {
-        console.log(songs)
+        //console.log(songs)
         document.getElementById("command-line-input").removeAttribute("disabled")
         document.getElementById("input-placeholder").innerHTML = "Start typing a name of a song..."
         genbutton.removeAttribute("disabled")
@@ -614,7 +633,7 @@ async function fetchAllSongs() {
     }
 
     //playlists
-    let playlists = []
+    playlists = []
     walk.filesSync(config.maindir, (basedir, filename) => {
         let fp = basedir + slash + filename
         playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
@@ -633,6 +652,12 @@ async function fetchAllSongs() {
 
         playlist.songs = lines
         playlist["type"] = "playlist"
+        playlist.tag = {
+            title: playlist.filename,
+            artist: `Playlist ${bull} ${playlist.songs.length / 2} Songs`,
+            album: utils.shortenFilename(playlist.fullpath, 60), 
+            cover: "playlist.png"
+        } 
         return playlist
     })
     for (let i = 0; i < playlists.length; i++) {
@@ -645,6 +670,64 @@ async function fetchAllSongs() {
     //combined
     songsAndPlaylists = [...songs, ...playlists]
     console.log(songsAndPlaylists)
+
+    //created playlists
+    editablePlaylists = fs.readdirSync(config.maindir).filter( //fetch teh maindir for user created playlists
+        item => fs.lstatSync(config.maindir + slash + item).isFile()
+    ).filter(item => { //filter out anything other than m3u
+        let sa = item.split(".")
+        return sa[sa.length-1].toLowerCase() == "m3u"
+    }).map(item => { //fetch the playlist data from big songAndPlaylists object
+        let fp = config.maindir + slash + item
+        let p = {}
+        for (let i = 0; i < songsAndPlaylists.length; i++) {
+            const cp = songsAndPlaylists[i];
+            if (cp.fullpath == fp) { p = cp; break; }
+        }
+        return p }
+    )
+    editablePlaylists.forEach(playlist => { //make a songitem for each playlist
+        let pElem = document.createElement("div")
+        let editElem = document.createElement("div")
+        pElem.classList.add("songitem")
+        let opts = {
+            coverid: "",
+            coversrc: "",
+            title: `<strong>${playlist.tag.title}</strong>`,
+            artist: `${playlist.songs.length / 2} Songs`,
+            album: playlist.tag.album,
+            filename: playlist.filename
+        }
+        pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) 1.5rem"
+        pElem.innerHTML = generateSongitem(opts)
+
+        editElem.classList.add("songitem-remove")
+        editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
+        editElem.onclick = () => {
+            console.log(playlist)
+            let con = dialog.showMessageBoxSync({
+                message: `do you wish to discard current playlist and load '${playlist.filename}'?`,
+                type: "question",
+                buttons: [`Discard playlist and Load '${playlist.filename}'`, "Cancel"],
+                noLink: true
+            })
+            if (con == 0) {
+                discardPlaylist()
+                let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
+                for (let i = 0; i < onlysongs.length; i++) {
+                    const song = onlysongs[i];
+                    //for loop find a song, push to currPlaylist and break from for loop
+                }
+
+            }
+            
+        }
+        pElem.appendChild(editElem)
+        document.getElementById("sidebar-playlists").appendChild(pElem)
+    })
+    if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
+
+    console.log(editablePlaylists)
 }
 
 //delete all generated playlists

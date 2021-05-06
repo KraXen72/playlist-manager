@@ -31,9 +31,9 @@ body {
     background-color: var(--bg-secondary);
     display: grid;
     grid-template-columns: 100%;
-    grid-gap: 0.5rem;
+    grid-gap: 0.3rem;
     padding: 0 0.8rem 0 0.8rem;
-    grid-template-rows: min-content auto;
+    grid-template-rows: min-content min-content auto;
 }
 #sidebar-buttons {
     width: 100%;
@@ -465,6 +465,9 @@ body {
     line-height: 1.5em;
     color: var(--text);
     background-color: var(--bg-primary);
+}
+.hr-text.hr-secondary:after {
+    background-color: var(--bg-secondary);
 }
   
 /*small extract from w3 css*/
