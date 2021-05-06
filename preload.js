@@ -735,7 +735,7 @@ async function fetchAllSongs() {
 
         editElem.classList.add("songitem-remove")
         editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
-        editElem.onclick = async () => {
+        editElem.onclick = async () => { //load playlist loadplaylist
             //console.log(playlist)
             let con = -1
             if (currPlaylist.length == 0) {
@@ -752,6 +752,8 @@ async function fetchAllSongs() {
                 discardPlaylist()
                 playlistName = utils.getExtOrFn(playlist.filename).fn
                 document.getElementById("titleh").textContent = playlistName
+                lastPlaylistName = playlistName
+                savePath = playlist.fullpath
                 let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
                 for (let i = 0; i < onlysongs.length; i++) {
                     const song = onlysongs[i];
@@ -778,9 +780,8 @@ async function fetchAllSongs() {
 //delete all generated playlists
 function purgePlaylists() {
     let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p))
-    console.log(playlists)
+
     if (playlists.length > 0) {
-        //console.log(playlists)
 
         let playliststr = playlists.map(playlist => playlist.filename).join(", ")
         let prgbtn = document.getElementById("prg")
