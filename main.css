@@ -186,8 +186,6 @@ body {
     flex-grow: 1;
     width: 100%;
 }
-
-
 #main-screen {
     grid-row: 2 / 3;
     grid-column: 3 / 4;
@@ -197,8 +195,6 @@ body {
     align-items: flex-end;
     padding: 1rem;
 }
-
-
 #command-line {
     grid-row: 1 / 2;
     grid-column: 3 / 4;
@@ -227,6 +223,21 @@ body {
     display: flex;
     align-items: center;
     height: min-content !important;
+}
+/*scrollbars*/
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.0);
+    border-radius: 10px;
+    margin: 0.5rem 0.1rem 0.5rem 0.1rem;
+    padding: 0rem 0.1rem 0rem 0.1rem;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #3f3533;
+    border-radius: 10px;
 }
 
 /*buttons*/
@@ -374,9 +385,6 @@ body {
     grid-row: 2 / 3;
     grid-column:  2 / 3;
     font-size: 1.3rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
     padding-top: 0.5rem;
 }
 #sp-artist {
@@ -390,6 +398,11 @@ body {
     grid-column: 2/ 3;
     display: flex;
     align-items: center;
+}
+#sp-title, #sp-artist, #sp-album {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 /*autocomplete*/
@@ -440,6 +453,7 @@ body {
     }
 }
 
+/*hr with text*/
 .hr-text {
     line-height: 1em;
     position: relative;

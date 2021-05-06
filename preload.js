@@ -325,17 +325,15 @@ function savePlaylistPrompt() {
         if (playlistName == "Untitled Playlist") {
             dialog.showMessageBoxSync({"message": "Please name your playlist first"})
         } else {
-            let opts = {
-                title: "Save Playlist",
-                defaultPath: `${config.maindir + slash + playlistName}.m3u`,
-                buttonLabel : "Save Playlist",
-                filters :[{name: 'Playlist', extensions: ['m3u']}]
-
-            }
             if (playlistName == lastPlaylistName && savePath !== undefined) {
                 savePlaylist()
             } else {
-                savePath = dialog.showSaveDialogSync(opts)
+                new Notification("playlist-manager", {
+                    body: `Your playlist has been saved to:\n${config.maindir + slash + playlistName}.m3u`,
+                    icon: "playlist.png",
+                    timeoutType: "default",
+                })
+                savePath = `${config.maindir + slash + playlistName}.m3u`
                 if (savePath !== undefined) { lastPlaylistName = playlistName; savePlaylist() }
             }
         }
