@@ -344,6 +344,8 @@ function savePlaylistPrompt() {
 
 function savePlaylist() { //actually save the playlist
     let lines = getPlaylistContent()
+    lines = removeDuplicatesFromPlaylist(lines)
+
     fs.writeFileSync(savePath, lines.join("\n"))
     
     document.getElementById("save").classList.add("btn-active")
@@ -374,6 +376,22 @@ function getPlaylistContent() {
         }
     }
     return play
+}
+
+function removeDuplicatesFromPlaylist(arr) {
+    let finalarr = [...arr]
+    let newarr = []
+    let allfilenames = [...arr].filter(line => !line.startsWith("#EXTINF:"))
+
+    for (let i = 0; i < allfilenames.length; i++) {// loop through all filenames
+        const fn = allfilenames[i];
+        if (!newarr.includes(fn)) {
+            newarr.push(fn)
+        } else {
+            finalarr.splice((i*2)-1, 2) //remove i*2(because extinfs) -1 so we target extinf, 2 items, so extinf + song
+        }
+    }
+    return finalarr
 }
 
 //add a song to the current playlist
@@ -450,7 +468,7 @@ async function addSong(songobj, refocus) {
 
 
     //this briefly selects the image to update it because some images are wierd and don't render on their own
-    setTimeout((refocus) => {
+    setTimeout(() => {
         document.getElementById("command-line-input").blur()
         var s = window.getSelection()
         var r = document.createRange();
@@ -458,12 +476,12 @@ async function addSong(songobj, refocus) {
         r.selectNode(songElem.querySelector(".songitem-cover-wrap"));
         s.addRange(r)
         
-        setTimeout((refocus) => {s.removeAllRanges();setTimeout((refocus) => {
-            if (refocus == true) {
-                document.getElementById("command-line-input").focus()
-            }
-        }, 3)}, 10)
-    }, 2)
+        setTimeout(() => {s.removeAllRanges();
+            setTimeout((refocus) => {
+                if (refocus == true) { document.getElementById("command-line-input").focus() }
+            }, 3, refocus)
+        }, 10, refocus)
+    }, 2, refocus)
     
     if (songobj.type == "song") {
         songobj.tag.cover = ""
@@ -759,19 +777,8 @@ async function fetchAllSongs() {
 
 //delete all generated playlists
 function purgePlaylists() {
-    let playlists = []
-
-    walk.filesSync(config.maindir, (basedir, filename) => {
-        playlists.push({ filename, "fullpath": basedir + slash + filename})
-    })
-    playlists = playlists.filter(playlist => {
-        let ext = utils.getExtOrFn(playlist.filename).ext
-        if (ext.toLowerCase() === "m3u" ) {
-            return true
-        } else {
-            return false
-        }
-    })
+    let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p))
+    console.log(playlists)
     if (playlists.length > 0) {
         //console.log(playlists)
 
