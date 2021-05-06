@@ -33,7 +33,7 @@ body {
     grid-template-columns: 100%;
     grid-gap: 0.3rem;
     padding: 0 0.8rem 0 0.8rem;
-    grid-template-rows: min-content min-content auto;
+    grid-template-rows: min-content min-content 1fr;
 }
 #sidebar-buttons {
     width: 100%;
@@ -43,6 +43,11 @@ body {
 }
 #sidebar-buttons button {
     width: 100%;
+}
+#sidebar-playlists {
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #title {
@@ -66,7 +71,6 @@ body {
     grid-template-columns: 100%;
     grid-auto-rows: min-content;
     background: transparent;
-
 }
 #playlist-scroll-wrap {
     border-top-left-radius: 1rem;

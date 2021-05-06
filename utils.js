@@ -49,4 +49,11 @@ function clearFolder(path) {
     })
 }
 
-module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder}
+function getExtOrFn(filename) {
+    let splitarr = filename.split(".")
+    let ext = splitarr[splitarr.length - 1]
+    let fn = splitarr.slice(0, splitarr.length - 1).join(".")
+    return {fn, ext}
+}
+
+module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder, getExtOrFn}

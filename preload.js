@@ -122,10 +122,7 @@ function setupAutocomplete() {
         },
         autoSelect: true,
         getResultValue: result => {
-            let fn = result.filename
-            let splitarr = fn.split(".")
-            let fix = splitarr.slice("0", "-1")
-            let final = fix.join(".")
+            let final = utils.getExtOrFn(result.filename).fn
 
             return `<span index="${songsAndPlaylists.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
@@ -318,6 +315,8 @@ function discardPlaylist() {
     currPlaylist = []
     document.getElementById("song-preview").style.visibility = "hidden"
     document.getElementById("openspan").style.display = "block"
+    playlistName = "Untitled Playlist"
+    document.getElementById("titleh").textContent = playlistName
 }
 
 
@@ -445,7 +444,10 @@ async function addSong(songobj, refocus) {
     if (currPlaylist.length == 0) {
         document.getElementById("openspan").style.display = "none"
     }
-    document.getElementById("playlist-bar").appendChild(songElem)
+    let pb = document.getElementById("playlist-bar")
+    pb.appendChild(songElem)
+    songElem.scrollIntoView()
+
 
     //this briefly selects the image to update it because some images are wierd and don't render on their own
     setTimeout((refocus) => {
@@ -543,13 +545,13 @@ async function generateM3U(folder, useEXTINF) {
         let basedir = walksong.basedir
 
         song = filename
-        extarr = song.split(".")
+        songext = utils.getExtOrFn(song).ext 
         if (basedir.replace(folder).length > 0) { //stupid fucking piece of shit
             appendname = basedir.replace(folder, "").replace(slash, "")
             if (appendname.length > 0) {appendname += slash}
         }
         //if the song extension is in allowed list
-        if (config.exts.includes(extarr[extarr.length - 1])) {
+        if (config.exts.includes(songext)) {
             if (useEXTINF == true) {
                 //get info about the song
                 let extinf = await getEXTINF(basedir + slash + song, song, false, true)
@@ -610,9 +612,8 @@ async function fetchAllSongs() {
         songs.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
     })
     songs = songs.filter(song => {
-        let splitarr = song.filename.split(".")
-        let ext = splitarr[splitarr.length - 1]
-        if (config.exts.includes(ext.toLowerCase()) ) {
+        let ext = utils.getExtOrFn(song.filename).ext
+        if (config.exts.includes(ext.toLowerCase(ext)) ) {
             song["type"] = "song"
             return true
         } else {
@@ -653,8 +654,7 @@ async function fetchAllSongs() {
         playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
     })
     playlists = playlists.filter(playlist => {
-        let splitarr = playlist.filename.split(".")
-        let ext = splitarr[splitarr.length - 1]
+        let ext = utils.getExtOrFn(playlist.filename).ext
         if (ext.toLowerCase() == "m3u" ) {
             return true
         } else {
@@ -689,8 +689,8 @@ async function fetchAllSongs() {
     editablePlaylists = fs.readdirSync(config.maindir).filter( //fetch teh maindir for user created playlists
         item => fs.lstatSync(config.maindir + slash + item).isFile()
     ).filter(item => { //filter out anything other than m3u
-        let sa = item.split(".")
-        return sa[sa.length-1].toLowerCase() == "m3u"
+        let ext = utils.getExtOrFn(item).ext
+        return ext.toLowerCase() == "m3u"
     }).map(item => { //fetch the playlist data from big songAndPlaylists object
         let fp = config.maindir + slash + item
         let p = {}
@@ -718,7 +718,7 @@ async function fetchAllSongs() {
         editElem.classList.add("songitem-remove")
         editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
         editElem.onclick = async () => {
-            console.log(playlist)
+            //console.log(playlist)
             let con = -1
             if (currPlaylist.length == 0) {
                 con = 0
@@ -732,9 +732,12 @@ async function fetchAllSongs() {
             }
             if (con == 0) {
                 discardPlaylist()
+                playlistName = utils.getExtOrFn(playlist.filename).fn
+                document.getElementById("titleh").textContent = playlistName
                 let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
                 for (let i = 0; i < onlysongs.length; i++) {
                     const song = onlysongs[i];
+                    //for loop find a song, push to currPlaylist and break from for loop
                     for (let j = 0; j < songsAndPlaylists.length; j++) {
                         const compsong = songsAndPlaylists[j];
                         if (compsong.relativepath == song) {
@@ -742,9 +745,7 @@ async function fetchAllSongs() {
                             break;
                         }
                     }
-                    //for loop find a song, push to currPlaylist and break from for loop
                 }
-
             }
             
         }
@@ -753,7 +754,7 @@ async function fetchAllSongs() {
     })
     if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
 
-    //console.log(editablePlaylists)
+    console.log(editablePlaylists)
 }
 
 //delete all generated playlists
@@ -764,8 +765,7 @@ function purgePlaylists() {
         playlists.push({ filename, "fullpath": basedir + slash + filename})
     })
     playlists = playlists.filter(playlist => {
-        let splitarr = playlist.filename.split(".")
-        let ext = splitarr[splitarr.length - 1]
+        let ext = utils.getExtOrFn(playlist.filename).ext
         if (ext.toLowerCase() === "m3u" ) {
             return true
         } else {
