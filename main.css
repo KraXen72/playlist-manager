@@ -15,7 +15,7 @@ body {
     display: grid;
     width: 100vw;
     height: 100vh;
-    grid-template: max-content 1fr max-content / minmax(15rem, 20%) minmax(18rem, 25%) auto;
+    grid-template: max-content 1fr max-content / minmax(18rem, 25%) minmax(18rem, 25%) 1fr;
 }
 .matter-textfield-outlined > input:focus, .matter-textfield-outlined > textarea:focus {
     border-top-color: transparent !important;

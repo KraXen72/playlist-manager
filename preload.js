@@ -203,7 +203,7 @@ async function updatePreview(song, empty, updateOverride) {
                 tag = {
                     title: song.filename,
                     artist: `Playlist ${bull} ${song.songs.length / 2} Songs`,
-                    album: utils.shortenFilename(song.fullpath, 60), 
+                    album: utils.shortenFilename(song.fullpath, 55), 
                     cover: "img/playlist.png"
                 } 
             }
@@ -777,6 +777,26 @@ async function fetchAllSongs() {
         pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) 1.5rem"
         pElem.innerHTML = generateSongitem(opts)
 
+		if (playlist.mode == "com") {
+			let regenElem = document.createElement("div")
+			regenElem.classList.add("songitem-remove")
+			regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
+			regenElem.onclick = async () => {
+				let currPlaylist_bak = [...currPlaylist]
+				discardPlaylist()
+				await gen()
+				await loadPlaylist(playlist, playlist.mode)
+				savePlaylist()
+				discardPlaylist()
+				if (autocompArr == "playlists"){document.getElementById("com").click()}
+				playlistName = lastPlaylistName
+				currPlaylist = [...currPlaylist_bak]
+			}
+
+			editElem.style.gridColumn = "4 / 5"
+			pElem.appendChild(regenElem)
+		}
+
         editElem.classList.add("songitem-remove")
         editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
         editElem.onclick = async () => { //load playlist loadplaylist
@@ -798,6 +818,7 @@ async function fetchAllSongs() {
             
         }
         pElem.appendChild(editElem)
+
         document.getElementById("sidebar-playlists").appendChild(pElem)
     })
     if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
