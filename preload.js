@@ -135,8 +135,6 @@ function setupAutocomplete(message) {
         } //show the filename in the result
       })
       mainsearch.destroy = () => {autocompleteDestroy(mainsearch)}
-      
-      console.log(mainsearch)
 }
 //autocomplete onSubmit
 async function autocompleteSubmit(result, refocus, update) {
@@ -316,7 +314,7 @@ function renamePlaylist() {
 
             sub.style.display = "none"
             canc.style.display = "none"
-            titleh.style.display = "block"
+            titleh.style.display = "-webkit-box"
             wrap.style.display = "none"
             sub.onclick = ""
             canc.onclick = ""
@@ -328,7 +326,7 @@ function renamePlaylist() {
     canc.onclick = () => {
         sub.style.display = "none"
         canc.style.display = "none"
-        titleh.style.display = "block"
+        titleh.style.display = "-webkit-box"
         wrap.style.display = "none"
         sub.onclick = ""
         canc.onclick = ""
@@ -761,6 +759,7 @@ async function fetchAllSongs() {
             const cp = songsAndPlaylists[i];
             if (cp.fullpath == fp) { p = cp; break; }
         }
+		p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
         return p }
     )
     editablePlaylists.forEach(playlist => { //make a songitem for each playlist
@@ -794,23 +793,7 @@ async function fetchAllSongs() {
                 })
             }
             if (con == 0) {
-                discardPlaylist()
-                playlistName = utils.getExtOrFn(playlist.filename).fn
-                document.getElementById("titleh").textContent = playlistName
-                lastPlaylistName = playlistName
-                savePath = playlist.fullpath
-                let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
-                for (let i = 0; i < onlysongs.length; i++) {
-                    const song = onlysongs[i];
-                    //for loop find a song, push to currPlaylist and break from for loop
-                    for (let j = 0; j < songsAndPlaylists.length; j++) {
-                        const compsong = songsAndPlaylists[j];
-                        if (compsong.relativepath == song) {
-                            await autocompleteSubmit(compsong, false, false)
-                            break;
-                        }
-                    }
-                }
+                loadPlaylist(playlist, playlist.mode)
             }
             
         }
@@ -820,6 +803,48 @@ async function fetchAllSongs() {
     if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
 
     console.log(editablePlaylists)
+}
+
+//load a playlist, "playlist" is an object, mode is new or com
+async function loadPlaylist(playlist, mode) {
+	discardPlaylist()
+	playlistName = utils.getExtOrFn(playlist.filename).fn
+	lastPlaylistName = playlistName
+	savePath = playlist.fullpath
+
+	let titleh = document.getElementById("titleh")
+
+	if (mode == "com") {
+		if (autocompArr == "both"){document.getElementById("com").click()} //turn on playlist only mode
+
+		let loadPlaylists = config.comPlaylists[playlist.fullpath] //array of playlists this is made of
+		for (let i = 0; i < loadPlaylists.length; i++) { //for each playlist we wanna add
+			const pl = loadPlaylists[i];
+			//for loop find the desired playlist, push to currPlaylist and break from for loop
+			for (let j = 0; j < allPlaylists.length; j++) {
+				const compp = allPlaylists[j];
+				if (compp.fullpath == pl.fullpath) {
+					await autocompleteSubmit(compp, false, false)
+					break;
+				}
+			}
+		}
+	} else {
+		let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
+		for (let i = 0; i < onlysongs.length; i++) {
+			const song = onlysongs[i];
+			//for loop find a song, push to currPlaylist and break from for loop
+			for (let j = 0; j < songsAndPlaylists.length; j++) {
+				const compsong = songsAndPlaylists[j];
+				if (compsong.relativepath == song) {
+					await autocompleteSubmit(compsong, false, false)
+					break;
+				}
+			}
+		}
+	}
+	playlistName = lastPlaylistName
+	titleh.textContent = lastPlaylistName
 }
 
 //delete all generated playlists
@@ -849,8 +874,6 @@ function purgePlaylists() {
     } else {
         alert("no playlists found, nothing deleted.")
     }
-
-   
 }
 
 //for @trevoreyre/autocomplete-js
@@ -874,6 +897,4 @@ function autocompleteDestroy(instance) {
     instance.renderResult = null
     //autocompleteDestroy(instance.core)
     instance.core = null
-
-    console.log(instance)
 }
