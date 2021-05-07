@@ -368,7 +368,9 @@ function savePlaylistPrompt() {
             dialog.showMessageBoxSync({"message": "Please name your playlist first"})
         } else {
 			if (autocompArr == 'playlists') {
-
+				let cPlaylist = currPlaylist.map(p => {return {"filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath}})
+				config.comPlaylists[`${config.maindir + slash + playlistName}.m3u`] = cPlaylist
+				utils.saveConfig("./config.json", config)
 			}
             if (playlistName == lastPlaylistName && savePath !== undefined) {
                 savePlaylist()
