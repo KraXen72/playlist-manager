@@ -100,8 +100,8 @@ function setupAutocomplete(message) {
     document.getElementById("input-placeholder").innerHTML = `Start typing a name of a ${message}...`
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
-          if (input.length < 1 && specialMode == false) { return [] }
-          let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
+          if (input.length < 1 && specialMode == false && autocompArr == "both") { return [] }
+          let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? [...allPlaylists].filter(p => !editablePlaylists.includes(p)) : []
           res = res.filter(song => { //find matches
             return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
           }
@@ -117,7 +117,8 @@ function setupAutocomplete(message) {
           //sort the results so playlists are on top
           res.sort((a, b) => { if (a.type == "playlist" && b.type == "song") { return -1 } else if (a.type == "song" && b.type == "playlist") { return 1 } else { return 0} })
           
-          return specialMode == true ? res : res.slice(0, 10)
+          //if specialmode or playlist only mode then return full results, otherwise first 10
+          return specialMode == true || autocompArr == "playlists" ? res : res.slice(0, 10)
         },
         onUpdate: (results, selectedIndex) => { 
             if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
@@ -128,7 +129,7 @@ function setupAutocomplete(message) {
         autoSelect: true,
         getResultValue: result => {
             let final = utils.getExtOrFn(result.filename).fn
-            let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
+            let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? [...allPlaylists].filter(p => !editablePlaylists.includes(p)) : []
 
             return `<span index="${res.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
@@ -205,7 +206,7 @@ async function updatePreview(song, empty, updateOverride) {
                     title: song.filename,
                     artist: `Playlist ${bull} ${song.songs.length / 2} Songs`,
                     album: utils.shortenFilename(song.fullpath, 60), 
-                    cover: "playlist.png"
+                    cover: "img/playlist.png"
                 } 
             }
             song.tag = tag
@@ -366,12 +367,15 @@ function savePlaylistPrompt() {
         if (playlistName == "Untitled Playlist") {
             dialog.showMessageBoxSync({"message": "Please name your playlist first"})
         } else {
+			if (autocompArr == 'playlists') {
+
+			}
             if (playlistName == lastPlaylistName && savePath !== undefined) {
                 savePlaylist()
             } else {
                 new Notification("playlist-manager", {
                     body: `Your playlist has been saved to:\n${config.maindir + slash + playlistName}.m3u`,
-                    icon: "playlist.png",
+                    icon: "img/playlist.png",
                     timeoutType: "default",
                 })
                 savePath = `${config.maindir + slash + playlistName}.m3u`
@@ -448,7 +452,7 @@ async function addSong(songobj, refocus) {
     if (songobj.type == "song") {
         imgpath = `covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
     } else if (songobj.type == "playlist") {
-        imgpath = "playlist.png"
+        imgpath = "img/playlist.png"
     }
 
     songElem.className = "songitem"
@@ -534,7 +538,7 @@ function generateSongitem(val) {
     return `
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder" style = "${val.coversrc == "" ? "display: none": ""}"></div>
-        <img class="songitem-cover cover-${val.coverid}" draggable="false" src="${val.coversrc}" onerror = "this.src = 'placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
+        <img class="songitem-cover cover-${val.coverid}" draggable="false" src="${val.coversrc}" onerror = "this.src = 'img/placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${val.title}</div>
     <div class="songitem-aa">
@@ -727,7 +731,7 @@ async function fetchAllSongs() {
             title: playlist.filename,
             artist: `Playlist ${bull} ${playlist.songs.length / 2} Songs`,
             album: utils.shortenFilename(playlist.fullpath, 60), 
-            cover: "playlist.png"
+            cover: "img/playlist.png"
         } 
         return playlist
     })
