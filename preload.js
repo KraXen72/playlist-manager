@@ -131,7 +131,7 @@ function setupAutocomplete(message) {
             let final = utils.getExtOrFn(result.filename).fn
             let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? [...allPlaylists].filter(p => !editablePlaylists.includes(p)) : []
 
-            return `<span index="${res.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
+            return `<span index="${res.indexOf(result)}">${final}${result.type == "playlist" && autocompArr == "both" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
       })
       mainsearch.destroy = () => {autocompleteDestroy(mainsearch)}
