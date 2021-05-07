@@ -460,13 +460,19 @@ body {
 .autocomplete-result[aria-selected=true] {
     background-color: rgba(165, 117, 98, 0.2)
 }
+.rotate {
+    animation-name: rotate;
+    animation-duration: 4000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
 
 @keyframes rotate {
     0% {
-        transform: translateY(-50%) rotate(0deg)
+        transform: rotate(0deg)
     }
     to {
-        transform: translateY(-50%) rotate(359deg)
+        transform: rotate(359deg)
     }
 }
 

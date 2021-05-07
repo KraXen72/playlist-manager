@@ -782,15 +782,19 @@ async function fetchAllSongs() {
 			regenElem.classList.add("songitem-remove")
 			regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
 			regenElem.onclick = async () => {
+				regenElem.classList.add("rotate")
 				let currPlaylist_bak = [...currPlaylist]
 				discardPlaylist()
 				await gen()
+				//fetch playlists again here
 				await loadPlaylist(playlist, playlist.mode)
 				savePlaylist()
 				discardPlaylist()
 				if (autocompArr == "playlists"){document.getElementById("com").click()}
 				playlistName = lastPlaylistName
 				currPlaylist = [...currPlaylist_bak]
+				regenElem.classList.remove("rotate")
+				//refresh sidebar here
 			}
 
 			editElem.style.gridColumn = "4 / 5"
