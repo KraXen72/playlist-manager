@@ -65,3 +65,5 @@ thanks to all the libraries used in this project:
 - [trevor eyre's autocomplete-js](https://www.npmjs.com/package/@trevoreyre/autocomplete-js), a vanilla js autocomplete library
 - [fs-walk](https://www.npmjs.com/package/fs-walk), recursive directory walking for nodejs
 - [music-metadata](https://www.npmjs.com/package/music-metadata), music file metadata parser for nodejs, supports any common audio and tagging format
+
+please report any bugs / feature requests in the issues
