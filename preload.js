@@ -27,6 +27,7 @@ var songsAndPlaylists = []
 var playlistName = "Untitled Playlist"
 var lastPlaylistName = "" //so we don't have to prompt to save every time
 var savePath = "" 
+var mainsearch
 
 var specialMode = false
 
@@ -126,7 +127,10 @@ function setupAutocomplete() {
 
             return `<span index="${songsAndPlaylists.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
-      })  
+      })
+      mainsearch.destroy = () => {autocompleteDestroy(mainsearch)}
+      
+      console.log(mainsearch)
 }
 //autocomplete onSubmit
 async function autocompleteSubmit(result, refocus, update) {
@@ -200,7 +204,6 @@ function initSettings() {
         fillSettingPills("settings-ign", config.ignore)
         document.getElementById('settings-ign-add').onclick = () => {addPill('settings-ign', 'settings-ign-input')}
         document.getElementById('settings-ign-pick').onclick = () => {pickFolderAndFillInput('settings-ign-input')}
-
     }
 }
 function closeSettings() {
@@ -804,4 +807,29 @@ function purgePlaylists() {
     }
 
    
+}
+
+//for @trevoreyre/autocomplete-js
+function autocompleteDestroy(instance) {
+    document.body.removeEventListener('click', instance.handleDocumentClick)
+    instance.input.removeEventListener('input', instance.core.handleInput)
+    instance.input.removeEventListener('keydown', instance.core.handleKeyDown)
+    instance.input.removeEventListener('focus', instance.core.handleFocus)
+    instance.input.removeEventListener('blur', instance.core.handleBlur)
+    instance.resultList.removeEventListener(
+        'mousedown',
+        instance.core.handleResultMouseDown
+    )
+    instance.resultList.removeEventListener('click', instance.core.handleResultClick)
+
+    instance.root = null
+    instance.input = null
+    instance.resultList = null
+    instance.getResultValue = null
+    instance.onUpdate = null
+    instance.renderResult = null
+    //autocompleteDestroy(instance.core)
+    instance.core = null
+
+    console.log(instance)
 }
