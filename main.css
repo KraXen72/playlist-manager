@@ -261,11 +261,22 @@ body {
     max-width: min-content;
     padding: 0px 8px 0px 8px !important;
 }
+.mdicontext {
+    display: flex;
+    justify-content:center;
+    align-items:center;
+}
 .ml {
     margin-left: .2rem
 }
 .mr {
     margin-right: .2rem
+}
+.fullwidth {
+    width: 100%
+}
+.flex-end {
+    justify-self: flex-end;
 }
 .btn-active {
     color: rgb(103, 165, 139);

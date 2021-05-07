@@ -27,9 +27,10 @@ var songsAndPlaylists = []
 var playlistName = "Untitled Playlist"
 var lastPlaylistName = "" //so we don't have to prompt to save every time
 var savePath = "" 
-var mainsearch
 
+var mainsearch
 var specialMode = false
+var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -44,6 +45,7 @@ window.addEventListener('DOMContentLoaded', () => {
     //sidebar
     document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('prg').addEventListener("click", purgePlaylists)
+    document.getElementById('com').addEventListener("click", playlistOnlyToggle)
     //playlist bar
     document.getElementById('new').addEventListener("click", renamePlaylist)
     //search
@@ -94,11 +96,13 @@ async function selectfolder(mouseevent, inputconfig) {
 //autocomplete
 
 //autocomplete
-function setupAutocomplete() {
+function setupAutocomplete(message) {
+    document.getElementById("input-placeholder").innerHTML = `Start typing a name of a ${message}...`
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
           if (input.length < 1 && specialMode == false) { return [] }
-          let res = songsAndPlaylists.filter(song => { //find matches
+          let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
+          res = res.filter(song => { //find matches
             return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
           }
           ).filter(song => { //filter out things already in playlist to avoid duplicates
@@ -124,8 +128,9 @@ function setupAutocomplete() {
         autoSelect: true,
         getResultValue: result => {
             let final = utils.getExtOrFn(result.filename).fn
+            let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
 
-            return `<span index="${songsAndPlaylists.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
+            return `<span index="${res.indexOf(result)}">${final}${result.type == "playlist" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
       })
       mainsearch.destroy = () => {autocompleteDestroy(mainsearch)}
@@ -147,6 +152,39 @@ async function autocompleteSubmit(result, refocus, update) {
 function specialSearch() {
     document.getElementById("special").classList.toggle("btn-active")
     specialMode = specialMode == true ? false : true
+}
+
+//playlist only mode
+function playlistOnlyToggle() {
+    let com = document.getElementById("com")
+    let con = -1
+    if (currPlaylist.length == 0) {
+        con = 0
+    } else {
+        let act = autocompArr == "both" ? "change to" : "exit from"
+        con = dialog.showMessageBoxSync({
+            message: `Do you wish to discard current playlist and ${act} Playlist only mode?`,
+            type: "question",
+            buttons: [`Discard playlist and ${act} Playlist only mode`, "Cancel"],
+            noLink: true
+        })
+    }
+    if (con == 0) {
+        discardPlaylist()
+        if (autocompArr == "both") {
+            com.classList.add("btn-active")
+
+            mainsearch.destroy()
+            autocompArr = "playlists"
+            setupAutocomplete("playlist")
+        } else {
+            com.classList.remove("btn-active")
+
+            mainsearch.destroy()
+            autocompArr = "both"
+            setupAutocomplete("song or playlist")
+        }
+    }
 }
 
 //preview
@@ -655,13 +693,13 @@ async function fetchAllSongs() {
     if (songs.length > 0) {
         //console.log(songs)
         document.getElementById("command-line-input").removeAttribute("disabled")
-        document.getElementById("input-placeholder").innerHTML = "Start typing a name of a song..."
         genbutton.removeAttribute("disabled")
 
         allSongs = songs
 
         utils.clearFolder("./covers")
-        setupAutocomplete()
+        autocompArr == "both"
+        setupAutocomplete("song or playlist")
     } else {
         document.getElementById("input-placeholder").innerHTML = "No songs found in this folder, check settings"
     }
