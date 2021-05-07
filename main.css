@@ -176,16 +176,19 @@ body {
     flex-grow: 1;
     text-align: center;
     margin-right: 0.5rem;
-    width: auto;
+    width: hidden;
     word-wrap: break-all;
     word-break: break-word;
-    line-height: 1.5rem ;
+    line-height: 1.6rem ;
 
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
+    overflow: auto;
     text-overflow: ellipsis;
+}
+#titleh::-webkit-scrollbar {
+    display: none !important;
 }
 #playlist-name-wrapper {
     margin-right: 0.5rem;
@@ -286,6 +289,9 @@ body {
 }
 .btn-active {
     color: rgb(103, 165, 139);
+}
+.btn-danger {
+    color: rgb(226, 76, 76);
 }
 
 /*settings*/

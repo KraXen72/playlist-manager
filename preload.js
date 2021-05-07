@@ -27,6 +27,7 @@ var songsAndPlaylists = []
 var playlistName = "Untitled Playlist"
 var lastPlaylistName = "" //so we don't have to prompt to save every time
 var savePath = "" 
+var unsavedChanges = false
 
 var mainsearch
 var specialMode = false
@@ -48,6 +49,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('com').addEventListener("click", playlistOnlyToggle)
     //playlist bar
     document.getElementById('new').addEventListener("click", renamePlaylist)
+    document.getElementById('titleh').addEventListener("scroll", (event) => {event.target.scrollTop = 0})
     //search
     document.getElementById('special').addEventListener("click", specialSearch)
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
@@ -66,7 +68,7 @@ async function selectfolder(mouseevent, inputconfig) {
         console.log(pick)
         if (pick.canceled == false) {
             //we need to reload the app when picking a new folder. this checks if user wants to proceed or not
-            if (currPlaylist.length > 0) {
+            if (currPlaylist.length > 0 && unsavedChanges == true) {
                 let msgc = await dialog.showMessageBoxSync({
                     message: "selecting a new main directory clears your current playlist. do you wish to proceed?",
                     type: "question",
@@ -93,6 +95,16 @@ async function selectfolder(mouseevent, inputconfig) {
     }
 }
 
+async function notReady(mode) { //true, turn on notReady, false, turn off notready
+    if (mode == true) {
+        unsavedChanges = true
+        document.getElementById("save").classList.add("btn-danger")
+    } else if (mode == false) {
+        unsavedChanges = false
+        document.getElementById("save").classList.remove("btn-danger")
+    }
+}
+
 //autocomplete
 
 //autocomplete
@@ -102,6 +114,7 @@ function setupAutocomplete(message) {
         search: input => {
           if (input.length < 1 && specialMode == false && autocompArr == "both") { return [] }
           let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? [...allPlaylists].filter(p => !editablePlaylists.includes(p)) : []
+
           res = res.filter(song => { //find matches
             return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
           }
@@ -147,6 +160,7 @@ async function autocompleteSubmit(result, refocus, update) {
     document.getElementById("command-line-input").value = '' //clear the input
     await addSong(result, refocus) //add the song to current playlist
 }
+
 //special serach
 function specialSearch() {
     document.getElementById("special").classList.toggle("btn-active")
@@ -157,7 +171,15 @@ function specialSearch() {
 function playlistOnlyToggle() {
     let com = document.getElementById("com")
     let con = -1
-    if (currPlaylist.length == 0) {
+    let onlyContainsPlaylists = true
+    for (let i = 0; i < currPlaylist.length; i++) {
+        const song = currPlaylist[i];
+        if (song.type == "song") {
+            onlyContainsPlaylists = false;
+            break;
+        }
+    }
+    if (currPlaylist.length == 0 || unsavedChanges == false || onlyContainsPlaylists == true) {
         con = 0
     } else {
         let act = autocompArr == "both" ? "change to" : "exit from"
@@ -169,7 +191,7 @@ function playlistOnlyToggle() {
         })
     }
     if (con == 0) {
-        discardPlaylist()
+        if (onlyContainsPlaylists == false){discardPlaylist()}
         if (autocompArr == "both") {
             com.classList.add("btn-active")
 
@@ -204,7 +226,7 @@ async function updatePreview(song, empty, updateOverride) {
                     title: song.filename,
                     artist: `Playlist ${bull} ${song.songs.length / 2} Songs`,
                     album: utils.shortenFilename(song.fullpath, 55), 
-                    cover: "img/playlist.png"
+                    cover: config.comPlaylists[song.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
                 } 
             }
             song.tag = tag
@@ -335,7 +357,7 @@ function renamePlaylist() {
 }
 
 function discardPlaylistPrompt() {
-    if (currPlaylist.length > 0) {
+    if (currPlaylist.length > 0 && unsavedChanges == true) {
         document.getElementById("command-line-input").blur()
         let con = dialog.showMessageBoxSync({
             message: "do you wish to discard current playlist?",
@@ -346,10 +368,13 @@ function discardPlaylistPrompt() {
         if (con == 0) {
             discardPlaylist()
         }
+    } else {
+        discardPlaylist()
     }
 }
 //discard the current playlist
 function discardPlaylist() {
+    notReady(false)
     utils.clearFolder("./covers")
     document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
     currPlaylist = []
@@ -357,6 +382,7 @@ function discardPlaylist() {
     document.getElementById("openspan").style.display = "block"
     playlistName = "Untitled Playlist"
     document.getElementById("titleh").textContent = playlistName
+    if (autocompArr == "playlists"){document.getElementById("com").click()}
 }
 
 
@@ -386,12 +412,14 @@ function savePlaylistPrompt() {
 }
 
 function savePlaylist() { //actually save the playlist
+    notReady(false)
     let lines = getPlaylistContent()
     lines = removeDuplicatesFromPlaylist(lines)
 
     fs.writeFileSync(savePath, lines.join("\n"))
     
     document.getElementById("save").classList.add("btn-active")
+    loadPlaylistsSidebar(editablePlaylists)
     setTimeout(() => {document.getElementById("save").classList.remove("btn-active")}, 1000)
 }
 
@@ -439,6 +467,7 @@ function removeDuplicatesFromPlaylist(arr) {
 
 //add a song to the current playlist
 async function addSong(songobj, refocus) {
+    notReady(true)
     let tag = songobj.tag
 
     let songElem = document.createElement("div")
@@ -452,7 +481,7 @@ async function addSong(songobj, refocus) {
     if (songobj.type == "song") {
         imgpath = `covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
     } else if (songobj.type == "playlist") {
-        imgpath = "img/playlist.png"
+        imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
     }
 
     songElem.className = "songitem"
@@ -470,6 +499,7 @@ async function addSong(songobj, refocus) {
     remElem.classList.add("songitem-remove")
     remElem.innerHTML = `<i class="material-icons-round md-close"></i>`
     remElem.onclick = () => {
+        notReady(true)
         if (currPlaylist.length == 1) { document.getElementById("song-preview").style.visibility = "hidden" }
         for (let i = 0; i < currPlaylist.length; i++) {
             const song = currPlaylist[i];
@@ -491,8 +521,14 @@ async function addSong(songobj, refocus) {
         printElem.classList.add("songitem-remove")
         printElem.innerHTML = `<i class="material-icons-round md-queue_music"></i>`
         printElem.onclick = () => {
+            let msg = ""
+            if (config.comPlaylists[songobj.fullpath] !== undefined) {
+                msg = `This generated playlist contains these playlists:\n${config.comPlaylists[songobj.fullpath].map(pl => pl.filename).join("\n")}`
+            } else {
+                msg = `This playlist contains:\n${songobj.songs.filter(line => !line.includes("#EXTINF")).join("\n")}`
+            }
             dialog.showMessageBoxSync({
-                message: `This playlist contains:\n${songobj.songs.filter(line => !line.includes("#EXTINF")).join("\n")}`,
+                message: msg,
                 type: "info",
                 noLink: true
             })
@@ -665,6 +701,21 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
 }
 
 async function fetchAllSongs() {
+    //clear the playlists
+    allSongs = []
+    allPlaylists = []
+    songsAndPlaylists = []
+    editablePlaylists = []
+
+    //check for config com playlists if some are missing delete them
+    for (let i = 0; i <Object.keys(config.comPlaylists).length; i++) {
+        const complaylist =Object.keys(config.comPlaylists)[i];
+        console.log(complaylist)
+        if (!fs.existsSync(complaylist)) {
+            delete config.comPlaylists[complaylist]
+        }
+    }
+
     let genbutton = document.getElementById("gen")
     genbutton.setAttribute("disabled", "true")
     let songs = []
@@ -731,7 +782,7 @@ async function fetchAllSongs() {
             title: playlist.filename,
             artist: `Playlist ${bull} ${playlist.songs.length / 2} Songs`,
             album: utils.shortenFilename(playlist.fullpath, 60), 
-            cover: "img/playlist.png"
+            cover: config.comPlaylists[playlist.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
         } 
         return playlist
     })
@@ -762,69 +813,7 @@ async function fetchAllSongs() {
 		p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
         return p }
     )
-    editablePlaylists.forEach(playlist => { //make a songitem for each playlist
-        let pElem = document.createElement("div")
-        let editElem = document.createElement("div")
-        pElem.classList.add("songitem")
-        let opts = {
-            coverid: "",
-            coversrc: "",
-            title: `<strong>${playlist.tag.title}</strong>`,
-            artist: `${playlist.songs.length / 2} Songs`,
-            album: playlist.tag.album,
-            filename: playlist.filename
-        }
-        pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) 1.5rem"
-        pElem.innerHTML = generateSongitem(opts)
-
-		if (playlist.mode == "com") {
-			let regenElem = document.createElement("div")
-			regenElem.classList.add("songitem-remove")
-			regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
-			regenElem.onclick = async () => {
-				regenElem.classList.add("rotate")
-				let currPlaylist_bak = [...currPlaylist]
-				discardPlaylist()
-				await gen()
-				//fetch playlists again here
-				await loadPlaylist(playlist, playlist.mode)
-				savePlaylist()
-				discardPlaylist()
-				if (autocompArr == "playlists"){document.getElementById("com").click()}
-				playlistName = lastPlaylistName
-				currPlaylist = [...currPlaylist_bak]
-				regenElem.classList.remove("rotate")
-				//refresh sidebar here
-			}
-
-			editElem.style.gridColumn = "4 / 5"
-			pElem.appendChild(regenElem)
-		}
-
-        editElem.classList.add("songitem-remove")
-        editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
-        editElem.onclick = async () => { //load playlist loadplaylist
-            //console.log(playlist)
-            let con = -1
-            if (currPlaylist.length == 0) {
-                con = 0
-            } else {
-                con = dialog.showMessageBoxSync({
-                    message: `do you wish to discard current playlist and load '${playlist.filename}'?`,
-                    type: "question",
-                    buttons: [`Discard playlist and Load '${playlist.filename}'`, "Cancel"],
-                    noLink: true
-                })
-            }
-            if (con == 0) {
-                loadPlaylist(playlist, playlist.mode)
-            }
-            
-        }
-        pElem.appendChild(editElem)
-
-        document.getElementById("sidebar-playlists").appendChild(pElem)
-    })
+    loadPlaylistsSidebar(editablePlaylists)
     if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
 
     console.log(editablePlaylists)
@@ -868,8 +857,79 @@ async function loadPlaylist(playlist, mode) {
 			}
 		}
 	}
+    notReady(false)
 	playlistName = lastPlaylistName
 	titleh.textContent = lastPlaylistName
+}
+
+function loadPlaylistsSidebar(eplaylists) {
+    document.getElementById("sidebar-playlists").innerHTML = ""
+
+    eplaylists.forEach(playlist => { //make a songitem for each playlist
+        let pElem = document.createElement("div")
+        let editElem = document.createElement("div")
+        pElem.classList.add("songitem")
+        let opts = {
+            coverid: "",
+            coversrc: "",
+            title: `<strong>${playlist.tag.title}</strong>`,
+            artist: `${playlist.songs.length / 2} Songs`,
+            album: playlist.tag.album,
+            filename: playlist.filename
+        }
+        pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) 1.5rem"
+        pElem.innerHTML = generateSongitem(opts)
+
+		if (playlist.mode == "com") {
+			let regenElem = document.createElement("div")
+			regenElem.classList.add("songitem-remove")
+			regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
+			regenElem.onclick = async () => {
+				regenElem.classList.add("rotate")
+				let currPlaylist_bak = [...currPlaylist]
+				discardPlaylist()
+				await gen()
+				await fetchAllSongs()
+				await loadPlaylist(playlist, playlist.mode)
+				savePlaylist()
+				discardPlaylist()
+				if (autocompArr == "playlists"){document.getElementById("com").click()}
+				playlistName = lastPlaylistName
+				currPlaylist = [...currPlaylist_bak]
+				regenElem.classList.remove("rotate")
+
+                loadPlaylistsSidebar(editablePlaylists)
+                window.location.reload()
+			}
+
+			editElem.style.gridColumn = "4 / 5"
+			pElem.appendChild(regenElem)
+		}
+
+        editElem.classList.add("songitem-remove")
+        editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
+        editElem.onclick = async () => { //load playlist loadplaylist
+            //console.log(playlist)
+            let con = -1
+            if (currPlaylist.length == 0 || unsavedChanges == false) {
+                con = 0
+            } else {
+                con = dialog.showMessageBoxSync({
+                    message: `do you wish to discard current playlist and load '${playlist.filename}'?`,
+                    type: "question",
+                    buttons: [`Discard playlist and Load '${playlist.filename}'`, "Cancel"],
+                    noLink: true
+                })
+            }
+            if (con == 0) {
+                loadPlaylist(playlist, playlist.mode)
+            }
+            
+        }
+        pElem.appendChild(editElem)
+
+        document.getElementById("sidebar-playlists").appendChild(pElem)
+    })
 }
 
 //delete all generated playlists
