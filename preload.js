@@ -388,6 +388,27 @@ function discardPlaylist() {
 
 function savePlaylistPrompt() {
     if (currPlaylist.length > 0) {
+        let onlyContainsPlaylists = true
+        for (let i = 0; i < currPlaylist.length; i++) {
+            const song = currPlaylist[i];
+            if (song.type == "song") {
+                onlyContainsPlaylists = false;
+                break;
+            }
+        }
+        if (onlyContainsPlaylists && autocompArr == "both") {
+            let con = -1
+            con = dialog.showMessageBoxSync({
+                message: "Do you want to save this as a combined playlist?",
+                detail: `Combined Playlists can only consist of other playlists, but if if any of the playlists update (you add a new song), you can easily re-make/update the generated playlist to include all the new stuff.`,
+                type: "question",
+                buttons: ["Save as Combined Playlist", "Save as a normal Playlist"],
+                noLink: true
+            })
+            if (con == 0) {
+                document.getElementById("com").click()
+            }
+        }
         if (playlistName == "Untitled Playlist") {
             dialog.showMessageBoxSync({"message": "Please name your playlist first"})
         } else {
@@ -425,6 +446,7 @@ function savePlaylist() { //actually save the playlist
 
 function getPlaylistContent() {
     let play = []
+
     play.push("#EXTM3U")
     for (let i = 0; i < currPlaylist.length; i++) {
         const song = currPlaylist[i];
