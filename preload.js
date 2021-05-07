@@ -54,7 +54,13 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('special').addEventListener("click", specialSearch)
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if(e.which == 9){
-            let song = songsAndPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] //get the song index from the index attribute
+            let song = {}
+            //get the song index from the index attribute
+            if (autocompArr == "both") {
+                song = songsAndPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] 
+            } else if (autocompArr == "playlists") {
+                song = allPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])]
+            }
             autocompleteSubmit(song, true)
             e.target.focus()
         }
@@ -113,7 +119,7 @@ function setupAutocomplete(message) {
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
           if (input.length < 1 && specialMode == false && autocompArr == "both") { return [] }
-          let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? [...allPlaylists].filter(p => !editablePlaylists.includes(p)) : []
+          let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
 
           res = res.filter(song => { //find matches
             return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
@@ -142,7 +148,7 @@ function setupAutocomplete(message) {
         autoSelect: true,
         getResultValue: result => {
             let final = utils.getExtOrFn(result.filename).fn
-            let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? [...allPlaylists].filter(p => !editablePlaylists.includes(p)) : []
+            let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
 
             return `<span index="${res.indexOf(result)}">${final}${result.type == "playlist" && autocompArr == "both" ? ` (Playlist)` : ""}</span>`
         } //show the filename in the result
