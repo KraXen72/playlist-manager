@@ -11,7 +11,8 @@ const walk = require('fs-walk')
 const mm = require('music-metadata');
 const Autocomplete = require('@trevoreyre/autocomplete-js')
 
-const slash = process.platform === 'win32' ? "\\" : "/"
+const slash = process.platform === 'win32' ? "\\" : "/" //desktop file slash
+const pslash = "/" //playlist file slash
 const bull = `&#8226;`
 const specialRegex = new RegExp("[^\x00-\x7F]", "gm")
 var config = utils.initOrLoadConfig("./config.json")
@@ -451,6 +452,7 @@ function savePlaylist() { //actually save the playlist
 }
 
 function getPlaylistContent() {
+    //console.log(currPlaylist)
     let play = []
 
     play.push("#EXTM3U")
@@ -461,19 +463,20 @@ function getPlaylistContent() {
             play.push(song.relativepath)
         } else if (song.type == "playlist") {
             let spl = song.relativepath.split(slash)
-            let relpath = spl.slice(0, spl.length-1).join(slash)
-            ///console.log(relpath)
+            let relpath = spl.slice(0, spl.length-1).join(pslash)
+            //console.log(relpath)
 
             for (let i = 0; i < song.songs.length; i++) {
                 const item = song.songs[i];
                 if (item.includes("#EXTINF")) {
                     play.push(item)
                 } else {
-                    play.push([relpath, item].join(slash))
+                    play.push([relpath, item].join(pslash))
                 }
             }
         }
     }
+    //console.log(play)
     return play
 }
 
@@ -671,9 +674,9 @@ async function generateM3U(folder, useEXTINF) {
 
         song = filename
         songext = utils.getExtOrFn(song).ext 
-        if (basedir.replace(folder).length > 0) { //stupid fucking piece of shit
+        if (basedir.replace(folder, "").length > 0) { //stupid fucking piece of shit
             appendname = basedir.replace(folder, "").replace(slash, "")
-            if (appendname.length > 0) {appendname += slash}
+            if (appendname.length > 0) {appendname += pslash}
         }
         //if the song extension is in allowed list
         if (config.exts.includes(songext)) {
@@ -700,10 +703,16 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number fo warnings
     //console.log("metadata: ",metadata)
 
-    const artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
+    var artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
     const album = metadata.common.album == undefined ? "Unknown Album" : metadata.common.album
     const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
+
+    if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
+        artist = metadata.common.artists.join(" / ")
+    }
+        
+
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
     if (skipCovers == false) {
@@ -738,7 +747,7 @@ async function fetchAllSongs() {
     //check for config com playlists if some are missing delete them
     for (let i = 0; i <Object.keys(config.comPlaylists).length; i++) {
         const complaylist =Object.keys(config.comPlaylists)[i];
-        console.log(complaylist)
+        //console.log(complaylist)
         if (!fs.existsSync(complaylist)) {
             delete config.comPlaylists[complaylist]
         }
