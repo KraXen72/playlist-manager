@@ -522,12 +522,14 @@ async function addSong(songobj, refocus) {
         title: tag.title,
         artist: tag.artist,
         album: tag.album,
-        filename: songobj.filename
+        filename: songobj.filename,
+        strong: false
     }
     songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index.toString())
 
     remElem.classList.add("songitem-remove")
+    remElem.setAttribute("title", "Remove song from this playlist")
     remElem.innerHTML = `<i class="material-icons-round md-close"></i>`
     remElem.onclick = () => {
         notReady(true)
@@ -550,6 +552,7 @@ async function addSong(songobj, refocus) {
 
         let printElem = document.createElement("div")
         printElem.classList.add("songitem-remove")
+        printElem.setAttribute("title", "See all songs in this playlist")
         printElem.innerHTML = `<i class="material-icons-round md-queue_music"></i>`
         printElem.onclick = () => {
             let msg = ""
@@ -602,12 +605,13 @@ async function addSong(songobj, refocus) {
 }
 //return the innerhtml for a songitem element
 function generateSongitem(val) {
+    let strongtag = val.strong !== undefined && val.strong == true ? ["<strong>", "</strong>"] : ["", ""]
     return `
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder" style = "${val.coversrc == "" ? "display: none": ""}"></div>
         <img class="songitem-cover cover-${val.coverid}" draggable="false" src="${val.coversrc}" onerror = "this.src = 'img/placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
     </div>
-    <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${val.title}</div>
+    <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${strongtag[0]}${val.title}${strongtag[1]}</div>
     <div class="songitem-aa">
         <span class="songitem-artist" title="${utils.fixQuotes(val.artist)}">${val.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(val.album)}">${val.album}</span>
     </div>
@@ -909,10 +913,11 @@ function loadPlaylistsSidebar(eplaylists) {
         let opts = {
             coverid: "",
             coversrc: "",
-            title: `<strong>${playlist.tag.title}</strong>`,
+            title: `${playlist.tag.title}`,
             artist: `${playlist.songs.length / 2} Songs`,
             album: playlist.tag.album,
-            filename: playlist.filename
+            filename: playlist.filename,
+            strong: true
         }
         pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) 1.5rem"
         pElem.innerHTML = generateSongitem(opts)
@@ -920,6 +925,7 @@ function loadPlaylistsSidebar(eplaylists) {
 		if (playlist.mode == "com") {
 			let regenElem = document.createElement("div")
 			regenElem.classList.add("songitem-remove")
+            regenElem.setAttribute("title", "re-make / update: generate this playlist again if you added new songs or removed some")
 			regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
 			regenElem.onclick = async () => {
 				regenElem.classList.add("rotate")
@@ -944,6 +950,7 @@ function loadPlaylistsSidebar(eplaylists) {
 		}
 
         editElem.classList.add("songitem-remove")
+        editElem.setAttribute("title", "Edit Playlist")
         editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
         editElem.onclick = async () => { //load playlist loadplaylist
             //console.log(playlist)
