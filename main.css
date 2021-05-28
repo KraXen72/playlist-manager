@@ -293,6 +293,11 @@ body {
 .btn-danger {
     color: rgb(226, 76, 76);
 }
+a, .link {
+    color: rgb(55, 185, 228);
+    cursor: pointer;
+    text-decoration: underline;
+}
 
 /*settings*/
 #settings-body {
@@ -457,7 +462,6 @@ body {
 .autocomplete-result {
     cursor: default;
     padding: 5px;
-    /*background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iOCIvPjxwYXRoIGQ9Ik0yMSAyMWwtNC00Ii8+PC9zdmc+");*/
     background-repeat: no-repeat;
     background-position: 12px
 }

@@ -66,6 +66,10 @@ window.addEventListener('DOMContentLoaded', () => {
             e.target.focus()
         }
     })
+    //settings
+    document.getElementById("g-repo").addEventListener("click", () => {
+        electron.shell.openExternal("http://github.com/KraXen72/playlist-manager")
+    })
 })
 
 //select main dir
