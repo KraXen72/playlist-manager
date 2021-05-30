@@ -10,6 +10,7 @@ const utils = require('./utils.js')
 const walk = require('fs-walk')
 const mm = require('music-metadata');
 const Autocomplete = require('@trevoreyre/autocomplete-js')
+//const sortable = require('html5sortable/dist/html5sortable.cjs.js')
 
 const slash = process.platform === 'win32' ? "\\" : "/" //desktop file slash
 const pslash = "/" //playlist file slash
@@ -257,7 +258,7 @@ async function artistModeToggle() {
         if (disablepom == true) {
             btn.querySelector('.md-person_search').setAttribute("hidden", "true")
             artistMode = true
-            
+
             if (allSongsAreTagged == false) {
                 let throbber = btn.querySelector('.md-autorenew')
                 throbber.removeAttribute("hidden")
@@ -992,6 +993,13 @@ async function loadPlaylist(playlist, mode) {
     notReady(false)
 	playlistName = lastPlaylistName
 	titleh.textContent = lastPlaylistName
+    /*
+    let sopts = {
+        handle: ".songitem-cover-wrap",
+        placeholder: `<hr>`
+    }
+    sortable('#playlist-bar', sopts)*/
+    //sortable.sortable("#playlist-bar")
 }
 
 function loadPlaylistsSidebar(eplaylists) {
