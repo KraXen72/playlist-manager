@@ -32,6 +32,8 @@ var unsavedChanges = false
 
 var mainsearch
 var specialMode = false
+var artistMode = false
+var allSongsAreTagged = false
 var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 
 /* ui and other handling */
@@ -53,6 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('titleh').addEventListener("scroll", (event) => {event.target.scrollTop = 0})
     //search
     document.getElementById('special').addEventListener("click", specialSearch)
+    document.getElementById('mode-toggle').addEventListener("click", artistModeToggle)
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if(e.which == 9){
             let song = {}
@@ -126,10 +129,17 @@ function setupAutocomplete(message) {
           if (input.length < 1 && specialMode == false && autocompArr == "both") { return [] }
           let res = autocompArr == "both" ? songsAndPlaylists : autocompArr == "playlists" ? allPlaylists : []
 
-          res = res.filter(song => { //find matches
-            return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
+          if (artistMode == false) {
+            res = res.filter(song => { //find matches
+                return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
+            })
+          } else {
+            res = res.filter(song => { //find matches
+                return song.tag.artist.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
+            })
           }
-          ).filter(song => { //filter out things already in playlist to avoid duplicates
+          
+          res = res.filter(song => { //filter out things already in playlist to avoid duplicates
             for (let i = 0; i < currPlaylist.length; i++) {if (song.filename == currPlaylist[i].filename) {return false} };return true
           })
           if (specialMode == true) {
@@ -142,7 +152,7 @@ function setupAutocomplete(message) {
           res.sort((a, b) => { if (a.type == "playlist" && b.type == "song") { return -1 } else if (a.type == "song" && b.type == "playlist") { return 1 } else { return 0} })
           
           //if specialmode or playlist only mode then return full results, otherwise first 10
-          return specialMode == true || autocompArr == "playlists" ? res : res.slice(0, 10)
+          return specialMode == true || autocompArr == "playlists" || artistMode == true ? res : res.slice(0, 10)
         },
         onUpdate: (results, selectedIndex) => { 
             if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
@@ -216,7 +226,84 @@ function playlistOnlyToggle() {
             autocompArr = "both"
             setupAutocomplete("song or playlist")
         }
+        return true
+    } else {
+        return false
     }
+}
+
+async function artistModeToggle() {
+    let btn = document.getElementById("mode-toggle")
+    if (artistMode == false) {
+        
+
+        let disablepom = false
+        if (autocompArr == "playlists") {
+            disablepom  = dialog.showMessageBoxSync({
+                message: "Searching by artist is not available in playlist only mode. What do you want to do?",
+                type: "question",
+                buttons: ["Exit playlist-only mode and search by artist", "Stay in playlist-only mode"],
+                noLink: true
+            })
+            if (disablepom == 0){
+                disablepom = true
+                playlistOnlyToggle()
+            } else {
+                disablepom = false
+            }
+        } else {
+            disablepom = true
+        }
+        if (disablepom == true) {
+            btn.querySelector('.md-person_search').setAttribute("hidden", "true")
+            artistMode = true
+            
+            if (allSongsAreTagged == false) {
+                let throbber = btn.querySelector('.md-autorenew')
+                throbber.removeAttribute("hidden")
+                throbber.classList.add("rotate")
+                await fetchMissingArtists()
+                throbber.classList.remove("rotate")
+                throbber.setAttribute("hidden", "true")
+            }
+            btn.querySelector('.md-library_music').removeAttribute("hidden")
+            document.getElementById('input-placeholder').textContent = `Search songs by artist...`
+            btn.title = "search by title"
+        }
+    } else {
+        btn.querySelector('.md-person_search').removeAttribute("hidden")
+        btn.querySelector('.md-library_music').setAttribute("hidden", "true")
+        artistMode = false
+        btn.title = "search by artist"
+
+        document.getElementById('input-placeholder').textContent = `Start typing a name of a ${autocompArr == "both" ? "song or playlist" : "playlist"}...`
+    }
+}
+
+async function fetchMissingArtists() {
+    let inp = document.getElementById('command-line-input')
+    let btn = document.getElementById("mode-toggle")
+
+    inp.setAttribute("disabled", "true")
+    btn.setAttribute("disabled", "true")
+
+    document.getElementById('input-placeholder').textContent = "Getting artist for each song, please wait..."
+
+    for (let i = 0; i < songsAndPlaylists.length; i++) {
+        var song = songsAndPlaylists[i];
+        if (song.tag == undefined) {
+            song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
+        } else {
+            continue;
+        }
+    }
+    allSongsAreTagged = true
+
+    mainsearch.destroy()
+    inp.removeAttribute("disabled")
+    btn.removeAttribute("disabled")
+    setupAutocomplete(autocompArr == "both" ? "song or playlist" : "playlist")
+    
 }
 
 //preview

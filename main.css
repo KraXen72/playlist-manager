@@ -444,7 +444,7 @@ a, .link {
     background: #282828;
     list-style: none;
     box-shadow: 0 2px 2px rgba(0, 0, 0, .16);
-    max-height: calc(100vh - 110%) !important;
+    max-height: calc(100vh - 110% - 12rem) !important;
 }
 
 [data-position=below] .autocomplete-result-list {
