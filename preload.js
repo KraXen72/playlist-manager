@@ -624,12 +624,16 @@ async function addSong(songobj, refocus) {
     moreElem.classList.add("songitem-button", "hidden", "vertical-icon-minwidth")
     moreElem.setAttribute("title", "more options")
     moreElem.onclick = (event) => {
-        summonMenu({event, buttons: [
-            {text: "Edit Tags", run: () => {
-                alert(1)
-                document.getElementById("moremenu").classList.add("hidden")
-            }}
-        ]})
+        let opt = {event, buttons: [
+            {
+                text: "Edit Tags", 
+                run: () => {
+                    alert(1)
+                    document.getElementById("moremenu").classList.add("hidden")
+                }
+            }
+        ]}
+        summonMenu(opt)
     }
 
     moreElem.innerHTML = `<i class="material-icons-round md-more_vert"></i>`
