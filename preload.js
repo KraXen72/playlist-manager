@@ -620,7 +620,7 @@ async function addSong(songobj, refocus) {
     songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index.toString())
 
-    remElem.classList.add("songitem-remove")
+    remElem.classList.add("songitem-button")
     remElem.setAttribute("title", "Remove song from this playlist")
     remElem.innerHTML = `<i class="material-icons-round md-close"></i>`
     remElem.onclick = () => {
@@ -640,10 +640,10 @@ async function addSong(songobj, refocus) {
         songElem.remove()
     }
     if (songobj.type == "playlist") { //add a print
-        remElem.style.gridColumn = " 4 / 5"
+        //remElem.style.gridColumn = " 4 / 5"
 
         let printElem = document.createElement("div")
-        printElem.classList.add("songitem-remove")
+        printElem.classList.add("songitem-button")
         printElem.setAttribute("title", "See all songs in this playlist")
         printElem.innerHTML = `<i class="material-icons-round md-queue_music"></i>`
         printElem.onclick = () => {
@@ -659,11 +659,11 @@ async function addSong(songobj, refocus) {
                 noLink: true
             })
         }
-        songElem.appendChild(printElem)
+        songElem.querySelector(".songitem-button-wrap").appendChild(printElem)
 
     }
 
-    songElem.appendChild(remElem)
+    songElem.querySelector(".songitem-button-wrap").appendChild(remElem)
     if (currPlaylist.length == 0) {
         document.getElementById("openspan").style.display = "none"
     }
@@ -708,6 +708,7 @@ function generateSongitem(val) {
         <span class="songitem-artist" title="${utils.fixQuotes(val.artist)}">${val.artist}</span>&nbsp;&#8226;&nbsp;<span class = "songitem-album" title="${utils.fixQuotes(val.album)}">${val.album}</span>
     </div>
     <div class="songitem-filename" hidden>${val.filename}</div>
+    <div class="songitem-button-wrap"></div>
     `
 }
 
@@ -1018,12 +1019,12 @@ function loadPlaylistsSidebar(eplaylists) {
             filename: playlist.filename,
             strong: true
         }
-        pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) 1.5rem"
+        pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) min-content"
         pElem.innerHTML = generateSongitem(opts)
 
 		if (playlist.mode == "com") {
 			let regenElem = document.createElement("div")
-			regenElem.classList.add("songitem-remove")
+			regenElem.classList.add("songitem-button")
             regenElem.setAttribute("title", "re-make / update: generate this playlist again if you added new songs or removed some")
 			regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
 			regenElem.onclick = async () => {
@@ -1044,11 +1045,11 @@ function loadPlaylistsSidebar(eplaylists) {
                 window.location.reload()
 			}
 
-			editElem.style.gridColumn = "4 / 5"
-			pElem.appendChild(regenElem)
+			//editElem.style.gridColumn = "4 / 5"
+			pElem.querySelector(".songitem-button-wrap").appendChild(regenElem)
 		}
 
-        editElem.classList.add("songitem-remove")
+        editElem.classList.add("songitem-button")
         editElem.setAttribute("title", "Edit Playlist")
         editElem.innerHTML = `<i class="material-icons-round md-drive_file_rename_outline"></i>`
         editElem.onclick = async () => { //load playlist loadplaylist
@@ -1069,7 +1070,7 @@ function loadPlaylistsSidebar(eplaylists) {
             }
             
         }
-        pElem.appendChild(editElem)
+        pElem.querySelector(".songitem-button-wrap").appendChild(editElem)
 
         document.getElementById("sidebar-playlists").appendChild(pElem)
     })
