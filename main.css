@@ -1,6 +1,7 @@
 :root {
     --bg-secondary: #222222;
     --bg-primary: #262626;
+    --fg-rosebox: #a57562;
     --text: #a3a5aa;
 }
 body {
@@ -127,6 +128,9 @@ body {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+}
+.songitem:hover .hidden {
+    display: flex !important;
 }
 .songitem-button {
     display: flex;
@@ -290,6 +294,9 @@ body {
 .fullwidth {
     width: 100%
 }
+.vertical-icon-minwidth {
+    width: 1rem !important;
+}
 .flex-end {
     justify-self: flex-end;
 }
@@ -384,9 +391,48 @@ a, .link {
 #settings-submit {
     margin-top: 0.3rem;
 }
-
 .noselect {
     user-select: none !important;
+}
+.hidden {
+    display: none;
+}
+
+/*more menu*/
+#moremenu {
+    position: absolute;
+    z-index: 3;
+    height: min-content;
+
+    left: 0px; 
+    top: 0px;
+    transform: translatex(-50%)
+}
+#mm-ul {
+    padding-inline-start: 0;
+    margin: 0px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--fg-rosebox);
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.2rem 0.2rem 0.2rem;
+    
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: 2rem;
+    row-gap: 0.1rem;
+}
+.mm-li {
+    list-style-type: none;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    transition: background 0.15s ease-in;
+    width: max-content;
+}
+.mm-li:hover {
+    background: rgba(165, 117, 98, 0.2);
 }
 
 /*song preview*/

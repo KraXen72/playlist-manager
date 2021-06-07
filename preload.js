@@ -595,6 +595,7 @@ async function addSong(songobj, refocus) {
 
     let songElem = document.createElement("div")
     let remElem = document.createElement("div")
+    let moreElem = document.createElement("div")
     let id = Date.now().toString() 
 
     if (tag.coverobj !== false && songobj.type == "song") {
@@ -619,6 +620,20 @@ async function addSong(songobj, refocus) {
     }
     songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index.toString())
+
+    moreElem.classList.add("songitem-button", "hidden", "vertical-icon-minwidth")
+    moreElem.setAttribute("title", "more options")
+    moreElem.onclick = (event) => {
+        summonMenu({event, buttons: [
+            {text: "Edit Tags", run: () => {
+                alert(1)
+                document.getElementById("moremenu").classList.add("hidden")
+            }}
+        ]})
+    }
+
+    moreElem.innerHTML = `<i class="material-icons-round md-more_vert"></i>`
+
 
     remElem.classList.add("songitem-button")
     remElem.setAttribute("title", "Remove song from this playlist")
@@ -663,6 +678,7 @@ async function addSong(songobj, refocus) {
 
     }
 
+    songElem.querySelector(".songitem-button-wrap").appendChild(moreElem)
     songElem.querySelector(".songitem-button-wrap").appendChild(remElem)
     if (currPlaylist.length == 0) {
         document.getElementById("openspan").style.display = "none"
@@ -710,6 +726,42 @@ function generateSongitem(val) {
     <div class="songitem-filename" hidden>${val.filename}</div>
     <div class="songitem-button-wrap"></div>
     `
+}
+
+//generate a material design esque more menu / dropdown thingy
+function summonMenu(options) {
+    document.onclick = ""
+    let menu = document.getElementById("moremenu")
+    menu.querySelector("ul").innerHTML = ""
+
+    if (options.buttons.length > 0) {
+        for (let i = 0; i < options.buttons.length; i++) {
+            const btn = options.buttons[i];
+            let btne = document.createElement("li")
+            btne.classList.add("mm-li")
+            btne.textContent = btn.text
+            btne.onclick = btn.run
+            menu.querySelector("ul").appendChild(btne)
+        }
+    } else {
+        menu.querySelector("ul").innerHTML = `<li class="mm-li">Invalid menu, no buttons defined</li>`
+    }
+   
+
+    menu.classList.remove("hidden")
+    menu.style.left = `${options.event.clientX}px`
+    //always fit the menu on screen: if the diff of posY and windowheight is less than menuheight, just put it to windowheight - menuheight
+    menu.style.top = `${window.innerHeight - options.event.clientY < menu.clientHeight ? 
+    window.innerHeight - menu.clientHeight : options.event.clientY}px`
+
+    setTimeout(() => { //put it into an instant settimeout so this more button click doesen't trigger it
+        document.onclick = (event) => { //hide the menu again if i click away
+            if (!event.path.includes(menu)) {
+                menu.classList.add("hidden")
+                document.onclick = ""
+            }
+        }
+    }, 0)
 }
 
 /*playlist handling - file manipulation etc*/
@@ -1079,30 +1131,47 @@ function loadPlaylistsSidebar(eplaylists) {
 //delete all generated playlists
 function purgePlaylists() {
     let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p))
+    if (unsavedChanges == false) {
+        if (playlists.length > 0) {
 
-    if (playlists.length > 0) {
-
-        let playliststr = playlists.map(playlist => playlist.filename).join(", ")
-        let prgbtn = document.getElementById("prg")
-
-        let message = `Are you sure you want to delete all these playlists?
-        ${playliststr}`
-
-        let decision = window.confirm(message)
-        if (decision == true) {
-            let delpaths = playlists.map(p => p.fullpath)
-            delpaths.forEach(p => {
-                fs.unlinkSync(p, (err) => console.log(err))
+            let playliststr = playlists.map(playlist => playlist.filename).join(", ")
+            let prgbtn = document.getElementById("prg")
+    
+            let message = `Are you sure you want to delete all these playlists?
+            ${playliststr}`
+    
+            let decision = window.confirm(message)
+            if (decision == true) {
+                let delpaths = playlists.map(p => p.fullpath)
+                delpaths.forEach(p => {
+                    fs.unlinkSync(p, (err) => console.log(err))
+                })
+                console.log("deleted sucessfully")
+                prgbtn.classList.add("btn-active")
+                setTimeout(() => {
+                    prgbtn.classList.remove("btn-active");
+                    window.location.reload()
+                }, 1000)
+            } else (
+                console.log("cancelled deleting")
+            )
+        } else {
+            let msgc = dialog.showMessageBoxSync({
+                message: "no playlists found, nothing deleted.",
+                type: "info",
+                buttons: ["Ok"],
+                noLink: true
             })
-            console.log("deleted sucessfully")
-            prgbtn.classList.add("btn-active")
-            setTimeout(() => {prgbtn.classList.remove("btn-active")}, 1000)
-        } else (
-            console.log("cancelled deleting")
-        )
+        }
     } else {
-        alert("no playlists found, nothing deleted.")
+        let msgc = dialog.showMessageBoxSync({
+            message: "Cannot purge playlists as you have unsaved changes. Either save this playlist (will not be purged) or discard it. Then try to purge again.",
+            type: "info",
+            buttons: ["Ok"],
+            noLink: true
+        })
     }
+    
 }
 
 //for @trevoreyre/autocomplete-js
