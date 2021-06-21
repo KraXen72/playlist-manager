@@ -272,6 +272,20 @@ body {
 #gen, #prg, #save {
     transition: color 0.5s;
 }
+#gen {
+    position: relative;
+    overflow: hidden;
+}
+#gprog {
+    width: 0%;
+    position: absolute !important;
+    bottom: 0;
+    left: 0;
+    background: rgb(103, 165, 139);
+    height: 2px;
+    z-index: 2;
+    transition: opacity 0.5s, width 0.6s;
+}
 #scrap, #playlist-name-submit, #playlist-name-cancel, #new, .mdiconbutton {
     display: flex;
     justify-content:center;

@@ -359,7 +359,7 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
         document.getElementById("sp-album").textContent = tag.album
 
         if (extraInfo !== undefined && extraInfo === true) {
-            let dur = `${Math.floor(Math.floor(tag.duration)/1000 / 60)}:${Math.floor(tag.duration/1000) % 60}` //get min and sec from duration
+            let dur = `${Math.floor(Math.floor(tag.duration)/1000 / 60)}:${utils.zeropad(Math.floor(tag.duration/1000) % 60, 2)}` //get min and sec from duration, zeropad it
 
             document.getElementById("sp-extra").classList.remove("hidden-f")
             document.getElementById("spe-fullpath").textContent = utils.shortenFilename(song.fullpath, 40)
@@ -833,8 +833,11 @@ function summonMenu(options) {
 //walk all directories and then call generateM3U()
 async function gen() {
     let alldirs = []
+    let gprog =  document.getElementById("gprog") //generate progress bar
     let genbutton = document.getElementById("gen")
     genbutton.setAttribute("disabled","true")
+    gprog.style.width = `0%`
+    gprog.style.opacity = `100%`
 
     walk.dirsSync(config.maindir, (basedir, filename, stats) => {
         alldirs.push({basedir, filename, "fullpath": basedir + slash + filename, stats})
@@ -855,7 +858,10 @@ async function gen() {
     for (let i = 0; i < alldirs.length; i++) {
         const dir = alldirs[i];
         await generateM3U(dir.fullpath, true)
+        gprog.style.width = `${i / alldirs.length * 100}%`
     }
+    gprog.style.width = `100%`
+    setTimeout(() => {gprog.style.opacity = `0%`}, "1000")
     //await generateM3U(alldirs[22].fullpath, true)
     console.log("done")
     genbutton.removeAttribute("disabled")
@@ -1287,3 +1293,27 @@ function autocompleteDestroy(instance) {
     //autocompleteDestroy(instance.core)
     instance.core = null
 }
+
+//progress bar buttons
+
+/**
+ * progress bar using border-bottom
+ * @param {String} id id of button
+ * @param {Number} percent 0-100 percent of the progress bar
+ * @param {String} col1 normal color
+ * @param {String} col2 progress bar color
+ * @param {Number} width width of the border in px
+ */
+/*
+function matterButtonBorder(id, percent, col1, col2, width) {
+    let b = document.getElementById(id)
+
+    let grad = `-webkit-linear-gradient(left, ${col2} ${percent}%, ${col1} ${percent}%, ${col1} 100%)`
+
+    b.style = `-webkit-border-image: ${grad} 0 0 100% 0/0 0 3px 0 stretch;`
+    b.style.borderBottomWidth = `${width}px`
+
+    b.style.borderTopColor = `${col1} !important;`
+
+
+}*/
