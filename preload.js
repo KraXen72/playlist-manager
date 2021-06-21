@@ -687,11 +687,11 @@ async function addSong(songobj, refocus) {
                 {   text: "Details",
                     run: () => {
                         updatePreview(songobj, false, true, true)
-                    }},
+                    }}/*,
                 {   text: "Edit Tags", 
                     run: () => {
                         alert("placeholder for tag editor")
-                    }}
+                    }}*/
             )
             
         }
