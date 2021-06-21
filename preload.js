@@ -47,6 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("folder-open").addEventListener("click", selectfolder)
     document.getElementById('settings').addEventListener("click", initSettings)
     document.getElementById("printPlaylist").addEventListener("click", () => {console.log("currPlaylist: ", currPlaylist)})
+    document.getElementById("spe-hide").addEventListener("click", () => {document.getElementById("sp-extra").classList.add("hidden-f")}) //hide extra preview
     //sidebar
     document.getElementById("gen").addEventListener("click",gen)
     document.getElementById('prg').addEventListener("click", purgePlaylists)
