@@ -285,6 +285,10 @@ async function artistModeToggle() {
 async function fetchMissingArtists() {
     let inp = document.getElementById('command-line-input')
     let btn = document.getElementById("mode-toggle")
+    let sprog =  document.getElementById("sprog")
+    sprog.style.width = `0`
+    sprog.style.opacity = `100%`
+
 
     inp.setAttribute("disabled", "true")
     btn.setAttribute("disabled", "true")
@@ -293,6 +297,7 @@ async function fetchMissingArtists() {
 
     for (let i = 0; i < songsAndPlaylists.length; i++) {
         var song = songsAndPlaylists[i];
+        sprog.style.width = `${i / songsAndPlaylists.length * 100}%`
         if (song.tag == undefined) {
             song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
         } else {
@@ -300,6 +305,9 @@ async function fetchMissingArtists() {
         }
     }
     allSongsAreTagged = true
+    sprog.style.width = `100%`
+    setTimeout(() => {sprog.style.opacity = `0%`}, 500)
+    setTimeout(() => {sprog.style.width = `0%`}, 1250)
 
     mainsearch.destroy()
     inp.removeAttribute("disabled")
@@ -836,7 +844,7 @@ async function gen() {
     let gprog =  document.getElementById("gprog") //generate progress bar
     let genbutton = document.getElementById("gen")
     genbutton.setAttribute("disabled","true")
-    gprog.style.width = `0%`
+    gprog.style.width = `0`
     gprog.style.opacity = `100%`
 
     walk.dirsSync(config.maindir, (basedir, filename, stats) => {
@@ -861,7 +869,8 @@ async function gen() {
         gprog.style.width = `${i / alldirs.length * 100}%`
     }
     gprog.style.width = `100%`
-    setTimeout(() => {gprog.style.opacity = `0%`}, "1000")
+    setTimeout(() => {gprog.style.opacity = `0%`}, 500)
+    setTimeout(() => {gprog.style.width = `0%`}, 1250)
     //await generateM3U(alldirs[22].fullpath, true)
     console.log("done")
     genbutton.removeAttribute("disabled")

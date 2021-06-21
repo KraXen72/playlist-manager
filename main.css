@@ -276,7 +276,7 @@ body {
     position: relative;
     overflow: hidden;
 }
-#gprog {
+.prog {
     width: 0%;
     position: absolute !important;
     bottom: 0;
@@ -284,7 +284,10 @@ body {
     background: rgb(103, 165, 139);
     height: 2px;
     z-index: 2;
-    transition: opacity 0.5s, width 0.6s;
+    transition: opacity 1s, width 0.5s;
+}
+.roundedprog {
+    border-radius: 0 0 1rem 1rem;
 }
 #scrap, #playlist-name-submit, #playlist-name-cancel, #new, .mdiconbutton {
     display: flex;

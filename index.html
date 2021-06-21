@@ -15,7 +15,7 @@
       </div>
       <div id="sidebar">
         <div id="sidebar-buttons">
-          <button class="matter-button-outlined" id="gen" disabled title ="Generate Playlists for all folder and subfolders, for more information check github repo"><div id="gprog"></div> Generate Playlists</button>
+          <button class="matter-button-outlined" id="gen" disabled title ="Generate Playlists for all folder and subfolders, for more information check github repo"><div id="gprog" class="prog"></div> Generate Playlists</button>
           <button class="matter-button-outlined" id="prg">Delete generated Playlists</button>
           <button class="matter-button-outlined mdicontext" title="Playlist only mode: you can only add playlists together, but, when one of the playlists changes, you can instantly re-make the combined playlist." id="com"><span class="fullwidth">Playlist only mode</span><i class="material-icons-round md-help_outline flex-end md-18" ></i></button>
         </div>
@@ -49,6 +49,7 @@
           <label class="matter-textfield-outlined" id="command-line-label">
             <input placeholder=" " id="command-line-input" spellcheck="false" type="text" class="autocomplete-input" disabled>
             <span class="noselect" id="input-placeholder">Select a folder first</span>
+            <div id="sprog" class="prog roundedprog" ></div>
             <ul class="autocomplete-result-list"></ul>
           </label>
           <button id = "special" class="matter-button-outlined mdiconbutton mr" title = "find songs with hard to type titles"><i class="material-icons-round md-emoji_symbols"></i></button>
