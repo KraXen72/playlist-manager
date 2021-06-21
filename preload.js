@@ -365,7 +365,7 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
         document.getElementById("sp-title").textContent = tag.title
         document.getElementById("sp-artist").innerHTML = tag.artist
         document.getElementById("sp-album").textContent = tag.album
-
+    
         if (extraInfo !== undefined && extraInfo === true) {
             let dur = `${Math.floor(Math.floor(tag.duration)/1000 / 60)}:${utils.zeropad(Math.floor(tag.duration/1000) % 60, 2)}` //get min and sec from duration, zeropad it
 
@@ -693,7 +693,6 @@ async function addSong(songobj, refocus) {
                         alert("placeholder for tag editor")
                     }}*/
             )
-            
         }
         summonMenu(opt)
     }
