@@ -57,4 +57,10 @@ function getExtOrFn(filename) {
     return {fn, ext}
 }
 
-module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder, getExtOrFn}
+function zeropad(number, finalWidth, customCharacter) {
+    customCharacter = customCharacter || '0';
+    number = number + '';
+    return number.length >= finalWidth ? number : new Array(finalWidth - number.length + 1).join(customCharacter) + number;
+  }
+
+module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder, getExtOrFn, zeropad}
