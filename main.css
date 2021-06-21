@@ -21,7 +21,7 @@ body {
 .matter-textfield-outlined > input:focus, .matter-textfield-outlined > textarea:focus {
     border-top-color: transparent !important;
 }
-#main-grid *, #settings-body * {
+#main-grid *, .popup-body * {
     --matter-helper-theme: 165, 117, 98 !important;
     --matter-onsurface-rgb: 163, 165, 170 !important;
 }
@@ -210,8 +210,9 @@ body {
     grid-column: 3 / 4;
     background: var(--bg-primary);
     display: flex;
-    flex-direction: row;
-    align-items: flex-end;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
     padding: 1rem;
 }
 #command-line {
@@ -312,8 +313,8 @@ a, .link {
     text-decoration: underline;
 }
 
-/*settings*/
-#settings-body {
+/*settings, details popups*/
+.popup-body {
     position: absolute;
     z-index: 2;
     top: 50%;
@@ -327,7 +328,7 @@ a, .link {
     max-height: 90%;
     overflow-y: auto;
 }
-.settingsclose {
+.popupclose {
     position: absolute;
     height: 2rem;
     width: 2rem;
@@ -336,7 +337,7 @@ a, .link {
     font-weight: bold;
     z-index: 5;
 }
-#settings-header {
+.popup-header {
     display: flex;
     position: sticky;
     position: -webkit-sticky;
@@ -397,7 +398,12 @@ a, .link {
 .hidden {
     display: none;
 }
-
+.hidden-f {
+    display: none !important;
+}
+.bold {
+    font-weight: bold;
+}
 /*more menu*/
 #moremenu {
     position: absolute;
@@ -429,7 +435,10 @@ a, .link {
     border-radius: 0.3rem;
     cursor: pointer;
     transition: background 0.15s ease-in;
-    width: max-content;
+    min-width: max-content;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
 }
 .mm-li:hover {
     background: rgba(165, 117, 98, 0.2);
@@ -483,6 +492,34 @@ a, .link {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+}
+
+/*sp-extra*/
+#sp-extra {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    column-gap: 0.2rem;
+    --end: 6;
+    --mid: 3;
+}
+#spe-fullpathd {
+    grid-area: 1 / 1 / 2 / var(--mid);
+}
+#spe-fullpath {
+    grid-area: 1 / var(--mid) / 2 / var(--end);
+}
+#spe-genred {
+    grid-area: 2 / 1 / 3 / var(--mid);
+}
+#spe-genre {
+    grid-area: 2 / var(--mid) / 3 / var(--end);
+}
+#spe-formatd {
+    grid-area: 3 / 1 / 4 / var(--mid); 
+}
+#spe-format {
+    grid-area: 3 / var(--mid) / 4 / var(--end);
 }
 
 /*autocomplete*/

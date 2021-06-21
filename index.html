@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <title>playlist-manager</title>
     <link rel="stylesheet" href="matter.css">
     <link rel="stylesheet" href="node_modules/@material-icons/font/css/all.css">
     <link rel="stylesheet" type="text/css" href="main.css">
@@ -68,6 +68,18 @@
           <div id="sp-album"></div>
           <div id="sp-artist"></div>
         </div>
+        <div id="sp-extra" class="hidden-f">
+          <div id="spe-fullpathd" class="bold">Path to song:</div><div id="spe-fullpath">D:\music\anime\Centimeter.mp3</div>
+          <div id="spe-formatd" class="bold">Format / Codec:</div><div id="spe-format">MPEG 1 Layer 3</div>
+          <div id="spe-genred" class="bold">Genre:</div><div id="spe-genre">Hip Hop / Rap</div>
+          <div id="spe-durationd" class="bold">Duration:</div><div id="spe-duration">10:03</div>
+          <div id="spe-sized" class="bold">Size:</div><div id="spe-size">10.80 MB</div>
+          <div id="spe-yeard" class="bold">Year:</div>
+          <div id="spe-bitrated" class="bold">Bitrate:</div><div id="spe-bitrate">320 kb/s</div>
+          <div id="spe-samplerated" class="bold">Sample rate: </div><div id="spe-samplerate">44100 Hz</div>
+          <div id="spe-year">2020</div>
+          
+        </div>
       </div>
       <div id="button-bar">
         <button class="matter-button-outlined mdiconbutton" id="save" title = "save playlist"><i class="material-icons-round md-save"></i></button>
@@ -80,10 +92,10 @@
         <span class="material-icons-round md-settings" id="settings" title="settings"></span>
       </div>
     </div>
-    <div id="settings-body" hidden>
-      <div id="settings-header">
+    <div id="settings-body" class="popup-body" hidden>
+      <div id="settings-header" class="popup-header">
         <h1>Settings</h1>
-        <button class="closepill settingsclose" id="settings-close">&times;</button>
+        <button class="closepill popupclose" id="settings-close">&times;</button>
       </div>
       <p>File extensions considered music files: <a href="https://github.com/borewit/music-metadata#features" target="_blank" style="float: right">all supported audio file types</a></p>
       <div id="settings-exts"></div>

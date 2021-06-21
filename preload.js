@@ -308,7 +308,14 @@ async function fetchMissingArtists() {
 }
 
 //preview
-async function updatePreview(song, empty, updateOverride) { 
+/**
+ * update the song preview
+ * @param {Object} song object
+ * @param {Boolean} empty True means clear preveiw
+ * @param {Boolean} updateOverride override if we should update
+ * @param {Boolean} extraInfo if we should fetch extra info about the song and display everything
+ */
+async function updatePreview(song, empty, updateOverride, extraInfo) { 
     let index = document.getElementById("song-preview").getAttribute("index")
     let type = document.getElementById("song-preview").getAttribute("type")
     let tag = {} //artist, title, album, duration, cover, extinf, coverobj
@@ -317,9 +324,14 @@ async function updatePreview(song, empty, updateOverride) {
         update = updateOverride
     }
     if (empty == false) {
-        if (song.index !== index || song.type !== type) {
+        if (song.index !== index || song.type !== type || update == true) {
             if (song.type == "song") {
-                tag = await getEXTINF(song.fullpath, song.filename, true, false)
+                if (extraInfo !== undefined && extraInfo === true) { //fetch extra info if wanted
+                    tag = await getEXTINF(song.fullpath, song.filename, true, false, true)
+                } else {
+                    tag = await getEXTINF(song.fullpath, song.filename, true, false)
+                }
+                //console.log(song)
             }  else if (song.type == "playlist") {
                 tag = {
                     title: song.filename,
@@ -337,13 +349,31 @@ async function updatePreview(song, empty, updateOverride) {
         }
         
     } else { tag = { artist: "", title: "", album: "", cover: "" } } //just clear the preview
-
+    //console.log(tag)
     if (update == true) {
         if (document.getElementById("song-preview").style.visibility == "hidden"){document.getElementById("song-preview").style.visibility = "visible"}
         document.getElementById("sp-cover").src = `${tag.cover}`
         document.getElementById("sp-title").textContent = tag.title
         document.getElementById("sp-artist").innerHTML = tag.artist
         document.getElementById("sp-album").textContent = tag.album
+
+        if (extraInfo !== undefined && extraInfo === true) {
+            let dur = `${Math.floor(Math.floor(tag.duration)/1000 / 60)}:${Math.floor(tag.duration/1000) % 60}` //get min and sec from duration
+
+            document.getElementById("sp-extra").classList.remove("hidden-f")
+            document.getElementById("spe-fullpath").textContent = utils.shortenFilename(song.fullpath, 40)
+            document.getElementById("spe-fullpath").setAttribute("title", song.fullpath)
+            document.getElementById("spe-genre").textContent = tag.extrainfo.genre
+            document.getElementById("spe-format").textContent = tag.extrainfo.format
+            document.getElementById("spe-duration").textContent = dur == "0:0" ? "Unknown" : dur
+            document.getElementById("spe-bitrate").textContent = tag.extrainfo.bitrate
+            document.getElementById("spe-size").textContent = tag.extrainfo.size
+            document.getElementById("spe-samplerate").textContent = tag.extrainfo.samplerate
+            document.getElementById("spe-year").textContent = tag.extrainfo.year
+
+        } else {
+            document.getElementById("sp-extra").classList.add("hidden-f")
+        }
     }
 }
 
@@ -621,18 +651,41 @@ async function addSong(songobj, refocus) {
     songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index.toString())
 
-    moreElem.classList.add("songitem-button", "hidden", "vertical-icon-minwidth")
+    moreElem.classList.add("songitem-button"/*, "hidden", "vertical-icon-minwidth"*/)
     moreElem.setAttribute("title", "more options")
     moreElem.onclick = (event) => {
-        let opt = {event, buttons: [
-            {
-                text: "Edit Tags", 
+        let opt = {event, buttons: []}
+
+        if (songobj.type == "playlist") { //playlist specific
+            opt.buttons.push({
+                text: "Details",
                 run: () => {
-                    alert(1)
-                    document.getElementById("moremenu").classList.add("hidden")
+                    let msg = ""
+                    if (config.comPlaylists[songobj.fullpath] !== undefined) {
+                        msg = `This generated playlist contains these playlists:\n${config.comPlaylists[songobj.fullpath].map(pl => pl.filename).join("\n")}`
+                    } else {
+                        msg = `This playlist contains:\n${songobj.songs.filter(line => !line.includes("#EXTINF")).join("\n")}`
+                    }
+                    dialog.showMessageBoxSync({
+                        message: msg,
+                        type: "info",
+                        noLink: true
+                    })
                 }
-            }
-        ]}
+            })
+        } else { //song specific
+            opt.buttons.push( 
+                {   text: "Details",
+                    run: () => {
+                        updatePreview(songobj, false, true, true)
+                    }},
+                {   text: "Edit Tags", 
+                    run: () => {
+                        alert("placeholder for tag editor")
+                    }}
+            )
+            
+        }
         summonMenu(opt)
     }
 
@@ -655,10 +708,14 @@ async function addSong(songobj, refocus) {
         if (currPlaylist.length == 0) {
             document.getElementById("openspan").style.display = "block"
         }
-        if (songobj.type == "song"){fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)}
+        if (songobj.type == "song"){
+            try {fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`)} catch(e){
+                console.log("failed to delete cover, probably")
+            }
+        }
         songElem.remove()
     }
-    if (songobj.type == "playlist") { //add a print
+    /*if (songobj.type == "playlist") { //add a print
         //remElem.style.gridColumn = " 4 / 5"
 
         let printElem = document.createElement("div")
@@ -680,7 +737,7 @@ async function addSong(songobj, refocus) {
         }
         songElem.querySelector(".songitem-button-wrap").appendChild(printElem)
 
-    }
+    }*/
 
     songElem.querySelector(".songitem-button-wrap").appendChild(moreElem)
     songElem.querySelector(".songitem-button-wrap").appendChild(remElem)
@@ -717,10 +774,11 @@ async function addSong(songobj, refocus) {
 }
 //return the innerhtml for a songitem element
 function generateSongitem(val) {
-    let strongtag = val.strong !== undefined && val.strong == true ? ["<strong>", "</strong>"] : ["", ""]
+    let strongtag = val.strong !== undefined && val.strong == true ? ["<strong>", "</strong>"] : ["", ""];
+    if (!fs.existsSync(val.coversrc)) {val.coversrc = ""};
     return `
     <div class="songitem-cover-wrap">
-        <div class="songitem-cover-placeholder" style = "${val.coversrc == "" ? "display: none": ""}"></div>
+        <div class="songitem-cover-placeholder" style = "${val.coversrc !== "" ? "display: none": ""}"></div>
         <img class="songitem-cover cover-${val.coverid}" draggable="false" src="${val.coversrc}" onerror = "this.src = 'img/placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${strongtag[0]}${val.title}${strongtag[1]}</div>
@@ -745,6 +803,7 @@ function summonMenu(options) {
             btne.classList.add("mm-li")
             btne.textContent = btn.text
             btne.onclick = btn.run
+            btne.onmouseup = () => {document.getElementById("moremenu").classList.add("hidden")}
             menu.querySelector("ul").appendChild(btne)
         }
     } else {
@@ -851,10 +910,20 @@ async function generateM3U(folder, useEXTINF) {
 }
 
 //read the file and get it's metadata
-async function getEXTINF(song, onlysong, returnObj, skipCovers) {
+/**
+ * read song file to get metadata
+ * @param {String} song full path to file
+ * @param {String} onlysong relative path to file (no folder)
+ * @param {Boolean} returnObj if true, return full object instead of EXTINF string
+ * @param {Boolean} skipCovers if true, skip fetching covers (faster)
+ * @param {Boolean} fetchExtraInfo if true, fetch extra info
+ */
+async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
     const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
     metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number fo warnings
     //console.log("metadata: ",metadata)
+
+    let extrainfo = {}
 
     var artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title == undefined ? onlysong : metadata.common.title
@@ -864,6 +933,23 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
     if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
         artist = metadata.common.artists.join(" / ")
     }
+   if (fetchExtraInfo !== undefined && fetchExtraInfo === true) {
+        let lstat =  fs.lstatSync(song)
+        extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
+        extrainfo.format = metadata.format.codec
+        extrainfo.bitrate = Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
+        extrainfo.samplerate = metadata.format.sampleRate.toString() + " Hz"
+
+        if (metadata.common.genre !== undefined && metadata.common.genre.length !== 0) {
+            extrainfo.genre = metadata.common.genre.join(" / ")
+        } else {
+            extrainfo.genre = "Unknown Genre"
+        }
+        extrainfo.year = metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
+        
+
+        //console.log(extrainfo)
+   }
         
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
@@ -884,7 +970,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers) {
 
     //console.log(extinf)
     if (returnObj == true) {
-        return {artist, title, album, duration, cover, extinf, coverobj}
+        return {artist, title, album, duration, cover, extinf, coverobj, extrainfo}
     } else {
         return extinf
     }
