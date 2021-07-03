@@ -1,0 +1,368 @@
+/* use @import url("roseboxlib.css"); in other stylesheet or html import (better i think)*/
+
+/*
+this library contains:
+
+**ROSEBOX SPECIFIC STUFF**
+- base rosebox colors (more to be added)
+- rosebox scrollbars
+- autocomplete-js rosebox styling
+
+**UTILITIES**
+- button progress bars
+- simple classes for quick fixes/changes™ (check utilities)
+- rotate animation class
+
+**COMPONENTS**
+- pills
+- big popup
+- moremenu™ (js in utils.js)
+- a hr with text in the middle
+
+**MISC**
+- extract from W3.CSS and normalize.css
+
+*/
+
+
+/*some variables*/
+:root {
+    --bg-secondary: #222222;
+    --bg-primary: #262626;
+    --fg-rosebox: #a57562;
+    --text: #a3a5aa;
+}
+body {
+    padding: 0px;
+    margin: 0px;
+    background-color: var(--bg-primary);
+    color: var(--text);
+    --matter-helper-theme: 165, 117, 98;
+    --matter-onsurface-rgb: 163, 165, 170;
+}
+
+/*scrollbars*/
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.0);
+    border-radius: 10px;
+    margin: 0.5rem 0.1rem 0.5rem 0.1rem;
+    padding: 0rem 0.1rem 0rem 0.1rem;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #3f3533;
+    border-radius: 10px;
+}
+
+/*progress bars - put <div class="prog" id="progid"></div> inside button*/
+.prog {
+    width: 0%;
+    position: absolute !important;
+    bottom: 0;
+    left: 0;
+    background: rgb(103, 165, 139);
+    height: 2px;
+    z-index: 2;
+    transition: opacity 1s, width 0.5s;
+}
+.roundedprog {
+    border-radius: 0 0 1rem 1rem;
+}
+
+/*------ utilities ------*/
+
+.ml {margin-left: .2rem}
+.mr {margin-right: .2rem}
+.fullwidth {width: 100%}
+.noselect {user-select: none !important;}
+.bold { font-weight: bold;}
+
+
+.mdicontext { /*add to button which has both text and a material icon*/
+    display: flex;
+    justify-content:center;
+    align-items:center;
+}
+.vertical-icon-minwidth { /*add to make super small icon*/
+    width: 1rem !important;
+}
+/*put element to flex-end*/
+.flex-end {justify-self: flex-end;}
+
+/*buttn colors, danger and active*/
+.btn-active {color: rgb(103, 165, 139);}
+.btn-danger {color: rgb(226, 76, 76);}
+
+/*hiding elements (easier to modify classlist than to append/remove attribute)*/
+.hidden {display: none;}
+.hidden-f {display: none !important;} /*force hide*/
+
+/*links*/
+a, .link {
+    color: rgb(55, 185, 228);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/*pills*/
+.pill {
+    max-height: 2rem;
+    background-color: gray;
+    border-radius: 100rem;
+    width: max-content;
+    padding: 0.3rem;
+    color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    margin: 0 0.3rem 0.3rem 0;
+}
+.closepill {
+    background-color: darkgray;
+    border-radius:100rem;
+    border: none;
+    margin-left: 0.3rem;
+    outline: none !important;
+}
+.closepill:active {
+    background-color: rgb(124, 124, 124);
+}
+/*syntax for pill:
+    a pill with text and a close button:
+    <div class="pill">
+        <span class="pillval">text</span>
+        <button class="closepill" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+
+    a close button (for a popup for example):
+    <button class="closepill popupclose" id="settings-close">&times;</button>
+*/
+
+/*a big popup, for setting or such*/
+/*settings, details popups*/
+.popup-body {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid #a57562;
+    padding: 0rem 1rem 1rem 1rem;
+    border-radius: 0.5rem;
+    min-width: 40rem;
+    background: var(--bg-primary);
+    max-height: 90%;
+    overflow-y: auto;
+}
+.popupclose {
+    position: absolute;
+    height: 2rem;
+    width: 2rem;
+    top: 2rem;
+    right: 1rem;
+    font-weight: bold;
+    z-index: 5;
+}
+.popup-header {
+    display: flex;
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    background: var(--bg-primary);
+    z-index: 3;
+    padding: 0.5rem;
+    border-bottom: 2px solid var(--bg-secondary)
+}
+/*use like this:
+    <div id="popupid-body" class="popup-body" hidden>
+      <div id="popupid-header" class="popup-header">
+        <h1>Popup Title</h1>
+        <button class="closepill popupclose" id="settings-close">&times;</button>
+      </div>
+      content
+    </div>
+*/
+
+/*more menu*/
+/*a context menu type of thing, used when you click on 3 dots*/
+#moremenu {
+    position: absolute;
+    z-index: 3;
+    height: min-content;
+
+    left: 0px; 
+    top: 0px;
+    transform: translatex(-50%)
+}
+#mm-ul {
+    padding-inline-start: 0;
+    margin: 0px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--fg-rosebox);
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.2rem 0.2rem 0.2rem;
+    
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-rows: 2rem;
+    row-gap: 0.1rem;
+}
+.mm-li {
+    list-style-type: none;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    transition: background 0.15s ease-in;
+    min-width: max-content;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+}
+.mm-li:hover {
+    background: rgba(165, 117, 98, 0.2);
+}
+
+/*syntax for moremenu:
+
+html:
+    <div id="moremenu" class="hidden">
+      <ul id="mm-ul">
+          <li class="mm-li">Bruh</li>
+      </ul>
+    </div>
+
+
+    to summon the menu, see utils.js
+
+*/
+
+/*rotate animation: add .rotate class and element will rotate*/
+.rotate {
+    animation-name: rotate;
+    animation-duration: 4000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg)
+    }
+    to {
+        transform: rotate(359deg)
+    }
+}
+
+/*autocomplete-js rosebox styling*/
+/*autocomplete library docs: https://autocomplete.trevoreyre.com/#/javascript-component */
+.autocomplete-result-list {
+    position: absolute;
+    margin: 0;
+    border: 1px solid rgba(0, 0, 0, .12);
+    padding: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: #282828;
+    list-style: none;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, .16);
+    max-height: calc(100vh - 110% - 12rem) !important;
+}
+
+[data-position=below] .autocomplete-result-list {
+    margin-top: -1px;
+    border-top-color: transparent;
+    border-radius: 0 0 8px 8px;
+}
+[data-position=above] .autocomplete-result-list {
+    margin-bottom: -1px;
+    border-bottom-color: transparent;
+    border-radius: 8px 8px 0 0;
+}
+.autocomplete-result {
+    cursor: default;
+    padding: 5px;
+    background-repeat: no-repeat;
+    background-position: 12px
+}
+.autocomplete-result:hover,
+.autocomplete-result[aria-selected=true] {
+    background-color: rgba(165, 117, 98, 0.2)
+}
+
+/*hr with text - create a hr with some text in it*/
+/*example:
+    <hr class="hr-text hr-secondary" data-content="Your playlists:" style="margin: 0.1rem" hidden id="yourplaylistshr">
+*/
+.hr-text {
+    line-height: 1em;
+    position: relative;
+    outline: 0;
+    border: 0;
+    color: black;
+    text-align: center;
+    height: 1.5rem;
+    opacity: .5;
+    margin: 0.3rem;
+}
+.hr-text:before {
+    content: '';
+    background: var(--text);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+}
+.hr-text:after {
+    content: attr(data-content);
+    position: relative;
+    display: inline-block;
+    color: black;
+    padding: 0 .5em;
+    line-height: 1.5em;
+    color: var(--text);
+    background-color: var(--bg-primary);
+}
+.hr-text.hr-secondary:after {
+    background-color: var(--bg-secondary);
+}
+
+/*small extract from w3 css*/
+html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
+/* Extract from normalize.css by Nicolas Gallagher and Jonathan Neal git.io/normalize */
+html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}
+article,aside,details,figcaption,figure,footer,header,main,menu,nav,section{display:block}summary{display:list-item}
+audio,canvas,progress,video{display:inline-block}progress{vertical-align:baseline}
+audio:not([controls]){display:none;height:0}[hidden],template{display:none}
+a{background-color:transparent}a:active,a:hover{outline-width:0}
+abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}
+b,strong{font-weight:bolder}dfn{font-style:italic}mark{background:#ff0;color:#000}
+small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sub{bottom:-0.25em}sup{top:-0.5em}figure{margin:1em 40px}img{border-style:none}
+code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}hr{box-sizing:content-box;height:0;overflow:visible}
+button,input,select,textarea,optgroup{font:inherit;margin:0}optgroup{font-weight:bold}
+button,input{overflow:visible}button,select{text-transform:none}
+button,[type=button],[type=reset],[type=submit]{-webkit-appearance:button}
+button::-moz-focus-inner,[type=button]::-moz-focus-inner,[type=reset]::-moz-focus-inner,[type=submit]::-moz-focus-inner{border-style:none;padding:0}
+button:-moz-focusring,[type=button]:-moz-focusring,[type=reset]:-moz-focusring,[type=submit]:-moz-focusring{outline:1px dotted ButtonText}
+fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:.35em .625em .75em}
+legend{color:inherit;display:table;max-width:100%;padding:0;white-space:normal}textarea{overflow:auto}
+[type=checkbox],[type=radio]{padding:0}
+[type=number]::-webkit-inner-spin-button,[type=number]::-webkit-outer-spin-button{height:auto}
+[type=search]{-webkit-appearance:textfield;outline-offset:-2px}
+[type=search]::-webkit-search-decoration{-webkit-appearance:none}
+::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}
+/* End extract */
+
+html,body{font-family:Verdana,sans-serif;font-size:15px;line-height:1.5}html{overflow-x:hidden}
+h1{font-size:36px}h2{font-size:30px}h3{font-size:24px}h4{font-size:20px}h5{font-size:18px}h6{font-size:16px}
+.w3-serif{font-family:serif}.w3-sans-serif{font-family:sans-serif}.w3-cursive{font-family:cursive}.w3-monospace{font-family:monospace}
+h1,h2,h3,h4,h5,h6{font-family:"Segoe UI",Arial,sans-serif;font-weight:400;margin:10px 0}.w3-wide{letter-spacing:4px}
+hr{border:0;border-top:1px solid #eee;margin:20px 0}
+.w3-container:after,.w3-container:before,.w3-panel:after,.w3-panel:before,.w3-row:after,.w3-row:before,.w3-row-padding:after,.w3-row-padding:before,
+.w3-cell-row:before,.w3-cell-row:after,.w3-clear:after,.w3-clear:before,.w3-bar:before,.w3-bar:after{content:"";display:table;clear:both}

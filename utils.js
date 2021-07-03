@@ -63,4 +63,59 @@ function zeropad(number, finalWidth, customCharacter) {
     return number.length >= finalWidth ? number : new Array(finalWidth - number.length + 1).join(customCharacter) + number;
 }
 
-module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder, getExtOrFn, zeropad}
+//generate a material design esque more menu / dropdown thingy
+/*
+requires html setup defined in roseboxlib.css
+
+usage:
+elem.onclick = (event) => {
+    let opt = {event, buttons: [
+        {   text: "Details",
+            run: () => {
+                updatePreview(songobj, false, true, true)
+            }},
+        {   text: "Edit Tags", 
+            run: () => {
+                alert("placeholder for tag editor")
+            }}
+    ]}
+    summonMenu(opt)
+}
+
+*/
+function summonMenu(options) {
+    document.onclick = ""
+    let menu = document.getElementById("moremenu")
+    menu.querySelector("ul").innerHTML = ""
+
+    if (options.buttons.length > 0) {
+        for (let i = 0; i < options.buttons.length; i++) {
+            const btn = options.buttons[i];
+            let btne = document.createElement("li")
+            btne.classList.add("mm-li")
+            btne.textContent = btn.text
+            btne.onclick = btn.run
+            btne.onmouseup = () => {document.getElementById("moremenu").classList.add("hidden")}
+            menu.querySelector("ul").appendChild(btne)
+        }
+    } else {
+        menu.querySelector("ul").innerHTML = `<li class="mm-li">Invalid menu, no buttons defined</li>`
+    }
+   
+    menu.classList.remove("hidden")
+    menu.style.left = `${options.event.clientX}px`
+    //always fit the menu on screen: if the diff of posY and windowheight is less than menuheight, just put it to windowheight - menuheight
+    menu.style.top = `${window.innerHeight - options.event.clientY < menu.clientHeight ? 
+    window.innerHeight - menu.clientHeight : options.event.clientY}px`
+
+    setTimeout(() => { //put it into an instant settimeout so this more button click doesen't trigger it
+        document.onclick = (event) => { //hide the menu again if i click away
+            if (!event.path.includes(menu)) {
+                menu.classList.add("hidden")
+                document.onclick = ""
+            }
+        }
+    }, 0)
+}
+
+module.exports = {shortenFilename, initOrLoadConfig, saveConfig, fixQuotes, clearFolder, getExtOrFn, zeropad, summonMenu}
