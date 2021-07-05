@@ -609,7 +609,7 @@ function getPlaylistContent() {
             play.push(song.relativepath)
         } else if (song.type == "playlist") {
             let spl = song.relativepath.split(slash)
-            let relpath = spl.slice(0, spl.length-1).join(pslash)
+            let relpath = spl.slice(0, spl.length-1).join(slash)
             //console.log(relpath)
 
             for (let i = 0; i < song.songs.length; i++) {
@@ -617,7 +617,7 @@ function getPlaylistContent() {
                 if (item.includes("#EXTINF")) {
                     play.push(item)
                 } else {
-                    play.push([relpath, item].join(pslash))
+                    play.push([relpath, item].join(slash))
                 }
             }
         }
