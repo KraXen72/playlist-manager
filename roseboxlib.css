@@ -180,7 +180,7 @@ a, .link {
     <div id="popupid-body" class="popup-body" hidden>
       <div id="popupid-header" class="popup-header">
         <h1>Popup Title</h1>
-        <button class="closepill popupclose" id="settings-close">&times;</button>
+        <button class="closepill popupclose" id="popupid-close">&times;</button>
       </div>
       content
     </div>

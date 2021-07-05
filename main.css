@@ -351,3 +351,19 @@
 #spe-genre {grid-area: 2 / var(--mid) / 3 / var(--end);}
 #spe-formatd {grid-area: 3 / 1 / 4 / var(--mid); }
 #spe-format {grid-area: 3 / var(--mid) / 4 / var(--end);}
+
+/*cover popup*/
+#coverdisplay {
+    height: 30rem;
+    width: auto;
+}
+#coverpop-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+#coverpop-header {
+    width: 100%;
+    border-bottom: 0px solid transparent
+}

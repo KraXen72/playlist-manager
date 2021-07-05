@@ -1,7 +1,11 @@
 const fs = require('fs');
 const slash = process.platform === 'win32' ? "\\" : "/"
 
-
+/**
+ * shorten a string to <start of string>...<end of string> format
+ * @param {String} str String to shorten
+ * @param {Number} len length of characters to shorten to
+ */
 function shortenFilename(str, len) { //turn a long string to start of string...end of string
     if (str.length > len) {
         let halfsize = Math.floor(len/2)-1 //the final size for each half
@@ -17,6 +21,10 @@ function shortenFilename(str, len) { //turn a long string to start of string...e
     } else {return str}
 }
 
+/**
+ * initialize / Load config file. rememer to modify this to init the way you want
+ * @param {String} filename config.json recommended but filename of the config file.
+ */
 function initOrLoadConfig(filename) { //initialize config.json
     let config = {}
 
@@ -34,15 +42,28 @@ function initOrLoadConfig(filename) { //initialize config.json
     return config
 }
 
+/**
+ * save the config file
+ * @param {String} filename path to config file (can be relative)
+ * @param {Object} config the object/json you want to write in config 
+ */
 function saveConfig(filename, config) { //save config.json
     fs.writeFileSync(filename, JSON.stringify(config, null, 2))
     console.log("saved config")
 }
 
+/**
+ * fix quotes so they can be put in title html attribute. replaces " with &quot;
+ * @param {String} str the string you want to fix quotes in
+ */
 function fixQuotes(str) { //escape quotes when put in title attribute for example
     return str.replaceAll('"', "&quot;")
 }
 
+/**
+ * clear a Folder - delete all files (NOT FOLDERS) in a folder
+ * @param {String} path path to folder to clear (can be relative)
+ */
 function clearFolder(path) { //delete all files in a folder
     let files = fs.readdirSync(path).filter(f => fs.lstatSync(path + slash + f).isFile() )
     files.forEach(f => {
@@ -50,6 +71,11 @@ function clearFolder(path) { //delete all files in a folder
     })
 }
 
+/**
+ * get either the extention or filename from a "filename.ext" format
+ * @param {String} filename a string in "filename.ext" format
+ * @returns {Object} {filename, ext}
+ */
 function getExtOrFn(filename) { //get the extension or filename from "filename.ext" format
     let splitarr = filename.split(".")
     let ext = splitarr[splitarr.length - 1]

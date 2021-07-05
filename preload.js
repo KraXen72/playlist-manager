@@ -392,6 +392,7 @@ function initSettings() {
     //closeSettings()
     if (body.style.display !== "block") {
         body.style.display = "block"
+        document.getElementById("coverpop-body").classList.add("hidden-f") //hide previous popup if there was one
         document.getElementById('settings-close').onclick = closeSettings
         document.getElementById("settings-submit").onclick = saveSettings
 
@@ -447,6 +448,20 @@ async function pickFolderAndFillInput(inputid) {
         document.getElementById(inputid).value = splitarr[splitarr.length - 1]
     }
     
+}
+
+//album cover display popup
+/**
+ * show the cover of clicked song but big
+ * @param {String} src path to album cover image
+ */
+function popCover(src) {
+    let popBody = document.getElementById("coverpop-body")
+    let popImg = document.getElementById("coverdisplay")
+    document.getElementById("coverpop-close").onclick = () => {popBody.classList.add("hidden-f")}
+    
+    popBody.classList.remove("hidden-f")
+    popImg.setAttribute("src", src)
 }
 
 /*playlist handling*/
@@ -662,7 +677,7 @@ async function addSong(songobj, refocus) {
 
     moreElem.classList.add("songitem-button"/*, "hidden", "vertical-icon-minwidth"*/)
     moreElem.setAttribute("title", "more options")
-    moreElem.onclick = (event) => {
+    let mmfunction = (event) => {
         let opt = {event, buttons: []}
 
         if (songobj.type == "playlist") { //playlist specific
@@ -687,6 +702,10 @@ async function addSong(songobj, refocus) {
                 {   text: "Details",
                     run: () => {
                         updatePreview(songobj, false, true, true)
+                    }},
+                {   text: "View cover", 
+                    run: () => {
+                        popCover(imgpath)
                     }}/*,
                 {   text: "Edit Tags", 
                     run: () => {
@@ -696,6 +715,8 @@ async function addSong(songobj, refocus) {
         }
         utils.summonMenu(opt)
     }
+    moreElem.onclick = mmfunction
+    songElem.oncontextmenu = mmfunction
 
     moreElem.innerHTML = `<i class="material-icons-round md-more_vert"></i>`
 
