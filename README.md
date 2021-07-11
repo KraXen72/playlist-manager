@@ -34,9 +34,21 @@ The best part is, this app uses relative paths in it's playlists, so if you just
 
 ## Installing
 
-for now, just clone this repo and in the directory run ``npm install`` and then ``npm start``.  
+**installing through npm**
+required: ``nodejs``  
+run in command prompt:  
+``npm i https://github.com/KraXen72/playlist-manager.git -g`` this will install the app globally 
+to launch the program, type ``playlistm`` in terminal or windows search.
+
+**running from source**
+required: ``nodejs, git``  
+run in command prompt:  
+1. ``git clone https://github.com/KraXen72/playlist-manager``
+2. ``cd playlist-manager``
+3. ``npm i``
+4. ``npm run start`` to run the program
   
-in the near future, it's going to be available on npm, and also as a prebuilt binary
+you can do all this with yarn instead of npm but npm works too
 
 ## Other Features:
 ### General:
