@@ -5,7 +5,7 @@ const electron = require('electron').remote
 const dialog = electron.dialog
 const fs = require('fs')
 
-const utils = require('./utils.js')
+const utils = require('./node_modules/roseboxlib/utils.js')
 
 const walk = require('fs-walk')
 const mm = require('music-metadata');
