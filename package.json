@@ -14,6 +14,9 @@
     "tutorial",
     "demo"
   ],
+  "bin": {
+    "playlistm": "./start.js"
+  },
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
