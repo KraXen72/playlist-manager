@@ -404,6 +404,8 @@ function initSettings() {
         fillSettingPills("settings-ign", config.ignore)
         document.getElementById('settings-ign-add').onclick = () => {addPill('settings-ign', 'settings-ign-input')}
         document.getElementById('settings-ign-pick').onclick = () => {pickFolderAndFillInput('settings-ign-input')}
+
+        document.getElementById('settings-config-import').onclick = () => {importSettings()}
     }
 }
 function closeSettings() {
@@ -414,6 +416,26 @@ function saveSettings() {
     config.ignore = [...document.getElementById("settings-ign").querySelectorAll(".pillval")].map(pill => pill.innerText)
     
     utils.saveConfig("./config.json", config)
+}
+function importSettings() {
+    let inp = document.getElementById('settings-config-input')
+    let sp = inp.nextElementSibling //span
+
+    let conf = {}
+
+    try { //import config
+        conf = JSON.parse(inp.value)
+        console.log(conf)
+        inp.value = ""
+        utils.saveConfig("./config.json", conf)
+        window.location.reload()
+
+    } catch (e) { //error message
+        sp.textContent = "invalid json"
+        sp.classList.add("btn-dangerf")
+        inp.value = ""
+        setTimeout(() => {sp.textContent = "Paste json here";sp.classList.remove("btn-dangerf")}, 2000)
+    }
 }
 
 //settings pills
