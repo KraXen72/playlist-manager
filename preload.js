@@ -40,7 +40,9 @@ var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
+    if (!fs.existsSync("./covers")){fs.mkdirSync("./covers")} //create covers dir if neccessary
     if (config.maindir !== "") {selectfolder(null, config)}
+
     //bottom bar
     document.getElementById('cancel').addEventListener("click", discardPlaylistPrompt)
     document.getElementById('save').addEventListener("click", savePlaylistPrompt)
