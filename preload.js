@@ -606,10 +606,10 @@ function getPlaylistContent() {
         const song = currPlaylist[i];
         if (song.type == "song") {
             play.push(song.tag.extinf)
-            play.push(song.relativepath)
+            play.push(song.relativepath.replaceAll(slash, pslash))
         } else if (song.type == "playlist") {
             let spl = song.relativepath.split(slash)
-            let relpath = spl.slice(0, spl.length-1).join(slash)
+            let relpath = spl.slice(0, spl.length-1).join(pslash) //what does this shit even do??
             //console.log(relpath)
 
             for (let i = 0; i < song.songs.length; i++) {
@@ -617,12 +617,12 @@ function getPlaylistContent() {
                 if (item.includes("#EXTINF")) {
                     play.push(item)
                 } else {
-                    play.push([relpath, item].join(slash))
+                    play.push([relpath, item].join(pslash))
                 }
             }
         }
     }
-    //console.log(play)
+    //it saves all paths with normal slashes
     return play
 }
 
@@ -1119,7 +1119,8 @@ async function loadPlaylist(playlist, mode) {
 			}
 		}
 	} else {
-		let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF"))
+		let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.replaceAll(pslash, slash))
+        //replace all normal slashes for os slashes when loading, so it can actually load the songs.
 		for (let i = 0; i < onlysongs.length; i++) {
 			const song = onlysongs[i];
 			//for loop find a song, push to currPlaylist and break from for loop
