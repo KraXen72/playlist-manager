@@ -20,10 +20,11 @@
   "author": "KraXen72",
   "license": "CC0-1.0",
   "dependencies": {
-    "@material-icons/font": "^1.0.8",
+    "@material-icons/font": "^1.0.14",
     "@trevoreyre/autocomplete-js": "^2.2.0",
-    "electron": "^12.0.5",
+    "electron": "^13.2.1",
     "fs-walk": "^0.0.2",
+    "graceful-fs": "^4.2.8",
     "music-metadata": "^7.8.4",
     "roseboxlib": "https://github.com/KraXen72/roseboxlib.git"
   }

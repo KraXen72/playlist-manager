@@ -371,6 +371,9 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
         if (extraInfo !== undefined && extraInfo === true) {
             let dur = `${Math.floor(Math.floor(tag.duration)/1000 / 60)}:${utils.zeropad(Math.floor(tag.duration/1000) % 60, 2)}` //get min and sec from duration, zeropad it
 
+            //TODO rewrite complex preview assignment
+            //there probably has to be a better way to do this?
+            //maybe like pass these as an object or an array where there is the desired value + queryselector. and map/assign in a loop 
             document.getElementById("sp-extra").classList.remove("hidden-f")
             document.getElementById("spe-fullpath").textContent = utils.shortenFilename(song.fullpath, 40)
             document.getElementById("spe-fullpath").setAttribute("title", song.fullpath)
@@ -438,6 +441,7 @@ function importSettings() {
     }
 }
 
+//TODO rewrite this in either like object/constructor type of thing (i do new TagArea(querySelector) and it would set all this up) or react/vue any other frontend framework
 //settings pills
 //add a pill to wrapper
 function addPill(wrapperid, inputid) {
@@ -621,6 +625,9 @@ function savePlaylist() { //actually save the playlist
     setTimeout(() => {document.getElementById("save").classList.remove("btn-active")}, 1000)
 }
 
+/**
+ * get a array of lines in extm3u (to write) from the currPlaylist (global)
+ */
 function getPlaylistContent() {
     //console.log(currPlaylist)
     let play = []
@@ -649,18 +656,24 @@ function getPlaylistContent() {
     //it saves all paths with normal slashes
     return play
 }
-
+/**
+ * remove duplicates from an array of m3u lines
+ * @param {Array} arr array of lines in extm3u syntax
+ * @returns array of lines in extm3u syntax without duplicates
+ */
 function removeDuplicatesFromPlaylist(arr) {
     let finalarr = [...arr]
     let newarr = []
     let allfilenames = [...arr].filter(line => !line.startsWith("#EXTINF:"))
+    //console.log(finalarr)
 
     for (let i = 0; i < allfilenames.length; i++) {// loop through all filenames
         const fn = allfilenames[i];
-        if (!newarr.includes(fn)) {
+        if (!newarr.includes(fn)) { //if the item is already in the new array, then we are seeing it for the second time
             newarr.push(fn)
         } else {
-            finalarr.splice((i*2)-1, 2) //remove i*2(because extinfs) -1 so we target extinf, 2 items, so extinf + song
+            //finalarr is array of lines (including extinfs)
+            finalarr.splice((i*2)-1, 2) //remove i*2(because extinfs every 2nd line) -1 (initial extinf), 2 items, so extinf + song
         }
     }
     return finalarr
@@ -846,7 +859,8 @@ function generateSongitem(val) {
 /*playlist handling - file manipulation etc*/
 
 //walk all directories and then call generateM3U()
-async function gen() {
+const gen = async () => {
+    
     let alldirs = []
     let gprog =  document.getElementById("gprog") //generate progress bar
     let genbutton = document.getElementById("gen")
@@ -883,7 +897,7 @@ async function gen() {
     genbutton.removeAttribute("disabled")
     genbutton.classList.add("btn-active")
     setTimeout(() => { genbutton.classList.remove("btn-active") }, 1000)
-}
+};
 
 //generate a m3u for given folder
 async function generateM3U(folder, useEXTINF) {
@@ -915,14 +929,17 @@ async function generateM3U(folder, useEXTINF) {
         }
         //if the song extension is in allowed list
         if (config.exts.includes(songext)) {
-            if (useEXTINF == true) {
-                //get info about the song
-                let extinf = await getEXTINF(basedir + slash + song, song, false, true)
-                allsongs.push(extinf.toString())
-                allsongs.push(`${appendname}${filename}`)
-            } else {
-                allsongs.push(`${appendname}${filename}`)
-            }
+            
+                if (useEXTINF == true) {
+                    //get info about the song
+                    let extinf = await getEXTINF(basedir + slash + song, song, false, true)
+                    allsongs.push(extinf.toString())
+                    allsongs.push(`${appendname}${filename}`)
+                } else {
+                    allsongs.push(`${appendname}${filename}`)
+                } 
+            
+            
         }
     }
     //console.log(allsongs)
@@ -942,8 +959,16 @@ async function generateM3U(folder, useEXTINF) {
  * @param {Boolean} fetchExtraInfo if true, fetch extra info
  */
 async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
-    const metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
-    metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number fo warnings
+    var metadata
+    try {
+        metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
+    } catch (e) {
+        console.warn(song, e)
+        metadata = { //when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
+            common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["failed to get extinf"]}
+        }
+    }
+    metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number of warnings
     //console.log("metadata: ",metadata)
 
     let extrainfo = {}
@@ -1331,6 +1356,4 @@ function matterButtonBorder(id, percent, col1, col2, width) {
     b.style.borderBottomWidth = `${width}px`
 
     b.style.borderTopColor = `${col1} !important;`
-
-
 }*/
