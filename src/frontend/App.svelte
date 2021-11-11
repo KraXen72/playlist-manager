@@ -8,6 +8,7 @@
     import Sidebar from './components/Sidebar.svelte'
 	import PlaylistBar from './components/PlaylistBar.svelte'
 	import ButtonBar from './components/ButtonBar.svelte'
+	import DetailsView from './components/DetailsView.svelte'
 
 </script>
 
@@ -19,6 +20,7 @@
     <Sidebar/>
 	<PlaylistBar/>
 	<ButtonBar/>
+	<DetailsView/>
 </main>
 
 <style>
