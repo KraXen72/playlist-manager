@@ -4,6 +4,7 @@
     <PlaylistTitle/>
     <SearchBar/>
     <Sidebar/>
+	<PlaylistBar/>
 </main>
 
 
@@ -28,5 +29,6 @@
     import PlaylistTitle from './components/PlaylistTitle.svelte'
     import SearchBar from './components/SearchBar.svelte'
     import Sidebar from './components/Sidebar.svelte'
+	import PlaylistBar from './components/PlaylistBar.svelte'
 
 </script>
