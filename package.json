@@ -25,6 +25,7 @@
 		"electron": "^13.1.1",
 		"electron-builder": "^22.10.5",
 		"electron-rebuild": "^2.3.5",
+		"electron-reloader": "^1.2.1",
 		"electron-run": "^2.0.1",
 		"esbuild": "^0.12.6",
 		"svelte": "^3.38.2",

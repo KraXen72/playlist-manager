@@ -32,11 +32,11 @@ export default defineConfig({
 			{
 				find: "@assets",
 				replacement: path.resolve(frontendPath, "assets"),
-			},
+			}/*,
 			{
 				find: "@rblib",
 				replacement: path.resolve(__dirname, "src/rblib"),
-			}
+			}*/
 		],
 		extensions: ['.js', '.ts', 'json', '.svelte']
 	},

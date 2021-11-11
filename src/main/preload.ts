@@ -4,19 +4,19 @@
 import { dialog, shell } from '@electron/remote'
 import { contextBridge, ipcRenderer } from "electron";
 import * as fs from 'fs';
-import * as utils from '@rblib/utils.js'
+import * as utils from '../rblib/utils.js'
 
 
 interface contextInterface {
   [ index: string ]: Function;
 }
 
-// const timestwo = (num: number) => {
-//   return num * 2
-// }
-// const testdialog = (text: string) => {
-//   dialog.showMessageBoxSync({message: "hello from preload!"})
-// }
+const timestwo = (num: number) => {
+  return num * 2
+}
+const testdialog = (text: string) => {
+  dialog.showMessageBoxSync({message: "hello from preload!"})
+}
 
 const context: contextInterface = {
   send: (channel: string, data: any) => {
@@ -36,8 +36,10 @@ const context: contextInterface = {
   }
 }
 
-Object.assign(context, {}) //add functions here
+Object.assign(context, {timestwo, testdialog}) //add functions here
 //console.log(context)
 contextBridge.exposeInMainWorld(
     "api", context
 );
+
+console.log("woo")

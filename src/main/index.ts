@@ -16,8 +16,7 @@ function createWindow() {
 			// contextIsolation: false, // protect against prototype pollution
 			contextIsolation: true, // protect against prototype pollution
 			enableRemoteModule: false, // turn off remote
-			preload: path.join(__dirname, 'preload.js'),
-			autoHideMenuBar: true
+			preload: path.join(__dirname, 'preload.js')
 		},
 		show: false,
 	}).once("ready-to-show", () => {
@@ -25,8 +24,16 @@ function createWindow() {
 	});
 
 	if (isDevelopment) {
+		
 		win.loadURL("http://localhost:3000");
-		// win.webContents.toggleDevTools();
+		win.webContents.toggleDevTools();
+
+		try {
+			require('electron-reloader')(module, {
+				debug: false,
+				watchRenderer: true
+			});
+		} catch (_) { console.log('electron-reloader made an oopsie'); }
 	} else {
 		win.loadURL(
 			pathToFileURL(path.join(__dirname, "./frontend/index.html")).toString()
