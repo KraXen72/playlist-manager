@@ -3,7 +3,8 @@
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "CommonJS",
-		"outDir": "../../app"
+		"outDir": "../../app",
+		"typeRoots": ["node_modules/@types"]
 	},
 	"include": [
 		"../main/**/*",

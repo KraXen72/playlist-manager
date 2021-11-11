@@ -15,8 +15,9 @@ function createWindow() {
 			nodeIntegration: true,
 			// contextIsolation: false, // protect against prototype pollution
 			contextIsolation: true, // protect against prototype pollution
-			enableRemoteModule: false, // turn off remote
-			preload: path.join(__dirname, 'preload.js')
+			//enableRemoteModule: false, // turn off remote
+			preload: path.join(__dirname, 'preload.js')/*,
+			nativeWindowOpen: isDevelopment*/
 		},
 		show: false,
 	}).once("ready-to-show", () => {
@@ -32,9 +33,10 @@ function createWindow() {
 			require('electron-reloader')(module, {
 				debug: false,
 				watchRenderer: true,
-				ignore: ["**/*.svelte" ]
+				ignore: ["**/*.svelte", "**/*.css", "**/*.html" ]
 			});
 		} catch (_) { console.log('electron-reloader made an oopsie'); }
+
 	} else {
 		win.loadURL(
 			pathToFileURL(path.join(__dirname, "./frontend/index.html")).toString()
@@ -50,7 +52,10 @@ function createWindow() {
 	// });
 }
 
+
+
 app.whenReady().then(createWindow);
+
 
 app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") {

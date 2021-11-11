@@ -4,7 +4,9 @@
 import { dialog, shell } from '@electron/remote'
 import { contextBridge, ipcRenderer } from "electron";
 import * as fs from 'fs';
-import * as utils from '../rblib/utils.js'
+import { createDeflate } from 'zlib';
+import { fixQuotes } from '../rblib/utils.js'
+const isDevelopment = process.env.NODE_ENV === "development";
 
 
 interface contextInterface {
@@ -36,10 +38,18 @@ const context: contextInterface = {
   }
 }
 
-Object.assign(context, {timestwo, testdialog}) //add functions here
+Object.assign(context, {timestwo, testdialog, fixQuotes}) //add functions here
 //console.log(context)
 contextBridge.exposeInMainWorld(
     "api", context
 );
 
-console.log("woo2")
+console.log("woo")
+/*
+if (isDevelopment) {
+	document.addEventListener('DOMContentLoaded', () => {
+		let s = document.createElement('script')
+		s.src = `https://cdn.jsdelivr.net/gh/redhatter/svelte-devtools-standalone@master/dist/standalone.js`
+		document.head.appendChild(s)
+	})
+}*/

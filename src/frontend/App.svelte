@@ -21,6 +21,7 @@
 </style>
 
 <script lang="ts">
+	//@ts-ignore
     const api = globalThis.api
 
     import AppTitle from './components/AppTitle.svelte'

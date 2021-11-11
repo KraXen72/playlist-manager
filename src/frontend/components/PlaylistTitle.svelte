@@ -1,4 +1,3 @@
-<!--<svelte:options accessors={true}/>-->
 <div>
     {#if mode === 'display'}
         <h4>{playlistNameDisplay}</h4>
