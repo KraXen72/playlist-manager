@@ -23,14 +23,14 @@
             <Label class="material-icons">close</Label>
         </Button>
     </Group>
+    <span class="button-separator">&nbsp;|&nbsp;</span>
     <span class="folder-select">
-        <span class="button-separator">&nbsp;|&nbsp;</span>
         <Button variant="outlined" class="mdborder mdbutton">Select</Button>
+        <Label>
+            D:\music
+        </Label>
     </span>
     <span class="squishy">
-        <!-- <Button class="smui-icon-btn" color="secondary" id="settings-button">
-            <Label class="material-icons">settings</Label>
-        </Button> -->
         <IconButton class="material-icons">settings</IconButton>
     </span>
 </div>
@@ -52,6 +52,7 @@
         flex-grow: 1;
         display: flex;
         align-items: center;
+        column-gap: 0.3rem
     }
     .squishy {
         max-height: 36px;
