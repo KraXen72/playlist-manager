@@ -1,0 +1,46 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"noImplicitAny": true,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"allowJs": true,
+		"checkJs": true,
+		"strict": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictPropertyInitialization": true,
+		"strictBindCallApply": true,
+		"noImplicitThis": true,
+		"noImplicitReturns": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"importHelpers": true,
+		"sourceMap": true,
+		"baseUrl": "./src",
+		"resolveJsonModule": true,
+		"importsNotUsedAsValues": "error",
+		"isolatedModules": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"types": [
+			"svelte",
+			"vite/client"
+		],
+		"paths": {
+			"@main/*": ["main/*"],
+			"@common/*": ["common/*"],
+			"@frontend/*": ["frontend/*"],
+			"@components/*": ["frontend/components/*"],
+			"@assets/*": ["frontend/assets/*"]
+		}
+	},
+	"exclude": [
+		"node_modules",
+		"app",
+		"dist"
+	],
+	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "src/vite-env.d.ts"]
+}

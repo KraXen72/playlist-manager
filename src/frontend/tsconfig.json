@@ -1,0 +1,21 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"lib": [
+			"ESNext"
+		],
+		"types": [
+			"svelte",
+			"vite/client"
+		],
+		"target": "esnext",
+		"module": "esnext"
+	},
+	"include": [
+		"../frontend/**/*",
+		"../common/**/*"
+, "../vite-env.d.ts"	],
+	"exclude": [
+		"../main/**/*"
+	]
+}

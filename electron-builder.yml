@@ -1,0 +1,7 @@
+appId: com.vanjmali.svelte-vite-electron
+productName: svelte-vite-electron
+copyright: Copyright © 2021 vanjmali
+directories:
+  output: dist
+  buildResources: build
+  app: app

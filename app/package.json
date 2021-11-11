@@ -1,0 +1,12 @@
+{
+  "name": "vite-project",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "index.js",
+  "devDependencies": {
+    "electron": "^11.3.0"
+  },
+  "dependencies": {
+    "fs-extra": "^10.0.0"
+  }
+}

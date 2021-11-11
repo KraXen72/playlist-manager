@@ -1,0 +1,3 @@
+[submodule "src/rblib"]
+	path = src/rblib
+	url = https://github.com/KraXen72/roseboxlib
