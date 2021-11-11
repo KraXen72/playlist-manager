@@ -42,4 +42,4 @@ contextBridge.exposeInMainWorld(
     "api", context
 );
 
-console.log("woo")
+console.log("woo2")

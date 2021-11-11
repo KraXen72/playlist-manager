@@ -31,7 +31,8 @@ function createWindow() {
 		try {
 			require('electron-reloader')(module, {
 				debug: false,
-				watchRenderer: true
+				watchRenderer: true,
+				ignore: ["**/*.svelte" ]
 			});
 		} catch (_) { console.log('electron-reloader made an oopsie'); }
 	} else {
