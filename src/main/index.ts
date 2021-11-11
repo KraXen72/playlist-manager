@@ -39,7 +39,7 @@ function createWindow() {
 			pathToFileURL(path.join(__dirname, "./frontend/index.html")).toString()
 		);
 	}
-
+	win.setMenuBarVisibility(false);
 	remote.enable(win.webContents)
 	//win.removeMenu();
 
