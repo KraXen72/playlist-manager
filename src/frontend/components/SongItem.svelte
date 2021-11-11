@@ -82,6 +82,7 @@
         background: transparent;
     }
     .songitem-cover-placeholder {
+        /*TODO fix this import using public*/
         background-image: url("img/placeholder.png");
         background-size: contain;
         background-position: center;

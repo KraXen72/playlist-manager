@@ -1,1 +1,57 @@
 @import url('../../node_modules/svelte-material-ui/bare.css');
+
+:root {
+    --mdc-theme-primary: var(--fg-rosebox);
+    --mdc-theme-secondary: var(--text);
+    --mdc-theme-background: #fff;
+    --mdc-theme-surface: #fff;
+    --mdc-theme-error: #b71c1c;
+    --mdc-theme-on-primary: #fff;
+    --mdc-theme-on-secondary: #fff;
+    --mdc-theme-on-surface: var(--text);
+    --mdc-theme-on-error: #fff;
+    --mdc-theme-text-primary-on-background: var(--text);
+    --mdc-theme-text-secondary-on-background: var(--text);
+    --mdc-theme-text-hint-on-background: var(--text);
+    --mdc-theme-text-disabled-on-background: var(--text);
+    /*not done yet*/
+    --mdc-theme-text-icon-on-background: rgba(0, 0, 0, 0.38);
+    --mdc-theme-text-primary-on-light: rgba(0, 0, 0, 0.87);
+    --mdc-theme-text-secondary-on-light: rgba(0, 0, 0, 0.54);
+    --mdc-theme-text-hint-on-light: rgba(0, 0, 0, 0.38);
+    --mdc-theme-text-disabled-on-light: rgba(0, 0, 0, 0.38);
+    --mdc-theme-text-icon-on-light: rgba(0, 0, 0, 0.38);
+    --mdc-theme-text-primary-on-dark: #fff;
+    --mdc-theme-text-secondary-on-dark: hsla(0, 0%, 100%, 0.7);
+    --mdc-theme-text-hint-on-dark: hsla(0, 0%, 100%, 0.5);
+    --mdc-theme-text-disabled-on-dark: hsla(0, 0%, 100%, 0.5);
+    --mdc-theme-text-icon-on-dark: hsla(0, 0%, 100%, 0.5);
+  }
+
+/*fixes*/
+.mdc-text-field:not(.mdc-text-field--disabled) .mdc-floating-label,
+.mdc-text-field:not(.mdc-text-field--disabled) .mdc-text-field__input {
+    color: var(--text);
+}
+.mdc-text-field:not(.mdc-text-field--disabled):hover .mdc-line-ripple::before,
+.mdc-text-field:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
+    border-bottom-color: var(--text);
+}
+.mdc-text-field--focused:not(.mdc-text-field--disabled) .mdc-floating-label {
+    color: var(--fg-rosebox);
+}
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: var(--text-tertiary);
+  transition: border-color 0.2s;
+}
+.mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-notched-outline .mdc-notched-outline__leading,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-notched-outline .mdc-notched-outline__notch,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-notched-outline .mdc-notched-outline__trailing {
+  border-color: var(--text-secondary);
+}
+
+.mdc-text-field__input {
+    font-size: 16px;
+}

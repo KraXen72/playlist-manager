@@ -1,3 +1,16 @@
+<script lang="ts">
+	//@ts-ignore
+    const api = globalThis.api
+
+    import AppTitle from './components/AppTitle.svelte'
+    import PlaylistTitle from './components/PlaylistTitle.svelte'
+    import SearchBar from './components/SearchBar.svelte'
+    import Sidebar from './components/Sidebar.svelte'
+	import PlaylistBar from './components/PlaylistBar.svelte'
+	import ButtonBar from './components/ButtonBar.svelte'
+
+</script>
+
 
 <main id="main-grid">
     <AppTitle/>
@@ -5,8 +18,8 @@
     <SearchBar/>
     <Sidebar/>
 	<PlaylistBar/>
+	<ButtonBar/>
 </main>
-
 
 <style>
     main#main-grid {
@@ -21,14 +34,3 @@
 
 </style>
 
-<script lang="ts">
-	//@ts-ignore
-    const api = globalThis.api
-
-    import AppTitle from './components/AppTitle.svelte'
-    import PlaylistTitle from './components/PlaylistTitle.svelte'
-    import SearchBar from './components/SearchBar.svelte'
-    import Sidebar from './components/Sidebar.svelte'
-	import PlaylistBar from './components/PlaylistBar.svelte'
-
-</script>
