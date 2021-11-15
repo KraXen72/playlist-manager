@@ -21,14 +21,7 @@ declare global {
             extrainfo: object | ""
         } | ""
     }
-
-    interface currPlaylist {
-        [ index: number ]: SongItem;
-    }
 }
 
 
-
-
-
-export const currPlaylist: currPlaylist = writable([]);
+export const currPlayList = writable<SongItem[]>([])

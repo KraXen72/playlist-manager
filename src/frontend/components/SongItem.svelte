@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
 
+    //@ts-ignore
     const api = globalThis.api
     const bull = `&nbsp;&#8226;&nbsp;`
 

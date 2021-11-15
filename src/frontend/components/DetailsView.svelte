@@ -18,7 +18,7 @@
 </script>
 
 <article>
-    <div class="song-preview" style="visibility: visible;" song-index="403" type="song">
+    <div class="song-preview" song-index="403" type="song">
         <div class="sp-cover-placeholder"></div>
         <div class="sp-cover-wrap">
             <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src="{coversrc}">
@@ -36,14 +36,13 @@
     }
     .song-preview {
         display: grid;
-        grid-template-rows: 0.3fr 1.5fr 0fr 0.8fr 0fr 0.8fr 0.3fr;
+        grid-template-rows: 0.6rem 1.5fr 0.8fr 0.8fr 0.6rem;
         grid-template-columns: 8rem 1fr;
-        height: 8rem;
+        /*height: 8rem;*/
         width: 100%;
         grid-template-areas: 
         "cover spacer1"
         "cover title"
-        "cover whatisthis"
         "cover artist"
         "cover album"
         "cover spacer2"
@@ -64,6 +63,9 @@
         height: 100%;
         border-radius: 10px;
         object-fit: contain;
+    }
+    .sp-cover, .sp-cover-placeholder, .sp-cover-placeholder {
+        border-radius: 10px;
     }
     .sp-title {
         grid-area: title;

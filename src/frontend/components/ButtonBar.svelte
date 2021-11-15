@@ -3,17 +3,6 @@
     import IconButton from '@smui/icon-button'
 </script>
 
-<!-- <div id="button-bar">
-    <button class="matter-button-outlined mdiconbutton" id="save" title="save playlist"><i class="material-icons-round md-save"></i></button>
-    <button class="matter-button-outlined mdiconbutton ml" id="cancel" title="discard playlist"><i class="material-icons-round md-close"></i></button>
-    <span class="ml mr">|</span>
-    <span id="select-folder">
-      <button class="matter-button-outlined" id="folder-open" title="Select directory with all your music">Select</button>
-      <span id="selected-folder">D:\music</span>
-    </span>
-    <span class="material-icons-round md-settings" id="settings" title="settings"></span>
-</div> -->
-
 <div id="button-bar">
     <Group variant="outlined">
         <Button variant="outlined" class="smui-icon-btn">

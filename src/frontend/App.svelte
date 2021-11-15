@@ -8,7 +8,8 @@
     import Sidebar from '@components/Sidebar.svelte'
 	import PlaylistBar from '@components/PlaylistBar.svelte'
     import ButtonBar from '@components/ButtonBar.svelte'
-    import DetailsView from '@components/DetailsView.svelte' 
+    import DetailsView from '@components/DetailsView.svelte'
+    import ExtraDetailsView from '@components/ExtraDetailsView.svelte';
     
 
 
@@ -24,6 +25,7 @@
 	<ButtonBar/>
     <div id="main-content">
         <DetailsView/>
+        <ExtraDetailsView hide={false}/>
     </div>
 	
 </main>
