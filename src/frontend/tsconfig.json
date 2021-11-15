@@ -16,6 +16,7 @@
 		"../common/**/*"
 , "../vite-env.d.ts"	],
 	"exclude": [
-		"../main/**/*"
+		"../main/**/*",
+		"../frontend/common/**/*"
 	]
 }
