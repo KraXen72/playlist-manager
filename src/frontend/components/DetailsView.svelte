@@ -1,5 +1,4 @@
 <script lang="ts">
-
     import placeholder from "../assets/placeholder.png";
     import { onMount } from "svelte";
 
@@ -11,24 +10,29 @@
         }
     })
 
+    export let coversrc = placeholder;
+    export let title = 'Unknown Title';
+    export let album = 'Unknown Album';
+    export let artist = 'Unknown Artist';
+
 </script>
 
 <article>
     <div class="song-preview" style="visibility: visible;" song-index="403" type="song">
         <div class="sp-cover-placeholder"></div>
         <div class="sp-cover-wrap">
-            <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src="{placeholder}">
+            <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src="{coversrc}">
         </div>
-        <div class="sp-title">DICTATOR</div>
-        <div class="sp-album">DICTATOR</div>
-        <div class="sp-artist">REI AMI</div>
+        <div class="sp-title">{title}</div>
+        <div class="sp-album">{album}</div>
+        <div class="sp-artist">{artist}</div>
     </div>
 </article>
 
 
 <style>
     article {
-        grid-area: DetailsView;
+        width: 100%;
     }
     .song-preview {
         display: grid;
@@ -58,7 +62,7 @@
     .sp-cover {
         width: 100%;
         height: 100%;
-        border-radius: 0.5rem;
+        border-radius: 10px;
         object-fit: contain;
     }
     .sp-title {

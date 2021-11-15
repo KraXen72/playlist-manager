@@ -2,13 +2,15 @@
 	//@ts-ignore
     const api = globalThis.api
 
-    import AppTitle from './components/AppTitle.svelte'
-    import PlaylistTitle from './components/PlaylistTitle.svelte'
-    import SearchBar from './components/SearchBar.svelte'
-    import Sidebar from './components/Sidebar.svelte'
-	import PlaylistBar from './components/PlaylistBar.svelte'
-	import ButtonBar from './components/ButtonBar.svelte'
-	import DetailsView from './components/DetailsView.svelte'
+    import AppTitle from '@components/AppTitle.svelte'
+    import PlaylistTitle from '@components/PlaylistTitle.svelte'
+    import SearchBar from '@components/SearchBar.svelte'
+    import Sidebar from '@components/Sidebar.svelte'
+	import PlaylistBar from '@components/PlaylistBar.svelte'
+    import ButtonBar from '@components/ButtonBar.svelte'
+    import DetailsView from '@components/DetailsView.svelte' 
+    
+
 
 </script>
 
@@ -20,7 +22,10 @@
     <Sidebar/>
 	<PlaylistBar/>
 	<ButtonBar/>
-	<DetailsView/>
+    <div id="main-content">
+        <DetailsView/>
+    </div>
+	
 </main>
 
 <style>
@@ -32,6 +37,13 @@
         grid-template-areas: "AppTitle PlaylistTitle SearchBar"
         "Sidebar PlaylistBar DetailsView"
         "Sidebar PlaylistBar ButtonBar";
+    }
+    #main-content {
+        grid-area: DetailsView;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        flex-direction: column;
     }
 
 </style>

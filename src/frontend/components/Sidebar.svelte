@@ -17,7 +17,7 @@
     aside {
         background: var(--bg-secondary);
         grid-area: Sidebar;
-        padding: var(--standard-padding);
+        padding: /*var(--standard-padding)*/0.8rem;
 
         display: grid;
         grid-template-columns: 100%;
