@@ -46,6 +46,9 @@
         align-items: flex-start;
         justify-content: flex-end;
         flex-direction: column;
+
+        padding-right: 1rem;
+        box-sizing: border-box;
     }
 
 </style>

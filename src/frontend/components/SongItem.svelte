@@ -1,10 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
+    import IconButton from '@smui/icon-button';
+    import Wrapper from '@smui/touch-target';
 
     //@ts-ignore
     const api = globalThis.api
-    const bull = `&nbsp;&#8226;&nbsp;`
+    const bull = `&nbsp;&#8226;&nbsp;`;
 
     export let coverid = "";
     export let coversrc = "";
@@ -14,6 +16,8 @@
     export let filename = "unknownpath";
     export let bold = false;
     export let nocover = false;
+    export let type = "song"; //song or playlist
+    export let buttons = <SongItemButton[]>[];
 
     let coverelem: HTMLImageElement;
 
@@ -22,8 +26,9 @@
             coverelem.src = placeholder
         }
     })
-    
+
 </script>
+
 <div class="songitem" class:nocover>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
@@ -38,7 +43,15 @@
         <span class="songitem-album" title="{album}">{album}</span>
     </div>
     <div class="songitem-filename" hidden>{filename}</div>
-    <div class="songitem-button-wrap"></div>
+    <div class="songitem-button-wrap">
+        <Wrapper>
+        {#each buttons as btn, i}
+            <div class="songitem-button">
+                <IconButton class="material-icons">{btn.icon}</IconButton>
+            </div>
+        {/each}
+        </Wrapper>
+    </div>
 </div>
 
 <style>
@@ -47,6 +60,9 @@
         padding: 0.2rem 0.2rem 0.25rem 0rem;
         display: grid;
         grid-template: 1.5rem 1.5rem / 3rem minmax(0%, 100%) min-content;
+        grid-template-areas:
+        "cover title button"
+        "cover albArt button";
         width: 100%;
     }
     .nocover {
@@ -57,8 +73,7 @@
         height: auto;
         width: auto;
         box-sizing:border-box;
-        grid-row: 1 / 3;
-        grid-column: 1 / 2;
+        grid-area: cover;
         margin: 0.2rem;
         border-radius: 0.3rem;
         position: relative;
@@ -90,8 +105,7 @@
         background-repeat: no-repeat;
     }
     .songitem-button-wrap {
-        grid-row: 1 / 3;
-        grid-column: 3 / 4;
+        grid-area: button;
         width: 100%;
         height: 100%;
         display: flex;
@@ -108,16 +122,14 @@
         cursor: pointer;
     }
     .songitem-title {
-        grid-row: 1 / 2;
-        grid-column: 2 / 3;
+        grid-area: title;
         margin-left: 0.2rem;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
     }
     .songitem-aa {
-        grid-row: 2 / 3;
-        grid-column: 2 / 3;
+        grid-area: albArt;
         font-size: 0.8rem;
         display: flex;
         max-width: auto;

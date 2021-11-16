@@ -62,6 +62,8 @@
         margin: 0.5rem;
         position: relative;
         column-gap: 0.2rem;
+        width: 100%;
+        box-sizing: border-box;
     }
     .key {
         font-weight: bold;
@@ -71,29 +73,6 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    /* .key.path { grid-area: kpath; }
-    .value.path { grid-area: path; }
-
-    .key.genre { grid-area: kgenre; }
-    .value.genre { grid-area: genre; }
-
-    .key.format { grid-area: kformat; }
-    .value.format { grid-area: format; }
-
-    .key.duration { grid-area: kduration; }
-    .value.duration { grid-area: duration; }
-
-    .key.bitrate { grid-area: kbitrate; }
-    .value.bitrate { grid-area: bitrate; }
-
-    .key.size { grid-area: ksize; }
-    .value.size { grid-area: size; }
-
-    .key.samplerate { grid-area: ksamplerate; }
-    .value.samplerate { grid-area: samplerate; }
-
-    .key.year { grid-area: kyear; }
-    .value.year { grid-area: year; } */
 
     .spacer {
         grid-area: spacer;

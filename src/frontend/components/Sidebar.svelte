@@ -8,8 +8,19 @@
         artist: "25 Songs",
         album: 'D:\\music\\temp batch 1.m3u', 
         bold: true,
-        nocover: true
+        nocover: true,
+        type: "playlist"
     }
+    let buttons: SongItemButton[] = [
+        {
+            icon: "drive_file_rename_outline",
+            desc: "Edit Playlist",
+            fn: () => {
+                alert(1)
+            }
+        }
+
+    ]
 </script>
 
 <style>
@@ -49,7 +60,7 @@
 
     <div class="sidebar-playlists">
         {#each Array(3) as i}
-            <SongItem {...opts}/>
+            <SongItem {...opts} buttons={buttons}/>
         {/each}
     </div>
     
