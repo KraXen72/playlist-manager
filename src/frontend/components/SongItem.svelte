@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
-    import IconButton from '@smui/icon-button';
-    import Wrapper from '@smui/touch-target';
+    import { Icon } from '@smui/button';
+    //import Tooltip, { Wrapper } from '@smui/tooltip';
 
     //@ts-ignore
     const api = globalThis.api
@@ -44,13 +44,18 @@
     </div>
     <div class="songitem-filename" hidden>{filename}</div>
     <div class="songitem-button-wrap">
-        <Wrapper>
+        
         {#each buttons as btn, i}
-            <div class="songitem-button">
-                <IconButton class="material-icons">{btn.icon}</IconButton>
-            </div>
+        <!-- <Wrapper>
+            <button class="songitem-button noselect" on:click={btn.fn}>
+                <Icon class="material-icons" touch>{btn.icon}</Icon>
+            </button>
+            <Tooltip unbounded xPos="center" yPos="below">{btn.desc}</Tooltip>
+        </Wrapper> -->
+        <button class="songitem-button noselect" on:click={btn.fn} title={btn.desc}>
+            <Icon class="material-icons" touch>{btn.icon}</Icon>
+        </button>
         {/each}
-        </Wrapper>
     </div>
 </div>
 
@@ -108,6 +113,7 @@
         grid-area: button;
         width: 100%;
         height: 100%;
+
         display: flex;
         justify-content: flex-end;
         align-items: center;
@@ -120,7 +126,21 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        width: 24px;
+
+        border: none;
+        background: transparent;
+        color: var(--text);
+        transition: opacity 0.1s;
     }
+    .songitem-button:hover {
+        opacity: 80%;
+    }
+    .songitem-button:active {
+        opacity: 50%;
+    }
+
+
     .songitem-title {
         grid-area: title;
         margin-left: 0.2rem;

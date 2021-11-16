@@ -13,10 +13,17 @@
     }
     let buttons: SongItemButton[] = [
         {
+            icon: "autorenew",
+            desc: "re-make / update: generate this playlist again if you added new songs or removed some",
+            fn: () => {
+                console.log("regen")
+            }
+        },
+        {
             icon: "drive_file_rename_outline",
             desc: "Edit Playlist",
             fn: () => {
-                alert(1)
+                console.log("edit")
             }
         }
 

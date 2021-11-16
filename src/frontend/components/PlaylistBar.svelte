@@ -10,6 +10,22 @@
         bold: false,
         nocover: false
     }
+    const buttons: SongItemButton[] = [
+        {
+            icon: "more_vert",
+            desc: "More options",
+            fn: () => {
+                console.log("more")
+            }
+        },
+        {
+            icon: "close",
+            desc: "Remove song from playlist",
+            fn: () => {
+                console.log("remove")
+            }
+        }
+    ]
 </script>
 
 
@@ -17,7 +33,7 @@
     <div id="playlist-scroll-wrap">
       <div id="playlist-bar">
         {#each Array(2) as i}
-            <SongItem {...opts}/>
+            <SongItem {...opts} {buttons}/>
         {/each}
       </div>
     </div>
