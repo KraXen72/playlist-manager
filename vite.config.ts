@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import path from "path";
+import timeReporter from 'vite-plugin-time-reporter';
 
 const frontendPath = path.resolve(__dirname, "src/frontend");
 const outDirfrontend = path.resolve(__dirname, "app/frontend");
@@ -8,7 +9,8 @@ const outDirfrontend = path.resolve(__dirname, "app/frontend");
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
-		svelte({ configFile: './../../svelte.config.js' })
+		svelte({ configFile: './../../svelte.config.js' }),
+		timeReporter()
 	],
 	base: "./",
 	root: frontendPath,
