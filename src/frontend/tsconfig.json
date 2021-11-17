@@ -14,7 +14,7 @@
 	"include": [
 		"../frontend/**/*",
 		"../common/**/*"
-, "../vite-env.d.ts"	],
+, "../vite-env.d.ts", "../global.d.ts"	],
 	"exclude": [
 		"../main/**/*",
 		"../frontend/common/**/*"

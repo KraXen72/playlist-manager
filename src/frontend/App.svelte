@@ -1,6 +1,5 @@
 <script lang="ts">
-	//@ts-ignore
-    const api = globalThis.api
+    
 
     import AppTitle from '@components/AppTitle.svelte'
     import PlaylistTitle from '@components/PlaylistTitle.svelte'
@@ -10,9 +9,8 @@
     import ButtonBar from '@components/ButtonBar.svelte'
     import DetailsView from '@components/DetailsView.svelte'
     import ExtraDetailsView from '@components/ExtraDetailsView.svelte';
-    
 
-
+    const api = window.api
 </script>
 
 
@@ -50,6 +48,5 @@
         padding-right: 1rem;
         box-sizing: border-box;
     }
-
 </style>
 

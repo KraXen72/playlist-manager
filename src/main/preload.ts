@@ -1,26 +1,29 @@
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
-
 import { dialog, shell } from '@electron/remote'
 import { contextBridge, ipcRenderer } from "electron";
 import * as fs from 'fs';
-import { createDeflate } from 'zlib';
-import { fixQuotes } from '../rblib/utils.js'
+import { contextIsolated } from 'process';
+
+import * as utils from '../rblib/utils.js'
 const isDevelopment = process.env.NODE_ENV === "development";
 
 
-interface contextInterface {
-  [ index: string ]: Function;
-}
 
-const timestwo = (num: number) => {
-  return num * 2
-}
 const testdialog = (text: string) => {
   dialog.showMessageBoxSync({message: "hello from preload!"})
 }
 
-const context: contextInterface = {
+/**
+ * multiplies number by 2
+ * @param num number to multiply
+ * @returns multiplied number
+ */
+const timestwo = (num: number) => {
+  return num * 2
+}
+
+const context = {
   send: (channel: string, data: any) => {
       // whitelist channels
       let validChannels = ["toMain", "requestSystemInfo"];
@@ -35,21 +38,10 @@ const context: contextInterface = {
           // @ts-ignore
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
-  }
+  },
+  timestwo, testdialog
 }
 
-Object.assign(context, {timestwo, testdialog, fixQuotes}) //add functions here
-//console.log(context)
-contextBridge.exposeInMainWorld(
-    "api", context
-);
+export type IElectronAPI = typeof context;
 
-console.log("woo")
-/*
-if (isDevelopment) {
-	document.addEventListener('DOMContentLoaded', () => {
-		let s = document.createElement('script')
-		s.src = `https://cdn.jsdelivr.net/gh/redhatter/svelte-devtools-standalone@master/dist/standalone.js`
-		document.head.appendChild(s)
-	})
-}*/
+contextBridge.exposeInMainWorld( "api", context );
