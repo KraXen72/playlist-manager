@@ -9,7 +9,6 @@ import * as utils from '../rblib/utils.js'
 const isDevelopment = process.env.NODE_ENV === "development";
 
 
-
 const testdialog = (text: string) => {
   dialog.showMessageBoxSync({message: "hello from preload!"})
 }
