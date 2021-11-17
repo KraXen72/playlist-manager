@@ -14,8 +14,9 @@
         {
             icon: "more_vert",
             desc: "More options",
-            fn: () => {
+            fn: (props: object) => {
                 console.log("more")
+                console.log(props)
             }
         },
         {
@@ -26,6 +27,8 @@
             }
         }
     ]
+
+
 </script>
 
 
@@ -33,7 +36,7 @@
     <div id="playlist-scroll-wrap">
       <div id="playlist-bar">
         {#each Array(2) as i}
-            <SongItem {...opts} {buttons}/>
+            <SongItem data={opts} {buttons}/>
         {/each}
       </div>
     </div>

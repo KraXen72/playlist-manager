@@ -67,7 +67,7 @@
 
     <div class="sidebar-playlists">
         {#each Array(3) as i}
-            <SongItem {...opts} buttons={buttons}/>
+            <SongItem data={opts} {buttons}/>
         {/each}
     </div>
     

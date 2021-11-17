@@ -8,16 +8,18 @@
     const api = globalThis.api
     const bull = `&nbsp;&#8226;&nbsp;`;
 
-    export let coverid = "";
-    export let coversrc = "";
-    export let title = "Unknown Title";
-    export let artist = "Unknown Artist";
-    export let album = "Unknown Album";
-    export let filename = "unknownpath";
-    export let bold = false;
-    export let nocover = false;
-    export let type = "song"; //song or playlist
-    export let buttons = <SongItemButton[]>[];
+    export let data = {
+        coverid: "",
+        coversrc: "",
+        title: "Unknown Title",
+        artist: "Unknown Artist",
+        album: "Unknown Album",
+        filename: "unknownpath",
+        bold: false,
+        nocover: false,
+        type: "song", //song or playlis
+    }
+    export let buttons = <SongItemButton[]>[]
 
     let coverelem: HTMLImageElement;
 
@@ -29,20 +31,20 @@
 
 </script>
 
-<div class="songitem" class:nocover>
+<div class="songitem" class:nocover={data.nocover}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
-        <img class="songitem-cover cover-{coverid}" draggable="false" loading="lazy" src="{coversrc}" bind:this={coverelem} alt="cover"/>
+        <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{data.coversrc}" bind:this={coverelem} alt="cover"/>
     </div>
-    <div class="songitem-title" title="{title}">
-        <span class:bold>{title}</span>
+    <div class="songitem-title" title="{data.title}">
+        <span class:bold={data.bold}>{data.title}</span>
     </div>
     <div class="songitem-aa">
-        <span class="songitem-artist" title="{artist}">{artist}</span>
+        <span class="songitem-artist" title="{data.artist}">{data.artist}</span>
         {@html bull}
-        <span class="songitem-album" title="{album}">{album}</span>
+        <span class="songitem-album" title="{data.album}">{data.album}</span>
     </div>
-    <div class="songitem-filename" hidden>{filename}</div>
+    <div class="songitem-filename" hidden>{data.filename}</div>
     <div class="songitem-button-wrap">
         
         {#each buttons as btn, i}
@@ -52,7 +54,7 @@
             </button>
             <Tooltip unbounded xPos="center" yPos="below">{btn.desc}</Tooltip>
         </Wrapper> -->
-        <button class="songitem-button noselect" on:click={btn.fn} title={btn.desc}>
+        <button class="songitem-button noselect" on:click={() => btn.fn(data)} title={btn.desc}>
             <Icon class="material-icons" touch>{btn.icon}</Icon>
         </button>
         {/each}
