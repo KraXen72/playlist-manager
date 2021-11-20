@@ -1,6 +1,15 @@
 <script lang="ts">
     import Button, {Label, Group} from '@smui/button';
-    import IconButton from '@smui/icon-button'
+    import IconButton from '@smui/icon-button';
+    import { config } from '../common/stores';
+
+    const api = window.api
+
+    function pick() {
+        let temp = api.pickFolder("Pick the main music folder") ?? [$config.maindir]
+        $config.maindir = temp[0]
+        api.saveConfig("./config.json", $config)
+    }
 </script>
 
 <div id="button-bar">
@@ -14,9 +23,9 @@
     </Group>
     <span class="button-separator">&nbsp;|&nbsp;</span>
     <span class="folder-select">
-        <Button variant="outlined" class="mdborder mdbutton">Select</Button>
+        <Button variant="outlined" class="mdborder mdbutton" on:click={pick}>Select</Button>
         <Label>
-            D:\music
+            {$config.maindir || "No folder selected"}
         </Label>
     </span>
     <span class="squishy">

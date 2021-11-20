@@ -8,3 +8,4 @@ app/*
 !app/package.json
 !app/yarn.lock
 !app/package-lock.json
+config.json

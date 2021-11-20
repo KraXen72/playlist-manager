@@ -24,3 +24,10 @@ interface SongItemButton {
     desc: string,
     fn: Function
 }
+
+interface Config {
+    maindir: string,
+    exts: string[], 
+    ignore: string[],
+    comPlaylists: Object
+}

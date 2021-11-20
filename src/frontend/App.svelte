@@ -1,6 +1,4 @@
 <script lang="ts">
-    
-
     import AppTitle from '@components/AppTitle.svelte'
     import PlaylistTitle from '@components/PlaylistTitle.svelte'
     import SearchBar from '@components/SearchBar.svelte'
@@ -10,7 +8,12 @@
     import DetailsView from '@components/DetailsView.svelte'
     import ExtraDetailsView from '@components/ExtraDetailsView.svelte';
 
+    import { config } from './common/stores'
+
     const api = window.api
+
+    $config = api.initOrLoadConfig("config.json")
+
 </script>
 
 

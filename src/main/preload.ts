@@ -1,11 +1,10 @@
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
 import { dialog, shell } from '@electron/remote'
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, OpenDialogSyncOptions } from "electron";
 import * as fs from 'fs';
-import { contextIsolated } from 'process';
 
-import * as utils from '../rblib/utils.js'
+import { initOrLoadConfig, saveConfig } from '../rblib/utils.js'
 const isDevelopment = process.env.NODE_ENV === "development";
 
 
@@ -20,6 +19,20 @@ const testdialog = (text: string) => {
  */
 const timestwo = (num: number) => {
   return num * 2
+}
+
+/**
+ * opens electron's folder select dialog
+ * @param title the title of the dialog
+ */
+const pickFolder = (title: string) => {
+  let opts: OpenDialogSyncOptions = {
+    title, properties: ["openDirectory"]
+  }
+
+  let pick = dialog.showOpenDialogSync(opts)
+
+  return pick
 }
 
 const context = {
@@ -38,7 +51,7 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },
-  timestwo, testdialog
+  timestwo, testdialog, initOrLoadConfig, pickFolder, saveConfig
 }
 
 export type IElectronAPI = typeof context;
