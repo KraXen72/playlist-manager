@@ -375,7 +375,7 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
             //there probably has to be a better way to do this?
             //maybe like pass these as an object or an array where there is the desired value + queryselector. and map/assign in a loop 
             document.getElementById("sp-extra").classList.remove("hidden-f")
-            document.getElementById("spe-fullpath").textContent = utils.shortenFilename(song.fullpath, 40)
+            document.getElementById("spe-fullpath").textContent = utils.shortenFilename(song.fullpath, 35)
             document.getElementById("spe-fullpath").setAttribute("title", song.fullpath)
             document.getElementById("spe-genre").textContent = tag.extrainfo.genre
             document.getElementById("spe-format").textContent = tag.extrainfo.format
@@ -615,7 +615,7 @@ function savePlaylistPrompt() {
 
 function savePlaylist() { //actually save the playlist
     notReady(false)
-    let lines = getPlaylistContent()
+    let lines = getPlaylistContent() //this is with duplicate songs possible
     lines = removeDuplicatesFromPlaylist(lines)
 
     fs.writeFileSync(savePath, lines.join("\n"))
@@ -662,21 +662,13 @@ function getPlaylistContent() {
  * @returns array of lines in extm3u syntax without duplicates
  */
 function removeDuplicatesFromPlaylist(arr) {
-    let finalarr = [...arr]
-    let newarr = []
-    let allfilenames = [...arr].filter(line => !line.startsWith("#EXTINF:"))
-    //console.log(finalarr)
+    //console.log("initial_songs: ", arr)
 
-    for (let i = 0; i < allfilenames.length; i++) {// loop through all filenames
-        const fn = allfilenames[i];
-        if (!newarr.includes(fn)) { //if the item is already in the new array, then we are seeing it for the second time
-            newarr.push(fn)
-        } else {
-            //finalarr is array of lines (including extinfs)
-            finalarr.splice((i*2)-1, 2) //remove i*2(because extinfs every 2nd line) -1 (initial extinf), 2 items, so extinf + song
-        }
-    }
-    return finalarr
+    let uniqueSongs = new Set(arr)
+    uniqueSongs = [...uniqueSongs]
+
+    //console.log("unique: ", uniqueSongs)
+    return uniqueSongs
 }
 
 //add a song to the current playlist
@@ -752,11 +744,10 @@ async function addSong(songobj, refocus) {
         }
         utils.summonMenu(opt)
     }
-    moreElem.onclick = mmfunction
-    songElem.oncontextmenu = mmfunction
-
     moreElem.innerHTML = `<i class="material-icons-round md-more_vert"></i>`
 
+    moreElem.onclick = mmfunction
+    songElem.oncontextmenu = mmfunction
 
     remElem.classList.add("songitem-button")
     remElem.setAttribute("title", "Remove song from this playlist")
@@ -781,29 +772,6 @@ async function addSong(songobj, refocus) {
         }
         songElem.remove()
     }
-    /*if (songobj.type == "playlist") { //add a print
-        //remElem.style.gridColumn = " 4 / 5"
-
-        let printElem = document.createElement("div")
-        printElem.classList.add("songitem-button")
-        printElem.setAttribute("title", "See all songs in this playlist")
-        printElem.innerHTML = `<i class="material-icons-round md-queue_music"></i>`
-        printElem.onclick = () => {
-            let msg = ""
-            if (config.comPlaylists[songobj.fullpath] !== undefined) {
-                msg = `This generated playlist contains these playlists:\n${config.comPlaylists[songobj.fullpath].map(pl => pl.filename).join("\n")}`
-            } else {
-                msg = `This playlist contains:\n${songobj.songs.filter(line => !line.includes("#EXTINF")).join("\n")}`
-            }
-            dialog.showMessageBoxSync({
-                message: msg,
-                type: "info",
-                noLink: true
-            })
-        }
-        songElem.querySelector(".songitem-button-wrap").appendChild(printElem)
-
-    }*/
 
     songElem.querySelector(".songitem-button-wrap").appendChild(moreElem)
     songElem.querySelector(".songitem-button-wrap").appendChild(remElem)
@@ -845,7 +813,7 @@ function generateSongitem(val) {
     return `
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder" style = "${val.coversrc !== "" ? "display: none": ""}"></div>
-        <img class="songitem-cover cover-${val.coverid}" draggable="false" src="${val.coversrc}" onerror = "this.src = 'img/placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
+        <img class="songitem-cover cover-${val.coverid}" draggable="false" loading="lazy" src="${val.coversrc}" onerror = "this.src = 'img/placeholder.png'" style = "${val.coversrc == "" ? "display: none": ""}"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${strongtag[0]}${val.title}${strongtag[1]}</div>
     <div class="songitem-aa">
@@ -1145,6 +1113,7 @@ async function fetchAllSongs() {
 
 //load a playlist, "playlist" is an object, mode is new or com
 async function loadPlaylist(playlist, mode) {
+    //sdebugger;
 	discardPlaylist()
 	playlistName = utils.getExtOrFn(playlist.filename).fn
 	lastPlaylistName = playlistName
@@ -1167,10 +1136,29 @@ async function loadPlaylist(playlist, mode) {
 				}
 			}
 		}
+        document.getElementById("playlist-scroll-wrap").scrollTop = 0;
 	} else {
 		let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.replaceAll(pslash, slash))
         //replace all normal slashes for os slashes when loading, so it can actually load the songs.
-		for (let i = 0; i < onlysongs.length; i++) {
+        console.time("fetchSongObjs")
+        console.log(onlysongs)
+        songobjs = []
+        for (let i = 0; i < onlysongs.length; i++) {
+            const song = songsAndPlaylists.filter(s => s.relativepath === onlysongs[i])[0]
+            if (song.tag == undefined || song?.tag?.cover === "" || song?.tag?.coverobj?.data === "") {
+                song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
+            }
+            songobjs.push(song)
+        }
+        console.timeEnd("fetchSongObjs")
+        console.log(songobjs)
+        for (let i = 0; i < songobjs.length; i++) {
+            addSong(songobjs[i], false)
+        }
+
+        document.getElementById("playlist-scroll-wrap").scrollTop = 0;
+
+		/*for (let i = 0; i < onlysongs.length; i++) {
 			const song = onlysongs[i];
 			//for loop find a song, push to currPlaylist and break from for loop
 			for (let j = 0; j < songsAndPlaylists.length; j++) {
@@ -1180,7 +1168,7 @@ async function loadPlaylist(playlist, mode) {
 					break;
 				}
 			}
-		}
+		}*/
 	}
     notReady(false)
 	playlistName = lastPlaylistName
@@ -1201,10 +1189,12 @@ function loadPlaylistsSidebar(eplaylists) {
         let pElem = document.createElement("div")
         let editElem = document.createElement("div")
         pElem.classList.add("songitem")
+        let title = playlist.tag.title
+        title = title.slice(0, title.length - 4) //strip .m3u from title
         let opts = {
             coverid: "",
             coversrc: "",
-            title: `${playlist.tag.title}`,
+            title: title,
             artist: `${playlist.songs.length / 2} Songs`,
             album: playlist.tag.album,
             filename: playlist.filename,
