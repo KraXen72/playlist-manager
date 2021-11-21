@@ -25,9 +25,18 @@ interface SongItemButton {
     fn: Function
 }
 
+interface comPlaylist {
+    [index: string]: {
+        filename: string,
+        fullpath: string,
+        relativepath: string,
+    }
+}
+
 interface Config {
     maindir: string,
     exts: string[], 
     ignore: string[],
-    comPlaylists: Object
+    comPlaylists: Object<comPlaylist>
 }
+
