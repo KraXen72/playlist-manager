@@ -33,12 +33,10 @@
 	<PlaylistBar/>
 	<ButtonBar/>
     <div id="main-content">
+        <button on:click={logSongs}>log them songs</button>
         <DetailsView/>
         <ExtraDetailsView hide={false}/>
     </div>
-
-    <button on:click={logSongs}>log them songs</button>
-	
 </main>
 
 <style>
