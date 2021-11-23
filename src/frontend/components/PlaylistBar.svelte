@@ -6,7 +6,8 @@
         coversrc: placeholder,
         title: "Sarcoma",
         artist: "Killstation",
-        album: 'The two of us are dying', 
+        album: 'The two of us are dying',
+        filename: 'placeholder',
         bold: false,
         nocover: false
     }
@@ -27,10 +28,7 @@
             }
         }
     ]
-
-
 </script>
-
 
 <div id="playlist-bar-wrapper">
     <div id="playlist-scroll-wrap">

@@ -3,6 +3,31 @@
     import TextDivider from './TextDivider.svelte';
     import SongItem from './SongItem.svelte';
 
+    import { config } from '../common/stores'
+    import { onDestroy } from 'svelte'
+
+    let sidebarPlaylists: SongItemData[] = []
+
+    const unsub = config.subscribe((val) => {
+        sidebarPlaylists = Object.keys(val.comPlaylists).map( (key)  => {
+            const playlist = val.comPlaylists[key]
+            console.log(playlist)
+            let item: SongItemData = {
+                title: key,
+                artist: "-- Songs",
+                filename: key,
+                album: key,
+                bold: true,
+                nocover: true
+            }
+            return item
+        })
+    })
+
+    onDestroy( () => {
+        unsub()
+    })
+
     let opts = {
         title: "temp batch 1.m3u",
         artist: "25 Songs",
@@ -30,6 +55,25 @@
     ]
 </script>
 
+<aside>
+    <div class="sidebar-buttons">
+        <Button variant="outlined" class="mdbutton mdborder fullwidth ">Generate Playlists</Button>
+        <Button variant="outlined" class="mdbutton mdborder fullwidth">Delete generated Playlists</Button>
+        <Button variant="outlined" class="mdbutton mdborder fullwidth">
+            <Label>Playlist-only mode</Label>
+            <Icon class="material-icons icon-135 mdicontext">help_outline</Icon>
+        </Button>
+    </div>
+    <TextDivider content="Your Playlists: "/>
+
+    <div class="sidebar-playlists">
+        {#each sidebarPlaylists as opts}
+            <SongItem data={opts} {buttons}/>
+        {/each}
+    </div>
+    
+</aside>    
+
 <style>
     /* your styles go here */
     aside {
@@ -53,22 +97,3 @@
         overflow-x: hidden;
     }
 </style>
-
-<aside>
-    <div class="sidebar-buttons">
-        <Button variant="outlined" class="mdbutton mdborder fullwidth ">Generate Playlists</Button>
-        <Button variant="outlined" class="mdbutton mdborder fullwidth">Delete generated Playlists</Button>
-        <Button variant="outlined" class="mdbutton mdborder fullwidth">
-            <Label>Playlist-only mode</Label>
-            <Icon class="material-icons icon-135 mdicontext">help_outline</Icon>
-        </Button>
-    </div>
-    <TextDivider content="Your Playlists: "/>
-
-    <div class="sidebar-playlists">
-        {#each Array(3) as i}
-            <SongItem data={opts} {buttons}/>
-        {/each}
-    </div>
-    
-</aside>    

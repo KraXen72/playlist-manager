@@ -3,8 +3,8 @@ interface SongItem {
     fullpath: string,
     relativepath: string,
     type: "song" | "playlist",
-    index: string, //TODO fix this so it's a number
-    tag: {
+    index: number,
+    tag?: {
         artist: string,
         title: string,
         album: string,
@@ -24,19 +24,31 @@ interface SongItemButton {
     desc: string,
     fn: Function
 }
-
-interface comPlaylist {
-    [index: string]: {
-        filename: string,
-        fullpath: string,
-        relativepath: string,
-    }
+interface SongItemData {
+    coverid?: string | "",
+    coversrc?: string | "",
+    title: string,
+    artist: string,
+    album: string,
+    filename: string,
+    bold: boolean,
+    nocover: boolean,
+    type?: "song" | "playlist", //song or playlis
 }
 
+interface comPlaylist {
+    filename: string,
+    fullpath: string,
+    relativepath: string,
+}
 interface Config {
     maindir: string,
     exts: string[], 
     ignore: string[],
-    comPlaylists: Object<comPlaylist>
+    comPlaylists: {
+        [index: string]: comPlaylist
+    }
 }
 
+export type IConfig = Config;
+export type ISongItem = SongItem;

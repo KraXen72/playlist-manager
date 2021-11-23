@@ -8,11 +8,19 @@
     import DetailsView from '@components/DetailsView.svelte'
     import ExtraDetailsView from '@components/ExtraDetailsView.svelte';
 
-    import { config } from './common/stores'
+    import { config, maindir, allSongs, allPlaylists, allSongsAndPlaylists } from './common/stores'
+    import { onDestroy } from 'svelte';
 
     const api = window.api
+    const slash = api.slash
 
+    // @ts-ignore
     $config = api.initOrLoadConfig("config.json")
+
+    function logSongs() {
+        let songs = api.walker.songs($maindir, $config)
+        console.log(songs)
+    }
 
 </script>
 
@@ -28,6 +36,8 @@
         <DetailsView/>
         <ExtraDetailsView hide={false}/>
     </div>
+
+    <button on:click={logSongs}>log them songs</button>
 	
 </main>
 

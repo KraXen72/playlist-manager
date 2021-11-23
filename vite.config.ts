@@ -26,10 +26,6 @@ export default defineConfig({
 				replacement: frontendPath,
 			},
 			{
-				find: "@common",
-				replacement: path.resolve(__dirname, "src/common"),
-			},
-			{
 				find: "@components",
 				replacement: path.resolve(frontendPath, "components"),
 			},

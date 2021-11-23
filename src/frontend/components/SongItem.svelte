@@ -8,7 +8,7 @@
     const api = globalThis.api
     const bull = `&nbsp;&#8226;&nbsp;`;
 
-    export let data = {
+    export let data: SongItemData = {
         coverid: "",
         coversrc: "",
         title: "Unknown Title",
