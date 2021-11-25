@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
-    import { Icon } from '@smui/button';
-    //import Tooltip, { Wrapper } from '@smui/tooltip';
+    //import { Icon } from '@smui/button';
+    import IconButton, { Icon } from '@smui/icon-button';
 
     //@ts-ignore
     const api = globalThis.api
@@ -48,15 +48,14 @@
     <div class="songitem-button-wrap">
         
         {#each buttons as btn, i}
-        <!-- <Wrapper>
-            <button class="songitem-button noselect" on:click={btn.fn}>
-                <Icon class="material-icons" touch>{btn.icon}</Icon>
-            </button>
-            <Tooltip unbounded xPos="center" yPos="below">{btn.desc}</Tooltip>
-        </Wrapper> -->
         <button class="songitem-button noselect" on:click={() => btn.fn(data)} title={btn.desc}>
             <Icon class="material-icons" touch>{btn.icon}</Icon>
         </button>
+        <!-- <IconButton size="button" class="songitem-button noselect" on:click={() => btn.fn(data)} title={btn.desc}>
+            <Icon class="material-icons">
+              {btn.icon}
+            </Icon>
+        </IconButton> -->
         {/each}
     </div>
 </div>
@@ -64,7 +63,7 @@
 <style>
     .songitem {
         height: min-content;
-        padding: 0.2rem 0.2rem 0.25rem 0rem;
+        padding: 0.2rem 0rem 0.25rem 0rem;
         display: grid;
         grid-template: 1.5rem 1.5rem / 3rem minmax(0%, 100%) min-content;
         grid-template-areas:
@@ -128,7 +127,7 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        width: 24px;
+        /*width: 24px;*/
 
         border: none;
         background: transparent;

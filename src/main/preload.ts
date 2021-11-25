@@ -74,24 +74,6 @@ const walker = {
 //   // }
 
   
-//   console.log(songs)
-//   walk.filesSync(config.maindir, (basedir, filename) => {
-//       let fp = basedir + slash + filename
-//       songs.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
-//   })
-//   songs = songs.filter(song => {
-//       let ext = utils.getExtOrFn(song.filename).ext
-//       if (config.exts.includes(ext.toLowerCase(ext)) ) {
-//           song["type"] = "song"
-//           return true
-//       } else {
-//           return false
-//       }
-//   })
-//   for (let i = 0; i < songs.length; i++) {
-//       const song = songs[i];
-//       song["index"] = i.toString() 
-//   }
 //   //read every song and add their tag to the big object
 //   /*
 //   for (let i = 0; i < songs.length; i++) {

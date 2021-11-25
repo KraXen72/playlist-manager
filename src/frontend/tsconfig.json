@@ -13,10 +13,13 @@
 	},
 	"include": [
 		"../frontend/**/*",
-		"../common/**/*"
-, "../vite-env.d.ts", "../global.d.ts"	],
+		"../common/**/*",
+		"../vite-env.d.ts", 
+		"../global.d.ts"	
+	],
 	"exclude": [
 		"../main/**/*",
-		"../frontend/common/**/*"
+		"../frontend/common/**/*",
+		"../rblib/**/*"
 	]
 }

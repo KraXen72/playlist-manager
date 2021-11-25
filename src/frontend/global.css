@@ -76,3 +76,7 @@ https://github.com/google/material-design-icons/tree/master/font
     min-width: 36px !important;
 }
 
+.songitem-button {
+    padding: 0 !important;
+    max-width: 36px !important;
+}

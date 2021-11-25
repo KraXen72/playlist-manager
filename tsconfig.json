@@ -38,13 +38,15 @@
 			"@rblib/*": ["frontend/rblib/*"]
 		}
 	},
+	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "src/vite-env.d.ts"],
 	"exclude": [
 		"node_modules",
 		"app",
 		"dist",
 		"frontend/rblib",
 		"frontend/rblib/**/*",
-		"src/**/rblib/*"
-	],
-	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "src/vite-env.d.ts"],
+		"src/**/rblib/*",
+		"rblib/**/*",
+		"rblib"
+	]
 }
