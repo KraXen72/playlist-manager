@@ -1000,7 +1000,7 @@ async function fetchAllSongs() {
     editablePlaylists = []
 
     //check for config com playlists if some are missing delete them
-    for (let i = 0; i <Object.keys(config.comPlaylists).length; i++) {
+    for (let i = 0; i < Object.keys(config.comPlaylists).length; i++) {
         const complaylist =Object.keys(config.comPlaylists)[i];
         //console.log(complaylist)
         if (!fs.existsSync(complaylist)) {
