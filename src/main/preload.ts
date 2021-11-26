@@ -45,7 +45,7 @@ const walker = {
 
     }).map((song, i) => {
       const sItem: ISongItem = {
-        filename: song.name,
+    	 	filename: song.name,
         fullpath: song.path,
         index: i,
         relativepath: song.path.replaceAll(basedDir, "").replace(slash, ""),

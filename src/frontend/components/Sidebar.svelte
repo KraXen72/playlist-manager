@@ -11,7 +11,6 @@
     const unsub = config.subscribe((val) => {
         sidebarPlaylists = Object.keys(val.comPlaylists).map( (key)  => {
             const playlist = val.comPlaylists[key]
-            console.log(playlist)
             let item: SongItemData = {
                 title: key,
                 artist: "-- Songs",
@@ -22,11 +21,10 @@
             }
             return item
         })
+        console.log("fetched playlists")
     })
 
-    onDestroy( () => {
-        unsub()
-    })
+    onDestroy(unsub)
 
     let opts = {
         title: "temp batch 1.m3u",

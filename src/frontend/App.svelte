@@ -17,13 +17,12 @@
     // @ts-ignore
     $config = api.initOrLoadConfig("config.json")
 
-    function logSongs() {
-        let songs = api.walker.songs($maindir, $config)
-        console.log(songs)
-    }
-
+    const unsub = maindir.subscribe(val => {
+        $allSongs = api.walker.songs($maindir, $config)
+        /*console.log("fetched songs", $allSongs)*/ console.log("fetched songs")
+    })
+    onDestroy(unsub)
 </script>
-
 
 <main id="main-grid">
     <AppTitle/>
@@ -33,9 +32,8 @@
 	<PlaylistBar/>
 	<ButtonBar/>
     <div id="main-content">
-        <button on:click={logSongs}>log them songs</button>
         <DetailsView/>
-        <ExtraDetailsView hide={false}/>
+        <ExtraDetailsView hide={true}/>
     </div>
 </main>
 
