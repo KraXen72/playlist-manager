@@ -1,12 +1,12 @@
 <script lang="ts">
-    import AppTitle from '@components/AppTitle.svelte'
-    import PlaylistTitle from '@components/PlaylistTitle.svelte'
-    import SearchBar from '@components/SearchBar.svelte'
-    import Sidebar from '@components/Sidebar.svelte'
-	import PlaylistBar from '@components/PlaylistBar.svelte'
-    import ButtonBar from '@components/ButtonBar.svelte'
-    import DetailsView from '@components/DetailsView.svelte'
-    import ExtraDetailsView from '@components/ExtraDetailsView.svelte';
+    import AppTitle from '$components/AppTitle.svelte'
+    import PlaylistTitle from '$components/PlaylistTitle.svelte'
+    import SearchBar from '$components/SearchBar.svelte'
+    import Sidebar from '$components/Sidebar.svelte'
+	import PlaylistBar from '$components/PlaylistBar.svelte'
+    import ButtonBar from '$components/ButtonBar.svelte'
+    import DetailsView from '$components/DetailsView.svelte'
+    import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
 
     import { config, maindir, allSongs, allPlaylists, allSongsAndPlaylists } from './common/stores'
     import { onDestroy } from 'svelte';
@@ -27,7 +27,7 @@
 <main id="main-grid">
     <AppTitle/>
     <PlaylistTitle/>
-    <SearchBar/>
+    <SearchBar completeFrom={$allSongs}/>
     <Sidebar/>
 	<PlaylistBar/>
 	<ButtonBar/>

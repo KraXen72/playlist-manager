@@ -4,6 +4,7 @@ import path from "path";
 import timeReporter from 'vite-plugin-time-reporter';
 
 const frontendPath = path.resolve(__dirname, "src/frontend");
+const srcPath = path.resolve(__dirname, "src");
 const outDirfrontend = path.resolve(__dirname, "app/frontend");
 
 // https://vitejs.dev/config/
@@ -20,7 +21,16 @@ export default defineConfig({
 	},
 	logLevel: 'info',
 	resolve: {
-		alias: [
+		alias: {
+			$rblib: path.resolve('./src/rblib'), 
+			$components: path.resolve("./src/frontend/components")
+		},
+		extensions: ['.js', '.ts', 'json', '.svelte'],
+		/*alias: [
+			{
+				find: "$rblib",
+				replacement: path.resolve("./src/rblib"),
+			},
 			{
 				find: "@frontend",
 				replacement: frontendPath,
@@ -36,12 +46,7 @@ export default defineConfig({
 			{
 				find: "@assets",
 				replacement: path.resolve(frontendPath, "assets"),
-			},
-			{
-				find: "@rblib",
-				replacement: path.resolve(__dirname, "src/rblib"),
 			}
-		],
-		extensions: ['.js', '.ts', 'json', '.svelte'],
+		],*/
 	}
 });

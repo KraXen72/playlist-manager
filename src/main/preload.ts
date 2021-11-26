@@ -177,7 +177,9 @@ const context = {
           // @ts-ignore
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
-  },*/ testdialog, initOrLoadConfig, pickFolder, saveConfig, slash, walker
+  },*/ 
+	testdialog, initOrLoadConfig, pickFolder, saveConfig, slash, walker,
+	getExtOrFn
 }
 
 export type IElectronAPI = typeof context;
