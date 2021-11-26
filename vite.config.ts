@@ -44,7 +44,7 @@ export default defineConfig({
 				replacement: path.resolve(frontendPath, "common"),
 			},
 			{
-				find: "@assets",
+				find: "$assets",
 				replacement: path.resolve(frontendPath, "assets"),
 			}
 		],*/

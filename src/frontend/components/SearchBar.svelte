@@ -6,8 +6,9 @@
   // @ts-ignore
   import Autocomplete from "@trevoreyre/autocomplete-js";
   export let completeFrom = <SongItem[]>[];
-  
-  import { getExtOrFn } from '$rblib/esm/lib'
+
+  // @ts-ignore
+  import { getExtOrFn } from '$rblib/esm/lib' 
 
   const api = window.api
 

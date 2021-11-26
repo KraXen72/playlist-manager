@@ -34,11 +34,10 @@
 			"@common/*": ["common/*"],
 			"@frontend/*": ["frontend/*"],
 			"$components/*": ["frontend/components/*"],
-			"@assets/*": ["frontend/assets/*"],
+			"$assets/*": ["frontend/assets/*"],
 			"$rblib/*": ["src/rblib/*"]
 		}
 	},
-	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "src/vite-env.d.ts", "src/rblib/helper.mjs"],
 	"exclude": [
 		"node_modules",
 		"app",
@@ -46,8 +45,10 @@
 		"frontend/rblib",
 		"frontend/rblib/**/*",
 		"src/**/rblib/*",
-		"rblib/**/*",
 		"rblib",
-		"**/*/utils.js"
-	]
+		"**/*/rblib/**/*/utils.js",
+		"src/rblib/**/*",
+		"**/rblib/esm/lib.js"
+	],
+	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/frontend/**/*.js","src/main/**/*.js", "src/**/*.svelte", "src/vite-env.d.ts"]
 }
