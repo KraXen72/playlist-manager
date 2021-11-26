@@ -8,9 +8,7 @@
   export let completeFrom = <SongItem[]>[];
 
   // @ts-ignore
-  import { getExtOrFn } from '$rblib/esm/lib' 
-
-  const api = window.api
+  import { getExtOrFn } from '$rblib/esm/lib';
 
   let options = {
     search: (input: string) => {
@@ -62,24 +60,28 @@
         updatePreview(results[selectedIndex], false);
       } //update the song preview
     }*/,
-    onSubmit: (result: any) => {
+    onSubmit: (result: SongItem) => {
       //final pick
       //autocompleteSubmit(result, true);
       console.log(result)
+      //picked = getExtOrFn(result.filename).fn;
     },
     autoSelect: true,
     getResultValue: (result: SongItem) => {
-      let final = getExtOrFn(result.filename).fn;//result.filename//
-
-      return `<span index="${result.index}">${final}${/*
+      return result.prettyName || getExtOrFn(result.filename).fn
+      /*return `<span index="${result.index}">${final}${
         result.type == "playlist" && autocompArr == "both" ? ` (Playlist)` : ""
-      */""}</span>`;
-    }
+      ""}</span>`;*/
+    }/*,
+    getResultValue: (result: SongItem) => {
+      return getExtOrFn(result.filename).fn;
+    }*/
   };
   onMount(() => {
     new Autocomplete("#autocomplete", options);
   })
-  
+
+  let inpVal = ""
 </script>
 
 <div class="comp">
@@ -87,6 +89,7 @@
     <Textfield
       label="Start typing a name of a song or playlist..."
       value=""
+      bind:input$value={inpVal}
       variant="outlined"
       class="fullwidth"
       input$class="autocomplete-input"

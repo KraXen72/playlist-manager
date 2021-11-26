@@ -32,23 +32,23 @@
 		"paths": {
 			"@main/*": ["main/*"],
 			"@common/*": ["common/*"],
-			"@frontend/*": ["frontend/*"],
+			"$frontend/*": ["frontend/*"],
 			"$components/*": ["frontend/components/*"],
 			"$assets/*": ["frontend/assets/*"],
-			"$rblib/*": ["src/rblib/*"]
+			"$rblib/*": ["rblib/*"]
 		}
 	},
+	"include": [
+		"src/**/*.d.ts", 
+		"src/**/*.ts", 
+		"src/**/*.js", 
+		"src/**/*.svelte", 
+		"src/vite-env.d.ts"
+	],
 	"exclude": [
 		"node_modules",
 		"app",
 		"dist",
-		"frontend/rblib",
-		"frontend/rblib/**/*",
-		"src/**/rblib/*",
-		"rblib",
-		"**/*/rblib/**/*/utils.js",
-		"src/rblib/**/*",
-		"**/rblib/esm/lib.js"
-	],
-	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/frontend/**/*.js","src/main/**/*.js", "src/**/*.svelte", "src/vite-env.d.ts"]
+		"src/rblib/esm"
+	]
 }

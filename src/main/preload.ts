@@ -5,6 +5,7 @@ import { dialog, shell } from '@electron/remote'
 import { contextBridge, ipcRenderer, OpenDialogSyncOptions } from "electron";
 import * as fsWalk from '@nodelib/fs.walk';
 import * as path from 'path';
+import * as mm from 'music-metadata';
 
 import { initOrLoadConfig, saveConfig, getExtOrFn } from '../rblib/utils.js'
 
@@ -32,7 +33,6 @@ const pickFolder = (title: string) => {
   }
 
   let pick = dialog.showOpenDialogSync(opts)
-
   return pick
 }
 
@@ -44,9 +44,12 @@ const walker = {
       return entry.dirent.isFile() && config.exts.includes(ext) //if is a file and valid ext, it passes
 
     }).map((song, i) => {
+      const parts = song.name.split(slash)
+
       const sItem: ISongItem = {
     	 	filename: song.name,
         fullpath: song.path,
+        prettyName: getExtOrFn(parts[parts.length - 1]).fn,
         index: i,
         relativepath: song.path.replaceAll(basedDir, "").replace(slash, ""),
         type: "song"
@@ -56,6 +59,81 @@ const walker = {
     return songs
   }
 }
+
+//read the file and get it's metadata
+/**
+ * read song file to get metadata
+ * @param {String} song full path to file
+ * @param {String} onlysong relative path to file (no folder)
+ * @param {Boolean} returnObj if true, return full object instead of EXTINF string
+ * @param {Boolean} skipCovers if true, skip fetching covers (faster)
+ * @param {Boolean} fetchExtraInfo if true, fetch extra info
+ */
+//  async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
+//   var metadata
+//   try {
+//       metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
+//   } catch (e) {
+//       console.warn(song, e)
+//       metadata = { //when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
+//           common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["failed to get extinf"]}
+//       }
+//   }
+//   metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number of warnings
+//   //console.log("metadata: ",metadata)
+
+//   let extrainfo = {}
+
+//   var artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
+//   const title = metadata.common.title == undefined ? onlysong : metadata.common.title
+//   const album = metadata.common.album == undefined ? "Unknown Album" : metadata.common.album
+//   const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
+
+//   if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
+//       artist = metadata.common.artists.join(" / ")
+//   }
+//  if (fetchExtraInfo !== undefined && fetchExtraInfo === true) {
+//       let lstat =  fs.lstatSync(song)
+//       extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
+//       extrainfo.format = metadata.format.codec
+//       extrainfo.bitrate = Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
+//       extrainfo.samplerate = metadata.format.sampleRate.toString() + " Hz"
+
+//       if (metadata.common.genre !== undefined && metadata.common.genre.length !== 0) {
+//           extrainfo.genre = metadata.common.genre.join(" / ")
+//       } else {
+//           extrainfo.genre = "Unknown Genre"
+//       }
+//       extrainfo.year = metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
+      
+
+//       //console.log(extrainfo)
+//  }
+      
+
+//   const extinf = `#EXTINF:${duration},${artist} - ${title}`
+
+//   if (skipCovers == false) {
+//       const pic = mm.selectCover(metadata.common.picture)
+//       var cover = ""
+//       if (pic !== undefined && pic !== null) {
+//           let frmt = pic.format.replaceAll("image/", "")
+
+//           cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
+//           coverobj = {frmt, "data": pic.data }
+//       } else {
+//           cover = ""
+//           coverobj = false
+//       }
+//   }
+
+//   //console.log(extinf)
+//   if (returnObj == true) {
+//       return {artist, title, album, duration, cover, extinf, coverobj, extrainfo}
+//   } else {
+//       return extinf
+//   }
+// }
 
 // async function fetchAllSongs() {
 //   //clear the playlists
@@ -163,21 +241,6 @@ const walker = {
 
 
 const context = {
-  /*send: (channel: string, data: any) => {
-      // whitelist channels
-      let validChannels = ["toMain", "requestSystemInfo"];
-      if (validChannels.includes(channel)) {
-          ipcRenderer.send(channel, data);
-      }
-  },
-  on: (channel: string, func: (arg0: any) => void) => {
-      let validChannels = ["fromMain", "getSystemInfo"];
-      if (validChannels.includes(channel)) {
-          // Deliberately strip event as it includes `sender`
-          // @ts-ignore
-          ipcRenderer.on(channel, (event, ...args) => func(...args));
-      }
-  },*/ 
 	testdialog, initOrLoadConfig, pickFolder, saveConfig, slash, walker,
 	getExtOrFn
 }

@@ -5,14 +5,19 @@
 
     import { config } from '../common/stores'
     import { onDestroy } from 'svelte'
+    import { getExtOrFn } from '$rblib/esm/lib';
+
+    const api = window.api
 
     let sidebarPlaylists: SongItemData[] = []
 
     const unsub = config.subscribe((val) => {
         sidebarPlaylists = Object.keys(val.comPlaylists).map( (key)  => {
             const playlist = val.comPlaylists[key]
-            let item: SongItemData = {
-                title: key,
+
+            const parts = key.split(api.slash)
+            const item: SongItemData = {
+                title: getExtOrFn(parts[parts.length - 1]).fn,
                 artist: "-- Songs",
                 filename: key,
                 album: key,

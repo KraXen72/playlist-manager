@@ -46,6 +46,7 @@
 		"@electron/remote": "^2.0.1",
 		"@nodelib/fs.walk": "^1.2.8",
 		"@trevoreyre/autocomplete-js": "^2.2.0",
-		"fs-extra": "^10.0.0"
+		"fs-extra": "^10.0.0",
+		"music-metadata": "^7.11.4"
 	}
 }

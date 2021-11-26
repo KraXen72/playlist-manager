@@ -5,6 +5,7 @@ declare global {
         relativepath: string,
         type: "song" | "playlist",
         index: number,
+        prettyName?: string,
         tag?: {
             artist: string,
             title: string,

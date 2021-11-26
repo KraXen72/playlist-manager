@@ -134,6 +134,13 @@
         color: var(--text);
         transition: opacity 0.1s;
     }
+    .songitem-button:focus-visible{
+        outline: none !important;
+        color: white;
+    }
+    .songitem-button:focus-visible i {
+        box-shadow: 0px 0px 19px 0px rgba(0,0,0,1);  
+    }
     .songitem-button:hover {
         opacity: 80%;
     }

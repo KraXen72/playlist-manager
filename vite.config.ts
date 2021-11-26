@@ -23,7 +23,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			$rblib: path.resolve('./src/rblib'), 
-			$components: path.resolve("./src/frontend/components")
+			$components: path.resolve("./src/frontend/components"),
+			$assets: path.resolve("./src/frontend/assets")
 		},
 		extensions: ['.js', '.ts', 'json', '.svelte'],
 		/*alias: [
@@ -32,7 +33,7 @@ export default defineConfig({
 				replacement: path.resolve("./src/rblib"),
 			},
 			{
-				find: "@frontend",
+				find: "$frontend",
 				replacement: frontendPath,
 			},
 			{
