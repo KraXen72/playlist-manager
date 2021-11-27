@@ -55,7 +55,6 @@
         margin: 0.5rem;
     }
     .sp-cover-placeholder {
-        background-image: url("img/placeholder.png");
         border-radius: 0.5rem;
     }
     .sp-cover {

@@ -3,12 +3,11 @@
   import Button, { Label, Group } from "@smui/button";
   import { onMount } from "svelte";
 
-  // @ts-ignore
-  import Autocomplete from "@trevoreyre/autocomplete-js";
   export let completeFrom = <SongItem[]>[];
 
   // @ts-ignore
   import { getExtOrFn } from '$rblib/esm/lib';
+  import Autocomplete from "@trevoreyre/autocomplete-js";
 
   let options = {
     search: (input: string) => {

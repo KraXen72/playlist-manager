@@ -26,7 +26,7 @@ export default defineConfig({
 			$components: path.resolve("./src/frontend/components"),
 			$assets: path.resolve("./src/frontend/assets")
 		},
-		extensions: ['.js', '.ts', 'json', '.svelte'],
+		extensions: ['.js', '.ts', 'json', '.svelte', '.css'],
 		/*alias: [
 			{
 				find: "$rblib",

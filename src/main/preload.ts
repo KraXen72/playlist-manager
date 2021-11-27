@@ -118,7 +118,7 @@ const walker = {
   if (skipCovers == false) {
       const pic = mm.selectCover(metadata.common.picture)
       if (pic !== undefined && pic !== null) {
-          let frmt = pic.format.replaceAll("image/", "")
+          let frmt = <"jpeg"|"png">pic.format.replaceAll("image/", "")
 
           cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
           coverobj = {frmt, "data": pic.data }
@@ -134,6 +134,22 @@ const walker = {
   } else {
       return extinf
   }
+}
+
+async function tagSongs(allSongs: SongItem[]) {
+  const tags = []
+  for (let i = 0; i < allSongs.length; i++) {
+      const song = allSongs[i];
+      tags.push(
+          new Promise(async (resolve) => {
+              const tag = await getEXTINF(song.fullpath, song.filename, true, false, false)
+              allSongs[song.index].tag = tag
+              resolve("")
+          })
+      )
+  }
+  await Promise.all(tags)
+  return allSongs
 }
 
 // async function fetchAllSongs() {
@@ -238,7 +254,7 @@ const walker = {
 
 const context = {
   slash,
-	testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF,
+	testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs,
 	getExtOrFn
 }
 

@@ -1,0 +1,44 @@
+@font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url('./assets/MaterialIcons-Regular.ttf') format('truetype');
+  }
+  @font-face {
+    font-family: 'Material Icons Round';
+    font-style: normal;
+    font-weight: 400;
+    src: url('./assets/MaterialIconsRound-Regular.otf') format('opentype');
+  }
+  
+  /* webfont:         src: url('./material-icons-round.woff2') format('woff2'); */
+  /* regular icons:   src: url('./MaterialIcons-Regular.ttf') format('truetype'); */
+  /* round icons:     src: url('./MaterialIconsRound-Regular.otf') format('opentype'); */
+  
+  /*
+  if you want to add icons but they mising, download new files from here:
+  https://github.com/google/material-design-icons/tree/master/font
+  */
+  
+  /*default is rounded because i like it*/
+  .material-icons, .material-icons-regular {
+    font-family: 'Material Icons Round'; /* Material Icons */
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    /*-webkit-font-feature-settings: 'liga';*/
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* if for some reason you want regular you can overwrite with this class*/
+  .material-icons-regular {
+    font-family: 'Material Icons';
+  }

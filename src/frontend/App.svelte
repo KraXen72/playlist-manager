@@ -9,38 +9,29 @@
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
 
     import { config, maindir, allSongs, allPlaylists, allSongsAndPlaylists } from './common/stores'
-    import { onDestroy } from 'svelte';
+    import { onDestroy, tick } from 'svelte';
 
     const api = window.api
 
     // @ts-ignore
     $config = api.initOrLoadConfig("config.json")
 
+    console.log("mounted")
     const unsub = maindir.subscribe(val => {
-        $allSongs = api.walker.songs($maindir, $config)
-        /*console.log("fetched songs", $allSongs)*/ console.log("fetched songs")
+            $allSongs = api.walker.songs($maindir, $config)
+            console.log("fetched songs.")
+            console.log("getting tags for songs...")
 
-        console.time('getting tags for songs')
+            console.time('got tags in:')
 
-        const tags = []
-        for (let i = 0; i < $allSongs.length; i++) {
-            const song = $allSongs[i];
-            tags.push(
-                new Promise(async (resolve) => {
-                    const tag = await api.getEXTINF(song.fullpath, song.filename, true, false, false)
-                    $allSongs[song.index].tag = tag
-                    resolve("")
-                })
-            )
-        }
-        Promise.all(tags).then(() => {
-            console.log("tagged all!")
-            console.timeEnd('getting tags for songs')
+            api.tagSongs($allSongs).then(val => {
+                $allSongs = val
+                console.timeEnd("got tags in:")
+            })
         })
-        
-    })
     onDestroy(unsub)
 </script>
+
 
 <main id="main-grid">
     <AppTitle/>

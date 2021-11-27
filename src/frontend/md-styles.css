@@ -1,5 +1,4 @@
 @import url('../../node_modules/svelte-material-ui/bare.css');
-
 :root {
     --mdc-theme-primary: var(--fg-rosebox);
     --mdc-theme-secondary: var(--text);
