@@ -12,7 +12,6 @@
     import { onDestroy } from 'svelte';
 
     const api = window.api
-    const slash = api.slash
 
     // @ts-ignore
     $config = api.initOrLoadConfig("config.json")
@@ -20,6 +19,25 @@
     const unsub = maindir.subscribe(val => {
         $allSongs = api.walker.songs($maindir, $config)
         /*console.log("fetched songs", $allSongs)*/ console.log("fetched songs")
+
+        console.time('getting tags for songs')
+
+        const tags = []
+        for (let i = 0; i < $allSongs.length; i++) {
+            const song = $allSongs[i];
+            tags.push(
+                new Promise(async (resolve) => {
+                    const tag = await api.getEXTINF(song.fullpath, song.filename, true, false, false)
+                    $allSongs[song.index].tag = tag
+                    resolve("")
+                })
+            )
+        }
+        Promise.all(tags).then(() => {
+            console.log("tagged all!")
+            console.timeEnd('getting tags for songs')
+        })
+        
     })
     onDestroy(unsub)
 </script>

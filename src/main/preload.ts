@@ -3,9 +3,11 @@
 // It has the same sandbox as a Chrome extension.
 import { dialog, shell } from '@electron/remote'
 import { contextBridge, ipcRenderer, OpenDialogSyncOptions } from "electron";
+
 import * as fsWalk from '@nodelib/fs.walk';
 import * as path from 'path';
 import * as mm from 'music-metadata';
+import * as fs from 'fs';
 
 import { initOrLoadConfig, saveConfig, getExtOrFn } from '../rblib/utils.js'
 
@@ -36,6 +38,7 @@ const pickFolder = (title: string) => {
   return pick
 }
 
+//TODO add walking playlists also
 const walker = {
   songs: (basedDir: string, config: IConfig) => { //only takes 70ms!!!
     let songs = fsWalk.walkSync(basedDir, {stats: true}).filter(entry => {
@@ -60,80 +63,78 @@ const walker = {
   }
 }
 
+
+
 //read the file and get it's metadata
 /**
  * read song file to get metadata
- * @param {String} song full path to file
- * @param {String} onlysong relative path to file (no folder)
- * @param {Boolean} returnObj if true, return full object instead of EXTINF string
- * @param {Boolean} skipCovers if true, skip fetching covers (faster)
- * @param {Boolean} fetchExtraInfo if true, fetch extra info
+ * @param song full path to file
+ * @param onlysong relative path to file (no folder)
+ * @param returnObj if true, return full object instead of EXTINF string
+ * @param skipCovers if true, skip fetching covers (faster)
+ * @param fetchExtraInfo if true, fetch extra info
  */
-//  async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
-//   var metadata
-//   try {
-//       metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
-//   } catch (e) {
-//       console.warn(song, e)
-//       metadata = { //when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
-//           common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["failed to get extinf"]}
-//       }
-//   }
-//   metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number of warnings
-//   //console.log("metadata: ",metadata)
+ async function getEXTINF(song: string, onlysong: string, returnObj: boolean, skipCovers: boolean, fetchExtraInfo: boolean) {
+  var metadata
+  try {
+      metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
+  } catch (e) {
+      console.warn(song, e)
+      metadata = { //when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
+          common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["failed to get extinf"]}
+      }
+  }
+  //@ts-ignore
+  metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number of warnings
 
-//   let extrainfo = {}
+  //console.log("metadata: ",metadata)
 
-//   var artist = metadata.common.artist == undefined ? "Unknown Artist" : metadata.common.artist
-//   const title = metadata.common.title == undefined ? onlysong : metadata.common.title
-//   const album = metadata.common.album == undefined ? "Unknown Album" : metadata.common.album
-//   const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
+  let extrainfo: ExtraInfo | {} = {}
 
-//   if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
-//       artist = metadata.common.artists.join(" / ")
-//   }
-//  if (fetchExtraInfo !== undefined && fetchExtraInfo === true) {
-//       let lstat =  fs.lstatSync(song)
-//       extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
-//       extrainfo.format = metadata.format.codec
-//       extrainfo.bitrate = Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
-//       extrainfo.samplerate = metadata.format.sampleRate.toString() + " Hz"
+  var artist = metadata.common?.artist ?? "Unknown Artist"
+  const title = metadata.common?.title ?? onlysong
+  const album = metadata.common?.album ?? "Unknown Album"
+  const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
 
-//       if (metadata.common.genre !== undefined && metadata.common.genre.length !== 0) {
-//           extrainfo.genre = metadata.common.genre.join(" / ")
-//       } else {
-//           extrainfo.genre = "Unknown Genre"
-//       }
-//       extrainfo.year = metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
-      
+  if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
+      artist = metadata.common.artists.join(" / ")
+  }
+  if (fetchExtraInfo !== undefined && fetchExtraInfo === true) {
+        let lstat =  fs.lstatSync(song)
+        extrainfo = {
+          size: (lstat.size / 1000000).toFixed(2).toString() + " MB",
+          format: metadata.format.codec,
+          bitrate: Math.round(metadata.format.bitrate / 1000).toString() + " kb/s",
+          samplerate: metadata.format.sampleRate?.toString() + " Hz",
+          genre: metadata.common?.genre?.join(" / ") ?? "Unknown Genre",
+          year: metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
+        }
+        //console.log(extrainfo)
+  }
+  const extinf = `#EXTINF:${duration},${artist} - ${title}`
+  let cover = ""
+  let coverobj = <CoverObj|boolean>{}
 
-//       //console.log(extrainfo)
-//  }
-      
+  if (skipCovers == false) {
+      const pic = mm.selectCover(metadata.common.picture)
+      if (pic !== undefined && pic !== null) {
+          let frmt = pic.format.replaceAll("image/", "")
 
-//   const extinf = `#EXTINF:${duration},${artist} - ${title}`
+          cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
+          coverobj = {frmt, "data": pic.data }
+      } else {
+          cover = ""
+          coverobj = false
+      }
+  }
 
-//   if (skipCovers == false) {
-//       const pic = mm.selectCover(metadata.common.picture)
-//       var cover = ""
-//       if (pic !== undefined && pic !== null) {
-//           let frmt = pic.format.replaceAll("image/", "")
-
-//           cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
-//           coverobj = {frmt, "data": pic.data }
-//       } else {
-//           cover = ""
-//           coverobj = false
-//       }
-//   }
-
-//   //console.log(extinf)
-//   if (returnObj == true) {
-//       return {artist, title, album, duration, cover, extinf, coverobj, extrainfo}
-//   } else {
-//       return extinf
-//   }
-// }
+  //console.log(extinf)
+  if (returnObj == true) {
+      return {artist, title, album, duration, cover, extinf, coverobj, extrainfo}
+  } else {
+      return extinf
+  }
+}
 
 // async function fetchAllSongs() {
 //   //clear the playlists
@@ -235,13 +236,9 @@ const walker = {
 //   console.log(editablePlaylists)
 // }
 
-
-
-
-
-
 const context = {
-	testdialog, initOrLoadConfig, pickFolder, saveConfig, slash, walker,
+  slash,
+	testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF,
 	getExtOrFn
 }
 

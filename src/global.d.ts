@@ -1,4 +1,18 @@
 declare global {
+    interface ExtraInfo {
+        size: string,
+        format: string | undefined,
+        bitrate: string,
+        samplerate: string,
+        genre: string,
+        year: string | number
+    }
+
+    interface CoverObj {
+        frmt: "jpeg" | "png" | false,
+        data: Buffer | string | ""
+    }
+
     interface SongItem {
         filename: string,
         fullpath: string,
@@ -13,12 +27,9 @@ declare global {
             duration: string,
             cover: string | "",
             extinf: string | "",
-            coverobj: {
-                frmt: "jpeg" | "png",
-                data: string | ""
-            } | "",
-            extrainfo: object | ""
-        } | ""
+            coverobj:  CoverObj | boolean,
+            extrainfo?: ExtraInfo | {}
+        } | string
     }
     
     interface SongItemButton {
