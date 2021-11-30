@@ -14,11 +14,16 @@
     export let title = 'Unknown Title';
     export let album = 'Unknown Album';
     export let artist = 'Unknown Artist';
+    
+    let inactive = true
+    //let titl = ""
+    $: inactive = title !== 'Unknown Title' ? false : true
+    //$: titl = window.btoa(title)
 
 </script>
 
 <article>
-    <div class="song-preview" song-index="403" type="song">
+    <div class="song-preview" class:hidden-f={inactive} song-index="403" type="song">
         <div class="sp-cover-placeholder"></div>
         <div class="sp-cover-wrap">
             <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src="{coversrc}">

@@ -5,9 +5,11 @@
 
   export let completeFrom = <SongItem[]>[];
 
+  import Autocomplete from "@trevoreyre/autocomplete-js";
+
   // @ts-ignore
   import { getExtOrFn } from '$rblib/esm/lib';
-  import Autocomplete from "@trevoreyre/autocomplete-js";
+  import { detailsData } from '../common/stores';
 
   let options = {
     search: (input: string) => {
@@ -53,12 +55,16 @@
       //   ? res
       //   : res.slice(0, 10);
       return res.slice(0, 10)
-    }/*,
-    onUpdate: (results, selectedIndex) => {
-      if (selectedIndex > -1) {
-        updatePreview(results[selectedIndex], false);
-      } //update the song preview
-    }*/,
+    },
+    onUpdate: (results: [], selectedIndex: number) => {
+      let selsong: SongItem = results[selectedIndex]
+      $detailsData = {
+        coversrc: "", 
+        title: selsong?.tag?.title ?? "Unknown Title",
+        album: selsong?.tag?.album ?? "Unknown Album",
+        artist: selsong?.tag?.artist ?? "Unknown artist",
+      }
+    },
     onSubmit: (result: SongItem) => {
       //final pick
       //autocompleteSubmit(result, true);

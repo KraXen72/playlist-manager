@@ -8,8 +8,8 @@
     import DetailsView from '$components/DetailsView.svelte'
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
 
-    import { config, maindir, allSongs, allPlaylists, allSongsAndPlaylists } from './common/stores'
-    import { onDestroy, tick } from 'svelte';
+    import { config, maindir, allSongs, detailsData, allPlaylists, allSongsAndPlaylists } from './common/stores'
+    import { onDestroy } from 'svelte';
 
     const api = window.api
 
@@ -22,11 +22,11 @@
             console.log("fetched songs.")
             console.log("getting tags for songs...")
 
-            console.time('got tags in:')
+            console.time('got tags in')
 
             api.tagSongs($allSongs).then(val => {
                 $allSongs = val
-                console.timeEnd("got tags in:")
+                console.timeEnd("got tags in")
             })
         })
     onDestroy(unsub)
@@ -41,7 +41,7 @@
 	<PlaylistBar/>
 	<ButtonBar/>
     <div id="main-content">
-        <DetailsView/>
+        <DetailsView {...$detailsData}/>
         <ExtraDetailsView hide={true}/>
     </div>
 </main>

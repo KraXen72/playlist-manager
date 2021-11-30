@@ -37,6 +37,7 @@ declare global {
         desc: string,
         fn: Function
     }
+    
     interface SongItemData {
         coverid?: string | "",
         coversrc?: string | "",
