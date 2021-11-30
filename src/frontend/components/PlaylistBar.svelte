@@ -1,6 +1,7 @@
 <script lang="ts">
     import SongItem from './SongItem.svelte'
     import placeholder from "../assets/placeholder.png";
+    import { currPlaylist } from '../common/stores'
 
     let opts = {
         coversrc: placeholder,
@@ -33,8 +34,8 @@
 <div id="playlist-bar-wrapper">
     <div id="playlist-scroll-wrap">
       <div id="playlist-bar">
-        {#each Array(2) as i}
-            <SongItem data={opts} {buttons}/>
+        {#each $currPlaylist as i}
+            <SongItem data={i.tag} {buttons}/>
         {/each}
       </div>
     </div>

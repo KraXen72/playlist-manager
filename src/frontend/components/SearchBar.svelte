@@ -9,7 +9,7 @@
 
   // @ts-ignore
   import { getExtOrFn } from '$rblib/esm/lib';
-  import { detailsData } from '../common/stores';
+  import { detailsData, currPlaylist } from '../common/stores';
 
   let options = {
     search: (input: string) => {
@@ -69,6 +69,7 @@
       //final pick
       //autocompleteSubmit(result, true);
       console.log(result)
+      $currPlaylist = [...$currPlaylist, result]
       //picked = getExtOrFn(result.filename).fn;
     },
     autoSelect: true,
