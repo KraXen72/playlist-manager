@@ -57,6 +57,7 @@ const walker = {
         relativepath: song.path.replaceAll(basedDir, "").replace(slash, ""),
         type: "song"
       }
+      //ipcRenderer.send("tagProgress", "done")
       return sItem
     })
     return songs
@@ -253,6 +254,22 @@ async function tagSongs(allSongs: SongItem[]) {
 // }
 
 const context = {
+  /*send: (channel: string, data: any) => {
+    // whitelist channels
+    let validChannels = ["toMain", "requestSystemInfo"];
+    if (validChannels.includes(channel)) {
+        ipcRenderer.send(channel, data);
+    }
+  },*/
+  /*
+  on: (channel: string, func: (arg0: any) => void) => {
+      let validChannels = ["fromMain", "getSystemInfo", 'tagProgress'];
+      if (validChannels.includes(channel)) {
+          // Deliberately strip event as it includes `sender`
+          // @ts-ignore
+          ipcRenderer.on(channel, (event, ...args) => func(...args));
+      }
+  },*/
   slash,
 	testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs,
 	getExtOrFn

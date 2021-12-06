@@ -1,9 +1,12 @@
 <script lang="ts">
   import Textfield from "@smui/textfield";
+  import Icon from '@smui/textfield/icon';
+  import CircularProgress from '@smui/circular-progress';
   import Button, { Label, Group } from "@smui/button";
   import { onMount } from "svelte";
 
   export let completeFrom = <SongItem[]>[];
+  export let disabled = false
 
   import Autocomplete from "@trevoreyre/autocomplete-js";
 
@@ -88,19 +91,25 @@
   })
 
   let inpVal = ""
+
+  const txtProps = {
+    label: "Start typing a name of a song or playlist...",
+    value: "",
+    variant: "outlined",
+    input$class: "autocomplete-input",
+    helperLine$class: "fullwidth", 
+    class: 'fullwidth'
+  }
+  const inpTitle = "Please wait, getting tags for songs..."
 </script>
 
-<div class="comp">
+<div class="comp" class:notready={disabled} title={disabled ? inpTitle : null}>
   <div id="autocomplete" class="autocomplete fullwidth">
-    <Textfield
-      label="Start typing a name of a song or playlist..."
-      value=""
-      bind:input$value={inpVal}
-      variant="outlined"
-      class="fullwidth"
-      input$class="autocomplete-input"
-      helperLine$class="fullwidth"
-    />
+    <Textfield {...txtProps} bind:input$value={inpVal} class="fullwidth notready" disabled> 
+      <!-- <Icon slot="trailingIcon" class="material-icons">
+        <CircularProgress style="height: 24px; width: 24px;" indeterminate  />
+      </Icon> -->
+    </Textfield>
     <ul class="autocomplete-result-list" />
   </div>
   <Group variant="outlined">
@@ -123,4 +132,17 @@
     padding: var(--standard-padding);
     background: var(--bg-secondary);
   }
+
+  .notready {
+    /* pointer-events: none !important;
+    filter: grayscale();
+    cursor: not-allowed !important; */
+  }
+
+  /*.progHolder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }*/
 </style>

@@ -4,8 +4,7 @@
     //import { Icon } from '@smui/button';
     import IconButton, { Icon } from '@smui/icon-button';
 
-    //@ts-ignore
-    const api = globalThis.api
+    const api = window.api
     const bull = `&nbsp;&#8226;&nbsp;`;
 
     export let data: SongItemData = {
