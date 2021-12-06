@@ -105,11 +105,7 @@
 
 <div class="comp" class:notready={disabled} title={disabled ? inpTitle : null}>
   <div id="autocomplete" class="autocomplete fullwidth">
-    <Textfield {...txtProps} bind:input$value={inpVal} class="fullwidth notready" disabled> 
-      <!-- <Icon slot="trailingIcon" class="material-icons">
-        <CircularProgress style="height: 24px; width: 24px;" indeterminate  />
-      </Icon> -->
-    </Textfield>
+    <Textfield {...txtProps} bind:input$value={inpVal}/> 
     <ul class="autocomplete-result-list" />
   </div>
   <Group variant="outlined">
