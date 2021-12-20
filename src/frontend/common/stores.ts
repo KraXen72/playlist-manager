@@ -8,3 +8,5 @@ export const allSongs = writable<SongItem[]>([])
 export const allPlaylists = writable([])
 export const allSongsAndPlaylists = writable([]) //derived([allSongs, allPlaylists], ([value1, value2]) => [...value1, ...value2]);
 export const detailsData = writable({})
+
+export const tagDB = writable<tagDB>({})
