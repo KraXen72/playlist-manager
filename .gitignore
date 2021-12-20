@@ -9,3 +9,4 @@ app/*
 !app/yarn.lock
 !app/package-lock.json
 config.json
+db/*
