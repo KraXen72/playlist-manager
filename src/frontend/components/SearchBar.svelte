@@ -8,16 +8,19 @@
   export let completeFrom = <SongItem[]>[];
   export let disabled = false
 
-  let searchMode = 'normal' //special, artist
+  let searchMode = {
+    special: false,
+    artist: false
+  }//special, artist
 
   import Autocomplete from "@trevoreyre/autocomplete-js";
   let autocomp_bind
+  let inpVal = ""
 
   // @ts-ignore
   import { getExtOrFn, autocompleteDestroy } from '$rblib/esm/lib';
   import { detailsData, currPlaylist, tagDB } from '../common/stores';
 
-  let inpVal = ""
   let options = {
     search: (input: string) => {
       if (input.trim().length < 1) { return [] }
@@ -31,22 +34,22 @@
       })
 
       //find matches for artist mode vs normal mode
-      if (searchMode === 'normal') {
+      if (!searchMode.artist) { //normal
         res = res.filter(song => song.filename.toLowerCase().includes(input.toLowerCase()));
-      } else if (searchMode === 'artist') {
+      } else if (searchMode.artist) { //artist
         res = res.filter(song => $tagDB[song.filename].artist.toLowerCase().includes((input.toLowerCase())))
       }
       
       //special mode
-      if (searchMode === 'special') {
+      if (searchMode.special) {
         const regex = new RegExp(`[^\\x00-\\x7F]`, "gi");
         res = res.filter((song) => song.filename.match(regex));
       } 
 
-      if (searchMode === 'normal') {
-        return res.slice(0, 10)
-      } else if (searchMode === 'special' || searchMode === 'artist') {
+      if (searchMode.special || searchMode.artist) {
         return res
+      } else {
+        return res.slice(0, 10)
       }
 
       //sort the results so playlists are on top
@@ -63,7 +66,6 @@
     onUpdate: async (results: [], selectedIndex: number) => {
       let selsong: SongItem = results[selectedIndex]
       let filename = selsong?.filename ?? "nothing_selected"
-      console.log(filename)
 
       //let tag = $tagDB[selsong.prettyName]
       if (filename !== 'nothing_selected') {
@@ -120,12 +122,19 @@
     <ul class="autocomplete-result-list" />
   </div>
   <Group variant="outlined">
-    <Button variant="outlined" class="smui-icon-btn"
-      ><Label class="material-icons">emoji_symbols</Label></Button
-    >
-    <Button variant="outlined" class="smui-icon-btn"
-      ><Label class="material-icons">person_search</Label></Button
-    >
+    <!-- variant="{searchMode.special ? "unelevated" : "outlined"}" -->
+    <Button 
+      variant="outlined"
+      class="smui-icon-btn {searchMode.special ? "btn-activef" : ""}" 
+      on:click={() => searchMode.special = !searchMode.special}>
+        <Label class="material-icons">emoji_symbols</Label>
+    </Button>
+    <Button 
+      variant="outlined" 
+      class="smui-icon-btn {searchMode.artist ? "btn-activef" : ""}"
+      on:click={() => searchMode.artist = !searchMode.artist}>
+        <Label class="material-icons">person_search</Label>
+    </Button>
   </Group>
 </div>
 
