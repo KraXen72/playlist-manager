@@ -26,7 +26,7 @@
     <div class="song-preview" class:hidden-f={inactive} song-index="403" type="song">
         <div class="sp-cover-placeholder"></div>
         <div class="sp-cover-wrap">
-            <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src="{coversrc}">
+            <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src={coversrc}>
         </div>
         <div class="sp-title">{title}</div>
         <div class="sp-album">{album}</div>

@@ -1,17 +1,8 @@
 <script lang="ts">
     import SongItem from './SongItem.svelte'
     import placeholder from "../assets/placeholder.png";
-    import { currPlaylist } from '../common/stores'
+    import { currPlaylist, tagDB } from '../common/stores'
 
-    let opts = {
-        coversrc: placeholder,
-        title: "Sarcoma",
-        artist: "Killstation",
-        album: 'The two of us are dying',
-        filename: 'placeholder',
-        bold: false,
-        nocover: false
-    }
     const buttons: SongItemButton[] = [
         {
             icon: "more_vert",
@@ -29,13 +20,25 @@
             }
         }
     ]
+
+    function getSongItemDataFromTag(data: Tag, SongItemData: SongItemData) {
+        return <SongItemData>{
+            coversrc: data.cover,
+            title: data.title,
+            artist: data.artist,
+            album: data.album,
+            filename: SongItemData.filename,
+            bold: false,
+            nocover: false
+        }
+    }
 </script>
 
 <div id="playlist-bar-wrapper">
     <div id="playlist-scroll-wrap">
       <div id="playlist-bar">
-        {#each $currPlaylist as i}
-            <SongItem data={i.tag} {buttons}/>
+        {#each $currPlaylist as i, index}
+            <SongItem data={getSongItemDataFromTag($tagDB[i.filename], i)} {buttons}/>
         {/each}
       </div>
     </div>
