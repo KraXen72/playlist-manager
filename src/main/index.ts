@@ -33,7 +33,7 @@ function createWindow() {
 			require('electron-reloader')(module, {
 				debug: false,
 				watchRenderer: true,
-				ignore: ["**/*.svelte", "**/*.css", "**/*.html", "**/common/**/*", "**/config.json" ]
+				ignore: ["**/*.svelte", "**/*.css", "**/*.html", "**/common/**/*", "**/config.json", '**/db/**/*' ]
 			});
 		} catch (_) { console.log('electron-reloader made an oopsie'); }
 
