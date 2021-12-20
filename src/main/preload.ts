@@ -169,17 +169,10 @@ async function cacheTags(songs: SongItem[]) {
     if (tag.coverobj !== false) {
       coverpath = `./db/covers/${song.prettyName}.${tag.coverobj.frmt}`
       publicCoverPath = `/covers/${song.prettyName}.${tag.coverobj.frmt}`
-      
-      //console.log(coverpath)
-      /*try {
-        fs.writeFileSync(coverpath, tag.coverobj.data)
-      } catch(e) {
-        throw e;
-      }*/
+
       buffers[song.prettyName] = tag.coverobj.data
       fs.writeFileSync(coverpath, buffers[song.prettyName])
       delete buffers[song.prettyName]
-      
       
       tag.coverobj = false; //exterminatus
     }

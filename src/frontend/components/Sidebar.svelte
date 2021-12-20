@@ -13,12 +13,12 @@
 
     const unsub = config.subscribe((val) => {
         sidebarPlaylists = Object.keys(val.comPlaylists).map( (key)  => {
-            const playlist = val.comPlaylists[key]
+            //const playlist = val.comPlaylists[key]
 
             const parts = key.split(api.slash)
             const item: SongItemData = {
                 title: getExtOrFn(parts[parts.length - 1]).fn,
-                artist: "-- Songs",
+                artist: "-- Songs", //TODO get playlist length
                 filename: key,
                 album: key,
                 bold: true,
