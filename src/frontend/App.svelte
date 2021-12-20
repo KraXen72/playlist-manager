@@ -8,7 +8,7 @@
     import DetailsView from '$components/DetailsView.svelte'
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
 
-    import { config, maindir, allSongs, detailsData, allPlaylists, allSongsAndPlaylists } from './common/stores'
+    import { config, maindir, allSongs, detailsData, tagDB, allPlaylists, allSongsAndPlaylists } from './common/stores'
     import { onDestroy } from 'svelte';
 
     const api = window.api
@@ -16,25 +16,36 @@
     //let prog = {c: 0, f: 0}
     //let progElem: HTMLDivElement
 
-    // @ts-ignore
     $config = api.initOrLoadConfig("config.json")
-
     let searchDisabled = true
+    let localTagDB = $tagDB
 
     console.log("mounted")
     const unsub = maindir.subscribe(val => {
             $allSongs = api.walker.songs($maindir, $config)
-            console.log("fetched songs.")
-            console.log("getting tags for songs...")
-            //prog.f = $allSongs.length
+            console.log("fetched songs. checking if we have cached tags...")
 
-            console.time('got tags in')
 
-            api.tagSongs($allSongs).then(val => {
-                $allSongs = val
-                console.timeEnd("got tags in")
-                searchDisabled = false
-            })
+            // ($allSongs.length > Object.keys($tagDB).length && Object.keys($tagDB).length > 0)
+            localTagDB = api.initOrLoadConfig(`./db/${btoa($maindir)}.json`, {})
+
+            //check if all songs have a cached tag already or nah.
+            if ($allSongs.every(song => Object.keys(localTagDB).includes(song.filename))) {
+                console.log("all songs have cached tags.")
+                $tagDB = localTagDB
+            } else {
+                console.log("not all songs have cached tags. getting tags from songs...")
+                console.time("fetched tags for all songs")
+                api.cacheTags($allSongs).then(val => {
+                    localTagDB = val
+                    api.saveConfig(`./db/${btoa($maindir)}.json`, localTagDB, true)
+                    console.timeEnd("fetched tags for all songs")
+                    $tagDB = localTagDB
+                }).catch((e) => {console.error(e)})
+            }
+            console.log(Object.keys(localTagDB).length)
+            console.log(Object.keys(localTagDB)[0])
+
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {
                 const song = $allSongs[i];
@@ -51,7 +62,14 @@
             Promise.all(tags).then(() => {
                 console.timeEnd("got tags in")
                 setTimeout(() => {progElem.style.opacity = "0"}, 500)
-            })*/
+            })*
+            //backend
+            api.tagSongs($allSongs).then(val => {
+                $allSongs = val
+                //console.timeEnd("got tags in")
+                searchDisabled = false
+            })
+            */
         })
     onDestroy(unsub)
 </script>
