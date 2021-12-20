@@ -7,6 +7,8 @@ const frontendPath = path.resolve(__dirname, "src/frontend");
 const srcPath = path.resolve(__dirname, "src");
 const outDirfrontend = path.resolve(__dirname, "app/frontend");
 
+//console.log("publicdir: ", path.resolve(__dirname, "./db"))
+
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
@@ -20,6 +22,12 @@ export default defineConfig({
 		emptyOutDir: true,
 	},
 	logLevel: 'info',
+	server: {
+		watch: {
+		  ignored: ['!**/db']
+		}
+	},
+	publicDir: path.resolve(__dirname, "./db"),
 	resolve: {
 		alias: {
 			$rblib: path.resolve('./src/rblib'), 
