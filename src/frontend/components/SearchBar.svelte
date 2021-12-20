@@ -3,43 +3,52 @@
   import Icon from '@smui/textfield/icon';
   import CircularProgress from '@smui/circular-progress';
   import Button, { Label, Group } from "@smui/button";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
 
   export let completeFrom = <SongItem[]>[];
   export let disabled = false
 
+  let searchMode = 'normal' //special, artist
+
   import Autocomplete from "@trevoreyre/autocomplete-js";
+  let autocomp_bind
 
   // @ts-ignore
-  import { getExtOrFn } from '$rblib/esm/lib';
-  import { detailsData, currPlaylist } from '../common/stores';
+  import { getExtOrFn, autocompleteDestroy } from '$rblib/esm/lib';
+  import { detailsData, currPlaylist, tagDB } from '../common/stores';
 
+  let inpVal = ""
   let options = {
     search: (input: string) => {
       if (input.trim().length < 1) { return [] }
+
       let res = completeFrom;
 
-      res = res.filter((song) => {
-        //find matches
-        return song.filename.toLowerCase().includes(input.toLowerCase()); //fuck regex we doin includes
-      });
+      //filter out songs already in currPlaylist
+      res = res.filter(item => { 
+        let inPlaylist = $currPlaylist.some(song => song.fullpath === item.fullpath)
+        return !inPlaylist
+      })
 
-      // res = res.filter((song) => {
-      //   //filter out things already in playlist to avoid duplicates
-      //   for (let i = 0; i < currPlaylist.length; i++) {
-      //     if (song.filename == currPlaylist[i].filename) {
-      //       return false;
-      //     }
-      //   }
-      //   return true;
-      // });
+      //find matches for artist mode vs normal mode
+      if (searchMode === 'normal') {
+        res = res.filter(song => song.filename.toLowerCase().includes(input.toLowerCase()));
+      } else if (searchMode === 'artist') {
+        res = res.filter(song => $tagDB[song.filename].artist.toLowerCase().includes((input.toLowerCase())))
+      }
+      
+      //special mode
+      if (searchMode === 'special') {
+        const regex = new RegExp(`[^\\x00-\\x7F]`, "gi");
+        res = res.filter((song) => song.filename.match(regex));
+      } 
 
-      // if (specialMode == true) {
-      //   res = res.filter((song) => {
-      //     const regex = new RegExp(`[^\\x00-\\x7F]`, "gi");
-      //     return song.filename.match(regex);
-      //   });
-      // }
+      if (searchMode === 'normal') {
+        return res.slice(0, 10)
+      } else if (searchMode === 'special' || searchMode === 'artist') {
+        return res
+      }
+
       //sort the results so playlists are on top
       // res.sort((a, b) => {
       //   if (a.type == "playlist" && b.type == "song") {
@@ -50,30 +59,29 @@
       //     return 0;
       //   }
       // });
-
-      //if specialmode or playlist only mode then return full results, otherwise first 10
-      // return specialMode == true ||
-      //   autocompArr == "playlists" ||
-      //   artistMode == true
-      //   ? res
-      //   : res.slice(0, 10);
-      return res.slice(0, 10)
     },
-    onUpdate: (results: [], selectedIndex: number) => {
+    onUpdate: async (results: [], selectedIndex: number) => {
       let selsong: SongItem = results[selectedIndex]
-      $detailsData = {
-        coversrc: "", 
-        title: selsong?.tag?.title ?? "Unknown Title",
-        album: selsong?.tag?.album ?? "Unknown Album",
-        artist: selsong?.tag?.artist ?? "Unknown artist",
+      let filename = selsong?.filename ?? "nothing_selected"
+      console.log(filename)
+
+      //let tag = $tagDB[selsong.prettyName]
+      if (filename !== 'nothing_selected') {
+        //@ts-ignore
+        let tag = $tagDB[filename]
+
+        $detailsData = {
+          coversrc: tag.cover,
+          title: tag?.title ?? "Unknown Title",
+          album: tag?.album ?? "Unknown Album",
+          artist: tag?.artist ?? "Unknown artist",
+        }
       }
     },
     onSubmit: (result: SongItem) => {
-      //final pick
-      //autocompleteSubmit(result, true);
-      console.log(result)
+      //console.log(result)
       $currPlaylist = [...$currPlaylist, result]
-      //picked = getExtOrFn(result.filename).fn;
+      inpVal = ''
     },
     autoSelect: true,
     getResultValue: (result: SongItem) => {
@@ -87,10 +95,13 @@
     }*/
   };
   onMount(() => {
-    new Autocomplete("#autocomplete", options);
+    //console.log("binding autocomplete")
+    autocomp_bind = new Autocomplete("#autocomplete", options);
   })
-
-  let inpVal = ""
+  onDestroy(() => {
+    //console.log("destroying autocomplete")
+    autocompleteDestroy(autocomp_bind)
+  })
 
   const txtProps = {
     label: "Start typing a name of a song or playlist...",
@@ -105,7 +116,7 @@
 
 <div class="comp" class:notready={disabled} title={disabled ? inpTitle : null}>
   <div id="autocomplete" class="autocomplete fullwidth">
-    <Textfield {...txtProps} bind:input$value={inpVal}/> 
+    <Textfield {...txtProps} bind:value={inpVal}/> 
     <ul class="autocomplete-result-list" />
   </div>
   <Group variant="outlined">
