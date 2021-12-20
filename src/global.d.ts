@@ -13,6 +13,18 @@ declare global {
         data: Buffer | string | ""
     }
 
+    interface Tag {
+        artist: string,
+        title: string,
+        album: string,
+        duration: string,
+        cover: string | "",
+        fallbackCoverPath: string | "",
+        extinf: string | "",
+        coverobj:  CoverObj | boolean,
+        extrainfo?: ExtraInfo | {}
+    }
+
     interface SongItem {
         filename: string,
         fullpath: string,
@@ -20,16 +32,7 @@ declare global {
         type: "song" | "playlist",
         index: number,
         prettyName?: string,
-        tag?: {
-            artist: string,
-            title: string,
-            album: string,
-            duration: string,
-            cover: string | "",
-            extinf: string | "",
-            coverobj:  CoverObj | boolean,
-            extrainfo?: ExtraInfo | {}
-        } | string
+        tag?: Tag | string
     }
     
     interface SongItemButton {
@@ -63,7 +66,13 @@ declare global {
             [index: string]: comPlaylist
         }
     }
+
+    //tagDB
+    interface tagDB {
+        [filename: string]: Tag;//indexer
+    }
 }
 
 export type IConfig = Config;
 export type ISongItem = SongItem;
+export type ITag = Tag;
