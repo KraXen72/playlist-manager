@@ -1,9 +1,9 @@
-@font-face {
+/*@font-face {
     font-family: 'Material Icons';
     font-style: normal;
     font-weight: 400;
     src: url('./assets/MaterialIcons-Regular.ttf') format('truetype');
-  }
+}*/
   @font-face {
     font-family: 'Material Icons Round';
     font-style: normal;
@@ -39,6 +39,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
   /* if for some reason you want regular you can overwrite with this class*/
-  .material-icons-regular {
+  /*.material-icons-regular {
     font-family: 'Material Icons';
-  }
+  }*/
