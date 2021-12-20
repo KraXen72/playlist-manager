@@ -9,15 +9,17 @@ import * as path from 'path';
 import * as mm from 'music-metadata';
 import * as fs from 'fs';
 
-import { initOrLoadConfig, saveConfig, getExtOrFn } from '../rblib/utils.js'
+import { initOrLoadConfig, saveConfig, getExtOrFn, autocompleteDestroy } from '../rblib/utils.js'
 
 //we don't need to know about config if we just pass the values from svelte here
 //import { config } from './../frontend/common/stores'
-import type { IConfig, ISongItem } from './../global';
+import type { IConfig, ISongItem, ITag } from './../global';
 
 const isDevelopment = process.env.NODE_ENV === "development";
-
 const slash = process.platform === 'win32' ? "\\" : "/"
+
+if (!fs.existsSync("./db")) {fs.mkdirSync("./db")}
+if (!fs.existsSync("./db/covers")) {fs.mkdirSync("./db/covers")}
 
 const testdialog = (text: string) => {
   dialog.showMessageBoxSync({message: "hello from preload!"})
@@ -153,6 +155,44 @@ async function tagSongs(allSongs: SongItem[]) {
   return allSongs
 }
 
+async function cacheTags(songs: SongItem[]) {
+  let tags = {}
+  let buffers = {}
+  for (let i = 0; i < songs.length; i++) {
+    const song = songs[i];
+    //@ts-ignore
+    const tag: ITag = await getEXTINF(song.fullpath, song.filename, true, false, false)
+    //console.log("fetched")
+
+    let coverpath = ''
+    let publicCoverPath = ''
+    if (tag.coverobj !== false) {
+      coverpath = `./db/covers/${song.prettyName}.${tag.coverobj.frmt}`
+      publicCoverPath = `/covers/${song.prettyName}.${tag.coverobj.frmt}`
+      
+      //console.log(coverpath)
+      /*try {
+        fs.writeFileSync(coverpath, tag.coverobj.data)
+      } catch(e) {
+        throw e;
+      }*/
+      buffers[song.prettyName] = tag.coverobj.data
+      fs.writeFileSync(coverpath, buffers[song.prettyName])
+      delete buffers[song.prettyName]
+      
+      
+      tag.coverobj = false; //exterminatus
+    }
+    //tag.coverobj = false
+    tag.fallbackCoverPath = coverpath
+    tag.cover = publicCoverPath
+    //@ts-ignore
+    tags[song.filename] = tag
+    
+  }
+  return tags
+}
+
 // async function fetchAllSongs() {
 //   //clear the playlists
 //   allSongs = []
@@ -270,9 +310,7 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash,
-	testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs,
-	getExtOrFn
+  slash, testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags, getExtOrFn
 }
 
 export type IElectronAPI = typeof context;
