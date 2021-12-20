@@ -12,7 +12,7 @@
 		"strictPropertyInitialization": true,
 		"strictBindCallApply": true,
 		"noImplicitThis": true,
-		"noImplicitReturns": true,
+		"noImplicitReturns": false,
 		"experimentalDecorators": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
