@@ -34,7 +34,7 @@
 <div class="songitem" class:nocover={data.nocover}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
-        <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{placeholder}" bind:this={coverelem} alt="cover"/>
+        <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{data.coversrc}" bind:this={coverelem} alt="cover"/>
     </div>
     <div class="songitem-title" title="{data.title}">
         <span class:bold={data.bold}>{data.title}</span>
