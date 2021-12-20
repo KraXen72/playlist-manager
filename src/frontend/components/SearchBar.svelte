@@ -116,7 +116,7 @@
   const inpTitle = "Please wait, getting tags for songs..."
 </script>
 
-<div class="comp" class:notready={disabled} title={disabled ? inpTitle : null}>
+<div class="comp" class:notready={disabled}>
   <div id="autocomplete" class="autocomplete fullwidth">
     <Textfield {...txtProps} bind:value={inpVal}/> 
     <ul class="autocomplete-result-list" />
@@ -124,13 +124,13 @@
   <Group variant="outlined">
     <!-- variant="{searchMode.special ? "unelevated" : "outlined"}" -->
     <Button 
-      variant="outlined"
+      variant="outlined" title="find songs with hard to type titles"
       class="smui-icon-btn {searchMode.special ? "btn-activef" : ""}" 
       on:click={() => searchMode.special = !searchMode.special}>
         <Label class="material-icons">emoji_symbols</Label>
     </Button>
     <Button 
-      variant="outlined" 
+      variant="outlined" title="search by artist"
       class="smui-icon-btn {searchMode.artist ? "btn-activef" : ""}"
       on:click={() => searchMode.artist = !searchMode.artist}>
         <Label class="material-icons">person_search</Label>
