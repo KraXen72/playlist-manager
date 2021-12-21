@@ -84,8 +84,14 @@
         <DetailsView {...$detailsData}/>
         <ExtraDetailsView hide={true}/>
     </div>
-    
 </main>
+
+<div id="moremenu" class="hidden">
+    <ul id="mm-ul">
+        <li class="mm-li">Bruh</li>
+    </ul>
+</div>
+
 <!-- {Math.round((prog.c / prog.f) * 100)}% -->
 <!--<div class="prog" bind:this={progElem}></div>-->
 <style>
