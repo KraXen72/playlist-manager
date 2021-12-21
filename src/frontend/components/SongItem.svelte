@@ -1,13 +1,9 @@
 <script lang="ts">
+    import { summonMenu } from '$rblib/esm/lib';
+    import { Icon } from '@smui/icon-button';
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
     import { currPlaylist } from '../common/stores';
-    /*import Menu, { MenuComponentDev } from '@smui/menu';
-    import List, { Item, Separator, Text } from '@smui/list';*/
-
-    import { Icon } from '@smui/icon-button';
-    import { summonMenu } from '$rblib/esm/lib'
-
 
     const bull = `&nbsp;&#8226;&nbsp;`;
 
@@ -57,9 +53,9 @@
     let menuoptions = {
         buttons: [
             {
-                text: "test",
+                text: "Details",
                 run: () => {
-                    console.log("test")
+                    console.log("ExtraDetailsView")
                 }
             },
         ]
