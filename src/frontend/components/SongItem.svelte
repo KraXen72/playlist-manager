@@ -1,10 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
-    //import { Icon } from '@smui/button';
-    import IconButton, { Icon } from '@smui/icon-button';
-
     import { currPlaylist } from '../common/stores';
+    /*import Menu, { MenuComponentDev } from '@smui/menu';
+    import List, { Item, Separator, Text } from '@smui/list';*/
+
+    import { Icon } from '@smui/icon-button';
+    import { summonMenu } from '$rblib/esm/lib'
+
 
     const bull = `&nbsp;&#8226;&nbsp;`;
 
@@ -48,7 +51,17 @@
                 console.error(`unknown button click action '${action}'`)
                 break;
         }
-    } 
+    }
+    let menuoptions = {
+        buttons: [
+            {
+                text: "test",
+                run: () => {
+                    console.log("test")
+                }
+            }
+        ]
+    }
 </script>
 
 <div class="songitem" class:nocover={data.nocover}>
@@ -68,14 +81,24 @@
     <div class="songitem-button-wrap">
         
         {#each buttons as btn, i}
-        <button class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
-            <Icon class="material-icons" touch>{btn.icon}</Icon>
-        </button>
-        <!-- <IconButton size="button" class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
-            <Icon class="material-icons">
-              {btn.icon}
-            </Icon>
-        </IconButton> -->
+            {#if btn.fn === 'moremenu'}
+                <button class="songitem-button noselect"
+                on:click={(event) => {summonMenu(menuoptions, event)}}
+                title={btn.desc}>
+                    <Icon class="material-icons" touch>{btn.icon}</Icon>
+                </button>
+                <!-- on:click={(event) => { menuopen = true; menuCoords = {x: event.clientX, y: event.clientY}}} -->
+                <!--<MoreMenu options={menuoptions} open={menuopen} coords={menuCoords}/>-->
+            {:else}
+                <button class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
+                    <Icon class="material-icons" touch>{btn.icon}</Icon>
+                </button>
+            {/if}
+            <!-- <IconButton size="button" class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
+                <Icon class="material-icons">
+                {btn.icon}
+                </Icon>
+            </IconButton> -->
         {/each}
     </div>
 </div>
