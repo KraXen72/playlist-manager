@@ -32,7 +32,8 @@ export default defineConfig({
 		alias: {
 			$rblib: path.resolve('./src/rblib'), 
 			$components: path.resolve("./src/frontend/components"),
-			$assets: path.resolve("./src/frontend/assets")
+			$assets: path.resolve("./src/frontend/assets"),
+			$frontend: frontendPath,
 		},
 		extensions: ['.js', '.ts', 'json', '.svelte', '.css'],
 		/*alias: [

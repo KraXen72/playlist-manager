@@ -4,12 +4,6 @@
 
     let coverelem: HTMLImageElement;
 
-    onMount(() => {
-        coverelem.onerror = () => {
-            coverelem.src = placeholder
-        }
-    })
-
     export let coversrc = placeholder;
     export let title = 'Unknown Title';
     export let album = 'Unknown Album';
@@ -24,9 +18,12 @@
 
 <article>
     <div class="song-preview" class:hidden-f={inactive} song-index="403" type="song">
+        <img alt="file exist test" src={coversrc} hidden 
+        on:load={() => {coverelem.src = coversrc}} 
+        on:error={() => {coverelem.src = placeholder}}>
         <div class="sp-cover-placeholder"></div>
         <div class="sp-cover-wrap">
-            <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem} src={coversrc}>
+            <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem}>
         </div>
         <div class="sp-title">{title}</div>
         <div class="sp-album">{album}</div>

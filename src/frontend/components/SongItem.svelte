@@ -4,7 +4,8 @@
     //import { Icon } from '@smui/button';
     import IconButton, { Icon } from '@smui/icon-button';
 
-    const api = window.api
+    import { currPlaylist } from '../common/stores';
+
     const bull = `&nbsp;&#8226;&nbsp;`;
 
     export let data: SongItemData = {
@@ -14,6 +15,7 @@
         artist: "Unknown Artist",
         album: "Unknown Album",
         filename: "unknownpath",
+        allSongsIndex: -1,
         bold: false,
         nocover: false,
         type: "song", //song or playlis
@@ -28,7 +30,25 @@
             coverelem.src = placeholder
         }
     })
-    /*data.coversrc*/
+
+    function _removeSong(index: number) {
+        $currPlaylist = $currPlaylist.filter(song => song.index !== index)
+    }
+    
+    function handleButtonClick(action: string, data: SongItemData) {
+        switch (action) {
+            //TODO implement regen, edit, moremenu
+            case 'remove':
+                _removeSong(data.allSongsIndex)
+                break;
+            case 'moremenu':
+                
+                break;
+            default:
+                console.error(`unknown button click action '${action}'`)
+                break;
+        }
+    } 
 </script>
 
 <div class="songitem" class:nocover={data.nocover}>
@@ -48,10 +68,10 @@
     <div class="songitem-button-wrap">
         
         {#each buttons as btn, i}
-        <button class="songitem-button noselect" on:click={() => btn.fn(data)} title={btn.desc}>
+        <button class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
             <Icon class="material-icons" touch>{btn.icon}</Icon>
         </button>
-        <!-- <IconButton size="button" class="songitem-button noselect" on:click={() => btn.fn(data)} title={btn.desc}>
+        <!-- <IconButton size="button" class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
             <Icon class="material-icons">
               {btn.icon}
             </Icon>

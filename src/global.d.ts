@@ -38,7 +38,7 @@ declare global {
     interface SongItemButton {
         icon: string,
         desc: string,
-        fn: Function
+        fn: string
     }
     
     interface SongItemData {
@@ -48,6 +48,7 @@ declare global {
         artist: string,
         album: string,
         filename: string,
+        allSongsIndex: number,
         bold: boolean,
         nocover: boolean,
         type?: "song" | "playlist", //song or playlis

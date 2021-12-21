@@ -1,5 +1,6 @@
 <script lang="ts">
-    import SongItem from './SongItem.svelte'
+    import SongItem from './SongItem.svelte';
+    import type { ISongItem } from 'global';
     import placeholder from "../assets/placeholder.png";
     import { currPlaylist, tagDB } from '../common/stores'
 
@@ -7,27 +8,23 @@
         {
             icon: "more_vert",
             desc: "More options",
-            fn: (props: object) => {
-                console.log("more")
-                console.log(props)
-            }
+            fn: "moremenu"
         },
         {
             icon: "close",
             desc: "Remove song from playlist",
-            fn: () => {
-                console.log("remove")
-            }
+            fn: "remove"
         }
     ]
 
-    function getSongItemDataFromTag(data: Tag, SongItemData: SongItemData) {
+    function getSongItemDataFromTag(data: Tag, sItemData: ISongItem) {
         return <SongItemData>{
             coversrc: data.cover,
             title: data.title,
             artist: data.artist,
             album: data.album,
-            filename: SongItemData.filename,
+            filename: sItemData.filename,
+            allSongsIndex: sItemData.index,
             bold: false,
             nocover: false
         }
