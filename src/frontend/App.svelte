@@ -31,20 +31,18 @@
 
             //check if all songs have a cached tag already or nah.
             if ($allSongs.every(song => Object.keys(localTagDB).includes(song.filename))) {
-                console.log("all songs have cached tags.")
+                console.log(`all ${Object.keys(localTagDB).length} songs have cached tags.`)
                 $tagDB = localTagDB
             } else {
                 console.log("not all songs have cached tags. getting tags from songs...")
-                console.time("fetched tags for all songs")
+                console.time(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
                 api.cacheTags($allSongs).then(val => {
                     localTagDB = val
                     api.saveConfig(`./db/${btoa($maindir)}.json`, localTagDB, true)
-                    console.timeEnd("fetched tags for all songs")
+                    console.timeEnd(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
                     $tagDB = localTagDB
                 }).catch((e) => {console.error(e)})
             }
-            console.log(Object.keys(localTagDB).length)
-            console.log(Object.keys(localTagDB)[0])
 
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {
