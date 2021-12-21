@@ -52,6 +52,8 @@
                 break;
         }
     }
+
+    //you can reference local variables/functions here vv
     let menuoptions = {
         buttons: [
             {
@@ -59,12 +61,12 @@
                 run: () => {
                     console.log("test")
                 }
-            }
+            },
         ]
     }
 </script>
 
-<div class="songitem" class:nocover={data.nocover}>
+<div class="songitem" class:nocover={data.nocover} on:contextmenu={(event) => {summonMenu(menuoptions, event)}}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
         <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{data.coversrc}" bind:this={coverelem} alt="cover"/>
