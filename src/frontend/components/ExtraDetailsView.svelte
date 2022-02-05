@@ -1,7 +1,7 @@
 <script lang="ts">
     import Button, { Icon, Label } from '@smui/button'
 
-    export let data = {
+    export let data: ExtraDetailsData = {
         path: 'Unknown Path', //D:\music\main\cozyboy - what did you think i meant when i said i love you.mp3
         genre: 'Unknown Genre', //R&B
         format: 'Unknown Format', //MPEG 1 layer 3
@@ -27,6 +27,15 @@
         // @ts-ignore
         return { key, val: data[key], desc: desc[key]}
     })
+    // for each good generative solution i have to use one bad reactive statement. karma.
+    // not quite sure how exactly this display variable works so i don't want to rewrite the displaying
+    $: {
+        display = Object.keys(data).map(key => {
+            // @ts-ignore
+            return { key, val: data[key], desc: desc[key]}
+        })
+    }
+    
 
     function hideme() {
         hide = true;

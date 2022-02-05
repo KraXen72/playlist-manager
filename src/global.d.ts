@@ -8,6 +8,11 @@ declare global {
         year: string | number
     }
 
+    interface ExtraDetailsData extends ExtraInfo {
+        path: string,
+        duration: string | number
+    }
+
     interface CoverObj {
         frmt: "jpeg" | "png" | false,
         data: Buffer | string | ""

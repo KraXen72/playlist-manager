@@ -3,9 +3,11 @@
     import { Icon } from '@smui/icon-button';
     import { onMount } from 'svelte';
     import placeholder from "../assets/placeholder.png";
-    import { currPlaylist } from '../common/stores';
+    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB } from '../common/stores';
+    import { zeropad } from "$rblib/esm/lib"
 
     const bull = `&nbsp;&#8226;&nbsp;`;
+    const api = window.api
 
     export let data: SongItemData = {
         coverid: "",
@@ -34,14 +36,14 @@
         $currPlaylist = $currPlaylist.filter(song => song.index !== index)
     }
     
-    function handleButtonClick(action: string, data: SongItemData) {
+    function handleButtonClick(action: string, data: SongItemData, event: Event) {
         switch (action) {
             //TODO implement regen, edit, moremenu
             case 'remove':
                 _removeSong(data.allSongsIndex)
                 break;
             case 'moremenu':
-                
+                summonMenu(menuoptions, event)
                 break;
             default:
                 console.error(`unknown button click action '${action}'`)
@@ -50,12 +52,34 @@
     }
 
     //you can reference local variables/functions here vv
+    // gonna use this for the three dots button action, since each songitem will only have this as the moremenu
     let menuoptions = {
         buttons: [
             {
                 text: "Details",
                 run: () => {
-                    console.log("ExtraDetailsView")
+                    console.log("ExtraDetailsView: ", data)
+                    let ASData = $allSongs[data.allSongsIndex]
+                    api.getEXTINF(ASData.fullpath, data.filename, true, true, true).then(extrainfo => {
+                        //console.log(extrainfo)
+                        let prep = { 
+                            duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
+                            path: ASData.fullpath
+                        }
+                        Object.assign(prep, extrainfo.extrainfo)
+                        $extraDetailsData = prep
+
+                        let tag = $tagDB[data.filename]
+                        $detailsData = {
+                            coversrc: tag.cover,
+                            title: tag?.title ?? "Unknown Title",
+                            album: tag?.album ?? "Unknown Album",
+                            artist: tag?.artist ?? "Unknown artist",
+                        }
+
+                        //TODO show extradetails element
+                    })
+                    
                 }
             },
         ]
@@ -77,26 +101,10 @@
     </div>
     <div class="songitem-filename" hidden>{data.filename}</div>
     <div class="songitem-button-wrap">
-        
         {#each buttons as btn, i}
-            {#if btn.fn === 'moremenu'}
-                <button class="songitem-button noselect"
-                on:click={(event) => {summonMenu(menuoptions, event)}}
-                title={btn.desc}>
-                    <Icon class="material-icons" touch>{btn.icon}</Icon>
-                </button>
-                <!-- on:click={(event) => { menuopen = true; menuCoords = {x: event.clientX, y: event.clientY}}} -->
-                <!--<MoreMenu options={menuoptions} open={menuopen} coords={menuCoords}/>-->
-            {:else}
-                <button class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
-                    <Icon class="material-icons" touch>{btn.icon}</Icon>
-                </button>
-            {/if}
-            <!-- <IconButton size="button" class="songitem-button noselect" on:click={() => handleButtonClick(btn.fn, data)} title={btn.desc}>
-                <Icon class="material-icons">
-                {btn.icon}
-                </Icon>
-            </IconButton> -->
+            <button class="songitem-button noselect" on:click={(event) => handleButtonClick(btn.fn, data, event)} title={btn.desc}>
+                <Icon class="material-icons" touch>{btn.icon}</Icon>
+            </button>
         {/each}
     </div>
 </div>

@@ -8,7 +8,7 @@
     import DetailsView from '$components/DetailsView.svelte'
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
 
-    import { config, maindir, allSongs, detailsData, tagDB, allPlaylists, allSongsAndPlaylists } from './common/stores'
+    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists } from './common/stores'
     import { onDestroy } from 'svelte';
 
     const api = window.api
@@ -82,7 +82,7 @@
 	<ButtonBar/>
     <div id="main-content">
         <DetailsView {...$detailsData}/>
-        <ExtraDetailsView hide={true}/>
+        <ExtraDetailsView hide={false} data={$extraDetailsData}/>
     </div>
 </main>
 
