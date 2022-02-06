@@ -9,7 +9,8 @@
         bitrate: 'Unknown bitrate', //320 kb/s
         size: 'Unknown size', //0.00 MB
         samplerate: 'Unknown', //44100 Hz
-        year: 'Unknown Year' //2018
+        year: 'Unknown Year', //2018
+        forceReveal: false
     }
     export let hide = false;
     const desc = {
@@ -23,20 +24,30 @@
         year: 'Year: '
     }
 
-    let display = Object.keys(data).map(key => {
-        // @ts-ignore
-        return { key, val: data[key], desc: desc[key]}
-    })
+    /**
+     * maps the extra details data to an object that can be easily iterated and rendered
+    */
+    function _mapDataToDisplay() {
+        let disp = Object.keys(data).map(key => {
+            // @ts-ignore
+            return { key, val: data[key], desc: desc[key]}
+        }).filter(item => {
+            if (item.key == "forceReveal") { return false } else {return true}
+        })
+        return disp
+    }
+
+    let display = _mapDataToDisplay()
     // for each good generative solution i have to use one bad reactive statement. karma.
     // not quite sure how exactly this display variable works so i don't want to rewrite the displaying
     $: {
-        display = Object.keys(data).map(key => {
-            // @ts-ignore
-            return { key, val: data[key], desc: desc[key]}
-        })
+        display = _mapDataToDisplay();
+        if (data.forceReveal){
+            data.forceReveal = false
+            hide = false
+        }
     }
     
-
     function hideme() {
         hide = true;
     }

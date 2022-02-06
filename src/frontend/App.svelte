@@ -82,7 +82,7 @@
 	<ButtonBar/>
     <div id="main-content">
         <DetailsView {...$detailsData}/>
-        <ExtraDetailsView hide={false} data={$extraDetailsData}/>
+        <ExtraDetailsView hide={true} data={$extraDetailsData}/>
     </div>
 </main>
 

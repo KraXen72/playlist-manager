@@ -10,6 +10,7 @@ declare global {
 
     interface ExtraDetailsData extends ExtraInfo {
         path: string,
+        forceReveal?: boolean,
         duration: string | number
     }
 

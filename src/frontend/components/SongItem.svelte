@@ -58,13 +58,13 @@
             {
                 text: "Details",
                 run: () => {
-                    console.log("ExtraDetailsView: ", data)
-                    let ASData = $allSongs[data.allSongsIndex]
+                    let ASData = $allSongs[data.allSongsIndex] // we need this to get fullpath of song
                     api.getEXTINF(ASData.fullpath, data.filename, true, true, true).then(extrainfo => {
                         //console.log(extrainfo)
                         let prep = { 
                             duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
-                            path: ASData.fullpath
+                            path: ASData.fullpath,
+                            forceReveal: true
                         }
                         Object.assign(prep, extrainfo.extrainfo)
                         $extraDetailsData = prep
