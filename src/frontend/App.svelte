@@ -28,6 +28,7 @@
             $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
             //console.log($allPlaylists)
 
+            $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
 
             // ($allSongs.length > Object.keys($tagDB).length && Object.keys($tagDB).length > 0)
             localTagDB = api.initOrLoadConfig(`./db/${btoa($maindir)}.json`, {})
@@ -79,7 +80,7 @@
 <main id="main-grid">
     <AppTitle/>
     <PlaylistTitle/>
-    <SearchBar completeFrom={$allSongs} disabled={searchDisabled}/>
+    <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/>
     <Sidebar/>
 	<PlaylistBar/>
 	<ButtonBar/>

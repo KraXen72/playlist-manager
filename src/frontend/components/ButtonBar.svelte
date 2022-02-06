@@ -1,7 +1,7 @@
 <script lang="ts">
     import Button, {Label, Group} from '@smui/button';
     import IconButton from '@smui/icon-button';
-    import { config } from '../common/stores';
+    import { config } from '$common/stores';
 
     const api = window.api
 

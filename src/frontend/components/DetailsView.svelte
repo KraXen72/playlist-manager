@@ -1,5 +1,5 @@
 <script lang="ts">
-    import placeholder from "../assets/placeholder.png";
+    import placeholder from "$assets/placeholder.png";
     import { onMount } from "svelte";
 
     let coverelem: HTMLImageElement;
@@ -26,8 +26,8 @@
             <img alt="Selected Song cover" class="sp-cover" draggable="false" bind:this={coverelem}>
         </div>
         <div class="sp-title">{title}</div>
-        <div class="sp-album">{album}</div>
-        <div class="sp-artist">{artist}</div>
+        <div class="sp-album" title={album}>{album}</div>
+        <div class="sp-artist">{@html artist}</div>
     </div>
 </article>
 

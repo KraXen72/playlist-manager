@@ -6,7 +6,7 @@ export const maindir = derived(config, $config => $config?.maindir)
 
 export const allSongs = writable<SongItem[]>([])  //TODO change this into readable store
 export const allPlaylists = writable<PlaylistSongItem[]>([])
-export const allSongsAndPlaylists = writable([]) //derived([allSongs, allPlaylists], ([value1, value2]) => [...value1, ...value2]);
+export const allSongsAndPlaylists = writable<SongItemPlus[]>([]) //derived([allSongs, allPlaylists], ([value1, value2]) => [...value1, ...value2]);
 export const detailsData = writable({})
 export const extraDetailsData = writable<ExtraDetailsData>()
 

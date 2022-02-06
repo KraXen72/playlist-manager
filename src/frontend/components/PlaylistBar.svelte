@@ -1,8 +1,11 @@
 <script lang="ts">
     import SongItem from './SongItem.svelte';
     import type { ISongItem } from 'global';
-    import placeholder from "../assets/placeholder.png";
-    import { currPlaylist, tagDB } from '../common/stores'
+    import placeholder from "$assets/placeholder.png";
+    import playlistSrc from "$assets/playlist.png";
+    import { currPlaylist, tagDB } from '$common/stores'
+
+    const bull = `&nbsp;&#8226;&nbsp;`;
 
     const buttons: SongItemButton[] = [
         {
@@ -17,16 +20,31 @@
         }
     ]
 
-    function getSongItemDataFromTag(data: Tag, sItemData: ISongItem) {
-        return <SongItemData>{
-            coversrc: data.cover,
-            title: data.title,
-            artist: data.artist,
-            album: data.album,
-            filename: sItemData.filename,
-            allSongsIndex: sItemData.index,
-            bold: false,
-            nocover: false
+    function getSongItemDataFromTag(data: Tag, sItemData: SongItemPlus) {
+        if (sItemData.type === "song") {
+            return <SongItemData>{
+                coversrc: data.cover,
+                title: data.title,
+                artist: data.artist,
+                album: data.album,
+                filename: sItemData.filename,
+                allSongsIndex: sItemData.index,
+                type: "song",
+                bold: false,
+                nocover: false
+            }
+        } else if (sItemData.type === "playlist") {
+            return <SongItemData>{
+                coversrc: playlistSrc,
+                title: sItemData.filename,
+                artist: `Playlist • ${sItemData.songs.length / 2} Songs`,
+                album: sItemData.fullpath,
+                filename: sItemData.filename,
+                allSongsIndex: sItemData.index,
+                type: "playlist",
+                bold: false,
+                nocover: false
+            }
         }
     }
 </script>

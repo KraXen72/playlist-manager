@@ -45,6 +45,10 @@ declare global {
         songs: string[],
         type: "playlist"
     }
+
+    interface SongItemPlus extends SongItem {
+        songs?: string[]
+    }
     
     interface SongItemButton {
         icon: string,

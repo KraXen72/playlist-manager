@@ -21,10 +21,9 @@ const slash = process.platform === 'win32' ? "\\" : "/"
 if (!fs.existsSync("./db")) {fs.mkdirSync("./db")}
 if (!fs.existsSync("./db/covers")) {fs.mkdirSync("./db/covers")}
 
-const testdialog = (text: string) => {
-  dialog.showMessageBoxSync({message: "hello from preload!"})
+const infodialog = (text: string) => {
+  dialog.showMessageBoxSync({message: text})
 }
-
 // electron stuff
 
 /**
@@ -382,7 +381,7 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags
+  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags
 }
 
 export type IElectronAPI = typeof context;

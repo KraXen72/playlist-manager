@@ -4,6 +4,7 @@
   import CircularProgress from '@smui/circular-progress';
   import Button, { Label, Group } from "@smui/button";
   import { onDestroy, onMount } from "svelte";
+  import playlistPic from "../assets/playlist.png";
 
   export let completeFrom = <SongItem[]>[];
   export let disabled = false
@@ -16,6 +17,7 @@
   import Autocomplete from "@trevoreyre/autocomplete-js";
   let autocomp_bind
   let inpVal = ""
+  const bull = `&nbsp;&#8226;&nbsp;`;
 
   // @ts-ignore
   import { getExtOrFn, autocompleteDestroy } from '$rblib/esm/lib';
@@ -46,37 +48,47 @@
         res = res.filter((song) => song.filename.match(regex));
       } 
 
+      //sort the results so playlists are on top
+      res.sort((a, b) => {
+        if (a.type == "playlist" && b.type == "song") {
+          return -1;
+        } else if (a.type == "song" && b.type == "playlist") {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+
       if (searchMode.special || searchMode.artist) {
         return res
       } else {
         return res.slice(0, 10)
       }
-
-      //sort the results so playlists are on top
-      // res.sort((a, b) => {
-      //   if (a.type == "playlist" && b.type == "song") {
-      //     return -1;
-      //   } else if (a.type == "song" && b.type == "playlist") {
-      //     return 1;
-      //   } else {
-      //     return 0;
-      //   }
-      // });
     },
     onUpdate: async (results: [], selectedIndex: number) => {
-      let selsong: SongItem = results[selectedIndex]
+      let selsong: SongItemPlus = results[selectedIndex]
       let filename = selsong?.filename ?? "nothing_selected"
 
       //let tag = $tagDB[selsong.prettyName]
       if (filename !== 'nothing_selected') {
-        //@ts-ignore
-        let tag = $tagDB[filename]
+        if (selsong.type === "song") {
+          //@ts-ignore
+          let tag = $tagDB[filename]
 
-        $detailsData = {
-          coversrc: tag.cover,
-          title: tag?.title ?? "Unknown Title",
-          album: tag?.album ?? "Unknown Album",
-          artist: tag?.artist ?? "Unknown artist",
+          $detailsData = {
+            coversrc: tag.cover,
+            title: tag?.title ?? "Unknown Title",
+            artist: tag?.artist ?? "Unknown artist",
+            album: tag?.album ?? "Unknown Album",
+          }
+        } else if (selsong.type === "playlist") {
+          //TODO differentiate between com and not com playlist
+          $detailsData = {
+            coversrc: playlistPic,
+            title: selsong.filename,
+            artist: `Playlist${bull}${selsong.songs.length / 2} Songs`,
+            album: selsong.fullpath,
+          }
         }
       }
     },
@@ -87,14 +99,13 @@
     },
     autoSelect: true,
     getResultValue: (result: SongItem) => {
-      return result.prettyName || getExtOrFn(result.filename).fn
-      /*return `<span index="${result.index}">${final}${
-        result.type == "playlist" && autocompArr == "both" ? ` (Playlist)` : ""
-      ""}</span>`;*/
-    }/*,
-    getResultValue: (result: SongItem) => {
-      return getExtOrFn(result.filename).fn;
-    }*/
+      if (result.type === "song") {
+        return result.prettyName || getExtOrFn(result.filename).fn
+      } else if (result.type === "playlist") {
+        let res = result.prettyName || getExtOrFn(result.filename).fn
+        return `${res} (Playlist)`
+      }
+    }
   };
   onMount(() => {
     //console.log("binding autocomplete")

@@ -2,8 +2,8 @@
     import { summonMenu } from '$rblib/esm/lib';
     import { Icon } from '@smui/icon-button';
     import { onMount } from 'svelte';
-    import placeholder from "../assets/placeholder.png";
-    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB } from '../common/stores';
+    import placeholder from "$assets/placeholder.png";
+    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists } from '../common/stores';
     import { zeropad } from "$rblib/esm/lib"
 
     const bull = `&nbsp;&#8226;&nbsp;`;
@@ -36,14 +36,22 @@
         $currPlaylist = $currPlaylist.filter(song => song.index !== index)
     }
     
-    function handleButtonClick(action: string, data: SongItemData, event: Event) {
+    function _handleButtonClick(action: string, data: SongItemData, event: Event) {
         switch (action) {
             //TODO implement regen, edit, moremenu
             case 'remove':
                 _removeSong(data.allSongsIndex)
                 break;
             case 'moremenu':
-                summonMenu(menuoptions, event)
+                if (data.type === "song") {
+                    //@ts-ignore
+                    summonMenu(songMenuOptions, event)
+                } else if (data.type === "playlist") {
+                    //@ts-ignore
+                    summonMenu(playlistMenuOptions, event)
+                } else {
+                    console.error("this SongItem's type is neither 'song' or 'playlist'")
+                }
                 break;
             default:
                 console.error(`unknown button click action '${action}'`)
@@ -53,7 +61,7 @@
 
     //you can reference local variables/functions here vv
     // gonna use this for the three dots button action, since each songitem will only have this as the moremenu
-    let menuoptions = {
+    let songMenuOptions = {
         buttons: [
             {
                 text: "Details",
@@ -82,9 +90,29 @@
             },
         ]
     }
+
+    let playlistMenuOptions = {
+        buttons: [
+            {
+                text: "Details",
+                run: () => {
+                    let ASData = $allSongsAndPlaylists[data.allSongsIndex]
+                    let lines = [
+                            "This playlist contains: ",
+                            "",
+                            ...ASData.songs.filter((l: string) => !l.includes("#EXTINF:"))
+                        ]
+                    api.infodialog(lines.join("\n"))
+                }
+            },
+        ]
+    }
 </script>
 
-<div class="songitem" class:nocover={data.nocover} on:contextmenu={(event) => {summonMenu(menuoptions, event)}}>
+<div 
+    class="songitem" 
+    class:nocover={data.nocover} 
+    on:contextmenu={(event) => _handleButtonClick("moremenu", data, event)}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
         <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{data.coversrc}" bind:this={coverelem} alt="cover"/>
@@ -93,14 +121,14 @@
         <span class:bold={data.bold}>{data.title}</span>
     </div>
     <div class="songitem-aa">
-        <span class="songitem-artist" title="{data.artist}">{data.artist}</span>
+        <span class="songitem-artist" title="{data.artist}">{@html data.artist}</span>
         {@html bull}
         <span class="songitem-album" title="{data.album}">{data.album}</span>
     </div>
     <div class="songitem-filename" hidden>{data.filename}</div>
     <div class="songitem-button-wrap">
         {#each buttons as btn, i}
-            <button class="songitem-button noselect" on:click={(event) => handleButtonClick(btn.fn, data, event)} title={btn.desc}>
+            <button class="songitem-button noselect" on:click={(event) => _handleButtonClick(btn.fn, data, event)} title={btn.desc}>
                 <Icon class="material-icons" touch>{btn.icon}</Icon>
             </button>
         {/each}
