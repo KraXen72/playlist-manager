@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as mm from 'music-metadata';
 import * as fs from 'fs';
 
-import { initOrLoadConfig, saveConfig, getExtOrFn, autocompleteDestroy } from '../rblib/utils.js'
+import { initOrLoadConfig, saveConfig, getExtOrFn } from '../rblib/utils.js'
 
 //we don't need to know about config if we just pass the values from svelte here
 //import { config } from './../frontend/common/stores'
@@ -40,9 +40,17 @@ const pickFolder = (title: string) => {
   return pick
 }
 
-//TODO add walking playlists also
+/**
+ * object with multiple methods for walking/reading the filesystem for playlits and songs
+ */
 const walker = {
-  songs: (basedDir: string, config: IConfig) => { //only takes 70ms!!!
+  /**
+   * recursively walk $maindir to find all songs. only takes around 70ms
+   * @param basedDir maindir
+   * @param config config (used to get valid extensions)
+   * @returns array of SongItem objects
+   */
+  songs: (basedDir: string, config: IConfig) => {
     let songs = fsWalk.walkSync(basedDir, {stats: true}).filter(entry => {
 
       let ext = path.extname(entry.name).replaceAll(" ", "").replace(".", "") //strip spaces and dot from ext
@@ -54,7 +62,7 @@ const walker = {
       const sItem: ISongItem = {
     	 	filename: song.name,
         fullpath: song.path,
-        prettyName: getExtOrFn(parts[parts.length - 1]).fn,
+        prettyName: getExtOrFn(parts[parts.length - 1]).fn, // this could just use song.name tbh
         index: i,
         relativepath: song.path.replaceAll(basedDir, "").replace(slash, ""),
         type: "song"
@@ -63,9 +71,59 @@ const walker = {
       return sItem
     })
     return songs
+  },
+  /**
+   * recursively walk $maindir to find all playlists
+   * @param basedDir maindir
+   * @param indexOffset $allSongs.length
+   * @returns array of SongItem objects
+   */
+  playlists: (basedDir: string, indexOffset: number) => {
+    let playlists = fsWalk.walkSync(basedDir, {stats: true}
+    ).filter(entry => {
+      let ext = path.extname(entry.name).replaceAll(" ", "").replace(".", "") //strip spaces and dot from ext
+      return entry.dirent.isFile() && ext == "m3u" //if is a file and valid ext, it passes
+    }).map((playlist, i) => {
+      const sItem: ISongItem = {
+       filename: playlist.name,
+       fullpath: playlist.path,
+       prettyName: getExtOrFn(playlist.name).fn, // this could just use song.name tbh
+       index: indexOffset + i,
+       relativepath: playlist.path.replaceAll(basedDir, "").replace(slash, ""),
+       type: "playlist"
+     }
+     //TODO read file for contents
+
+      return sItem
+    })
+    return playlists
+  },
+  /**
+   * read the $maindir for all playlists created by user
+   * @param basedDir maindir
+   * @returns array of filenames of user-created playlists
+   */
+  editablePlaylists: (basedDir: string) => {
+    let editablePlaylists = fs.readdirSync(basedDir
+    ).filter( //fetch the maindir for user created playlists
+        item => fs.lstatSync(basedDir + slash + item).isFile()
+    ).filter(item => { //filter out anything other than m3u
+        let ext = getExtOrFn(item).ext
+        return ext.toLowerCase() == "m3u"
+    })/*.map(item => { //fetch the playlist data from big songAndPlaylists object
+        let fp = basedDir + slash + item
+        let p = {}
+        for (let i = 0; i < songsAndPlaylists.length; i++) {
+            const cp = songsAndPlaylists[i];
+            if (cp.fullpath == fp) { p = cp; break; }
+        }
+    p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
+        return p }
+    )*/
+    console.log(editablePlaylists)
+    return editablePlaylists
   }
 }
-
 
 
 //read the file and get it's metadata
@@ -155,6 +213,10 @@ async function tagSongs(allSongs: SongItem[]) {
   return allSongs
 }
 
+/**
+ * fetch tags for allSongs (provided). save covers as files
+ * @param songs array of songs to fetch tags for. preferably allSongs
+ */
 async function cacheTags(songs: SongItem[]) {
   let tags = {}
   let buffers = {}
@@ -170,9 +232,9 @@ async function cacheTags(songs: SongItem[]) {
       coverpath = `./db/covers/${song.prettyName}.${tag.coverobj.frmt}`
       publicCoverPath = `/covers/${song.prettyName}.${tag.coverobj.frmt}`
 
-      buffers[song.prettyName] = tag.coverobj.data
-      fs.writeFileSync(coverpath, buffers[song.prettyName])
-      delete buffers[song.prettyName]
+      buffers[song.prettyName] = tag.coverobj.data // add raw image data into the buffers array
+      fs.writeFileSync(coverpath, buffers[song.prettyName]) //write cover to file
+      delete buffers[song.prettyName] //delete buffer after write
       
       tag.coverobj = false; //exterminatus
     }

@@ -44,6 +44,8 @@
                 }).catch((e) => {console.error(e)})
             }
 
+            console.log(api.walker.playlists($maindir, $allSongs.length))
+
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {
                 const song = $allSongs[i];

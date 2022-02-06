@@ -60,8 +60,7 @@
                 run: () => {
                     let ASData = $allSongs[data.allSongsIndex] // we need this to get fullpath of song
                     api.getEXTINF(ASData.fullpath, data.filename, true, true, true).then(extrainfo => {
-                        //console.log(extrainfo)
-                        let prep = { 
+                        let prep = {
                             duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
                             path: ASData.fullpath,
                             forceReveal: true
@@ -76,8 +75,6 @@
                             album: tag?.album ?? "Unknown Album",
                             artist: tag?.artist ?? "Unknown artist",
                         }
-
-                        //TODO show extradetails element
                     })
                     
                 }
