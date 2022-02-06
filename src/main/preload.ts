@@ -41,6 +41,19 @@ const pickFolder = (title: string) => {
 }
 
 /**
+ * read playlist and yeet first line
+ * @param playlistPath path to playlist
+ * @returns array of lines
+ */
+const readPlaylistForContent = (playlistPath: string) => {
+  return fs.readFileSync(playlistPath, {"encoding": "utf-8"}
+  ).split("\n"
+  ).filter(line => { 
+    if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } 
+  })
+}
+
+/**
  * object with multiple methods for walking/reading the filesystem for playlits and songs
  */
 const walker = {
@@ -84,12 +97,15 @@ const walker = {
       let ext = path.extname(entry.name).replaceAll(" ", "").replace(".", "") //strip spaces and dot from ext
       return entry.dirent.isFile() && ext == "m3u" //if is a file and valid ext, it passes
     }).map((playlist, i) => {
-      const sItem: ISongItem = {
+      let lines = readPlaylistForContent(playlist.path)
+
+      const sItem: PlaylistSongItem = {
        filename: playlist.name,
        fullpath: playlist.path,
        prettyName: getExtOrFn(playlist.name).fn, // this could just use song.name tbh
        index: indexOffset + i,
        relativepath: playlist.path.replaceAll(basedDir, "").replace(slash, ""),
+       songs: lines,
        type: "playlist"
      }
      //TODO read file for contents
@@ -365,7 +381,7 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags, getExtOrFn
+  slash, testdialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags
 }
 
 export type IElectronAPI = typeof context;

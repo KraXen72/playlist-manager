@@ -40,6 +40,11 @@ declare global {
         prettyName?: string,
         tag?: Tag | string
     }
+
+    interface PlaylistSongItem extends SongItem {
+        songs: string[],
+        type: "playlist"
+    }
     
     interface SongItemButton {
         icon: string,
