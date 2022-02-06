@@ -60,7 +60,8 @@
                 run: () => {
                     let ASData = $allSongs[data.allSongsIndex] // we need this to get fullpath of song
                     api.getEXTINF(ASData.fullpath, data.filename, true, true, true).then(extrainfo => {
-                        let prep = {
+                        if (typeof extrainfo === "string"){throw Error('Impossible')} // this apparently eliminates the x is not on type "string" errors
+                        let prep: ExtraDetailsData = {
                             duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
                             path: ASData.fullpath,
                             forceReveal: true

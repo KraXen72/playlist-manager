@@ -25,6 +25,9 @@
             $allSongs = api.walker.songs($maindir, $config)
             console.log("fetched songs. checking if we have cached tags...")
 
+            $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
+            //console.log($allPlaylists)
+
 
             // ($allSongs.length > Object.keys($tagDB).length && Object.keys($tagDB).length > 0)
             localTagDB = api.initOrLoadConfig(`./db/${btoa($maindir)}.json`, {})
@@ -43,9 +46,6 @@
                     $tagDB = localTagDB
                 }).catch((e) => {console.error(e)})
             }
-
-            $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
-            console.log($allPlaylists)
 
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {

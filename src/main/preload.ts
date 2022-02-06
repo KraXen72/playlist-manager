@@ -211,6 +211,7 @@ const walker = {
   } else {
       return extinf
   }
+  //TODO split this into two functions where one returns object and one returns string
 }
 
 async function tagSongs(allSongs: SongItem[]) {

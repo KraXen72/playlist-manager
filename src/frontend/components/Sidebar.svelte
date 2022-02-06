@@ -3,7 +3,7 @@
     import TextDivider from './TextDivider.svelte';
     import SongItem from './SongItem.svelte';
 
-    import { config, maindir } from '../common/stores'
+    import { config, maindir, allPlaylists } from '../common/stores'
     import { onDestroy } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
 
@@ -13,6 +13,7 @@
 
     const unsub = config.subscribe((val) => {
         //sidebarPlaylists = Object.keys(val.comPlaylists)
+        console.log($allPlaylists)
         sidebarPlaylists = api.walker.editablePlaylists($maindir).map( (key)  => {
             //const playlist = val.comPlaylists[key]
 
