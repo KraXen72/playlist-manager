@@ -93,6 +93,14 @@
                 run: () => {
                     $viewCoverPath = data.coversrc
                     $extraDetailsData.forceState = "hide"
+
+                    let tag = $tagDB[data.filename]
+                    $detailsData = {
+                        coversrc: tag.cover,
+                        title: tag?.title ?? "Unknown Title",
+                        album: tag?.album ?? "Unknown Album",
+                        artist: tag?.artist ?? "Unknown artist",
+                    }
                 }
             }
         ]
