@@ -3,7 +3,7 @@
     import { Icon } from '@smui/icon-button';
     import { onMount } from 'svelte';
     import placeholder from "$assets/placeholder.png";
-    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists } from '../common/stores';
+    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists, config, viewCoverPath } from '$common/stores';
     import { zeropad } from "$rblib/esm/lib"
 
     const bull = `&nbsp;&#8226;&nbsp;`;
@@ -72,7 +72,7 @@
                         let prep: ExtraDetailsData = {
                             duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
                             path: ASData.fullpath,
-                            forceReveal: true
+                            forceState: "show"
                         }
                         Object.assign(prep, extrainfo.extrainfo)
                         $extraDetailsData = prep
@@ -88,6 +88,13 @@
                     
                 }
             },
+            {
+                text: "View cover",
+                run: () => {
+                    $viewCoverPath = data.coversrc
+                    $extraDetailsData.forceState = "hide"
+                }
+            }
         ]
     }
 
@@ -97,11 +104,19 @@
                 text: "Details",
                 run: () => {
                     let ASData = $allSongsAndPlaylists[data.allSongsIndex]
-                    let lines = [
-                            "This playlist contains: ",
-                            "",
-                            ...ASData.songs.filter((l: string) => !l.includes("#EXTINF:"))
-                        ]
+                    let isCom = Object.keys($config.comPlaylists).includes(ASData.fullpath)
+                    let lines = []
+                    if (isCom) {
+                        lines = [
+                                "This generated playlist contains: ", "",
+                                ...$config.comPlaylists[ASData.fullpath].map(item => item.filename)
+                            ]
+                    } else {
+                        lines = [
+                                "This playlist contains: ", "",
+                                ...ASData.songs.filter((l: string) => !l.includes("#EXTINF:"))
+                            ]
+                    }
                     api.infodialog(lines.join("\n"))
                 }
             },

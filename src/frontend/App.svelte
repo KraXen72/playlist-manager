@@ -7,8 +7,9 @@
     import ButtonBar from '$components/ButtonBar.svelte'
     import DetailsView from '$components/DetailsView.svelte'
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
+    import CoverView from './components/CoverView.svelte';
 
-    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists } from './common/stores'
+    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists, viewCoverPath } from './common/stores'
     import { onDestroy } from 'svelte';
 
     const api = window.api
@@ -85,6 +86,9 @@
 	<PlaylistBar/>
 	<ButtonBar/>
     <div id="main-content">
+        {#if $viewCoverPath !== false}
+            <CoverView src={$viewCoverPath}/>
+        {/if}
         <DetailsView {...$detailsData}/>
         <ExtraDetailsView hide={true} data={$extraDetailsData}/>
     </div>

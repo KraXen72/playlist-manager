@@ -9,38 +9,7 @@
 
     const api = window.api
 
-    let sidebarPlaylists: SongItemData[] = []
-
-    const unsub = config.subscribe((val) => {
-        //sidebarPlaylists = Object.keys(val.comPlaylists)
-        console.log($allPlaylists)
-        sidebarPlaylists = api.walker.editablePlaylists($maindir).map( (key)  => {
-            //const playlist = val.comPlaylists[key]
-
-            const parts = key.split(api.slash)
-            const item: SongItemData = {
-                title: getExtOrFn(parts[parts.length - 1]).fn,
-                artist: "-- Songs", //TODO get playlist length
-                filename: key,
-                album: key,
-                bold: true,
-                nocover: true
-            }
-            return item
-        })
-        console.log("fetched playlists")
-    })
-
-    onDestroy(unsub)
-
-    let opts = {
-        title: "temp batch 1.m3u",
-        artist: "25 Songs",
-        album: 'D:\\music\\temp batch 1.m3u', 
-        bold: true,
-        nocover: true,
-        type: "playlist"
-    }
+    let sidebarPlaylists: any[] = []
     let buttons: SongItemButton[] = [
         {
             icon: "autorenew",
@@ -54,6 +23,38 @@
         }
 
     ]
+
+    function _matchPlaylistFromFullpath(fullpath: string) {
+        return $allPlaylists.find(playlist => playlist.fullpath === fullpath)
+    }
+
+    const unsub = config.subscribe((val) => {
+        sidebarPlaylists = api.walker.editablePlaylists($maindir).map((key: string)  => {
+            let fullpath = `${$maindir}${api.slash}${key}`
+            let isCom = Object.keys($config.comPlaylists).includes(fullpath)
+            let ASData = _matchPlaylistFromFullpath(fullpath)
+
+            const parts = key.split(api.slash)
+            const item: SongItemData = {
+                title: getExtOrFn(parts[parts.length - 1]).fn,
+                artist: `${typeof ASData?.songs.length !== "undefined" ? ASData?.songs.length / 2 :"--"} Songs`,
+                filename: key,
+                album: key,
+                bold: true,
+                nocover: true //TODO generated playlist covers
+            }
+            if (isCom) {
+                return {item, buttons}
+            } else {
+                return {item,  buttons: [buttons[1]]}
+            }
+        })
+        console.log("fetched playlists")
+    })
+
+    onDestroy(unsub)
+
+    
 </script>
 
 <aside>
@@ -68,8 +69,8 @@
     <TextDivider content="Your Playlists: "/>
 
     <div class="sidebar-playlists">
-        {#each sidebarPlaylists as opts}
-            <SongItem data={opts} {buttons}/>
+        {#each sidebarPlaylists as ply}
+            <SongItem data={ply.item} buttons={ply.buttons}/>
         {/each}
     </div>
     

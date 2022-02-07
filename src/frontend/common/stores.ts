@@ -8,6 +8,8 @@ export const allSongs = writable<SongItem[]>([])  //TODO change this into readab
 export const allPlaylists = writable<PlaylistSongItem[]>([])
 export const allSongsAndPlaylists = writable<SongItemPlus[]>([]) //derived([allSongs, allPlaylists], ([value1, value2]) => [...value1, ...value2]);
 export const detailsData = writable({})
-export const extraDetailsData = writable<ExtraDetailsData>()
+//@ts-ignore
+export const extraDetailsData = writable<ExtraDetailsData>({})
+export const viewCoverPath = writable<(string|false)>(false)
 
 export const tagDB = writable<tagDB>({})

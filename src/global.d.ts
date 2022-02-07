@@ -10,7 +10,7 @@ declare global {
 
     interface ExtraDetailsData extends ExtraInfo {
         path: string,
-        forceReveal?: boolean,
+        forceState: "hide" | "show" | "none",
         duration: string | number
     }
 

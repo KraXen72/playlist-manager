@@ -10,7 +10,7 @@
         size: 'Unknown size', //0.00 MB
         samplerate: 'Unknown', //44100 Hz
         year: 'Unknown Year', //2018
-        forceReveal: false
+        forceState: "none"
     }
     export let hide = false;
     const desc = {
@@ -32,7 +32,7 @@
             // @ts-ignore
             return { key, val: data[key], desc: desc[key]}
         }).filter(item => {
-            if (item.key == "forceReveal") { return false } else {return true}
+            if (item.key == "forceState") { return false } else {return true}
         })
         return disp
     }
@@ -42,9 +42,17 @@
     // not quite sure how exactly this display variable works so i don't want to rewrite the displaying
     $: {
         display = _mapDataToDisplay();
-        if (data.forceReveal){
-            data.forceReveal = false
-            hide = false
+        switch (data.forceState) {
+            case "hide":
+                hide = true
+                data.forceState = "none"
+                break;
+            case "show":
+                hide = false
+                data.forceState = "none"
+                break;
+            default:
+                break;
         }
     }
     
@@ -60,9 +68,9 @@
     {/each}
     <hr class="spacer">
     <span class="closebtn">
-        <Button variant="outlined" class="mdbutton mdborder" on:click={hideme}>
-            <Label>Collapse</Label>
-            <Icon class="material-icons icon-135 mdicontext">expand_more</Icon>
+        <Button variant="outlined" class="mdbutton mdborder smui-icon-btn" on:click={hideme}>
+            <!-- <Label>Collapse</Label> -->
+            <Label class="material-icons icon-135 mdicontext">expand_more</Label>
         </Button>
     </span>
 </article>
@@ -80,6 +88,7 @@
         "kbitrate bitrate ksamplerate samplerate year";
 
         margin: 0.5rem;
+        padding-right: 0.5rem;
         position: relative;
         column-gap: 0.2rem;
         width: 100%;

@@ -3,9 +3,11 @@
     import type { ISongItem } from 'global';
     import placeholder from "$assets/placeholder.png";
     import playlistSrc from "$assets/playlist.png";
-    import { currPlaylist, tagDB } from '$common/stores'
+    import generated from "$assets/generated.png"
+    import { currPlaylist, tagDB, config } from '$common/stores'
 
     const bull = `&nbsp;&#8226;&nbsp;`;
+    const api = window.api
 
     const buttons: SongItemButton[] = [
         {
@@ -34,8 +36,9 @@
                 nocover: false
             }
         } else if (sItemData.type === "playlist") {
+            let isCom = Object.keys($config.comPlaylists).includes(sItemData.fullpath)
             return <SongItemData>{
-                coversrc: playlistSrc,
+                coversrc: isCom ? generated : playlistSrc,
                 title: sItemData.filename,
                 artist: `Playlist • ${sItemData.songs.length / 2} Songs`,
                 album: sItemData.fullpath,

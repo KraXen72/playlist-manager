@@ -135,7 +135,6 @@ const walker = {
     p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
         return p }
     )*/
-    console.log(editablePlaylists)
     return editablePlaylists
   }
 }

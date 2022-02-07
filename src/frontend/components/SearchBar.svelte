@@ -4,7 +4,8 @@
   import CircularProgress from '@smui/circular-progress';
   import Button, { Label, Group } from "@smui/button";
   import { onDestroy, onMount } from "svelte";
-  import playlistPic from "../assets/playlist.png";
+  import playlistPic from "$assets/playlist.png";
+  import generated from "$assets/generated.png"
 
   export let completeFrom = <SongItem[]>[];
   export let disabled = false
@@ -21,7 +22,7 @@
 
   // @ts-ignore
   import { getExtOrFn, autocompleteDestroy } from '$rblib/esm/lib';
-  import { detailsData, currPlaylist, tagDB } from '../common/stores';
+  import { detailsData, currPlaylist, tagDB, config, extraDetailsData } from '$common/stores';
 
   let options = {
     search: (input: string) => {
@@ -39,7 +40,7 @@
       if (!searchMode.artist) { //normal
         res = res.filter(song => song.filename.toLowerCase().includes(input.toLowerCase()));
       } else if (searchMode.artist) { //artist
-        res = res.filter(song => $tagDB[song.filename].artist.toLowerCase().includes((input.toLowerCase())))
+        res = res.filter(song => song.type !== "playlist").filter(song => $tagDB[song.filename].artist.toLowerCase().includes((input.toLowerCase())))
       }
       
       //special mode
@@ -49,10 +50,11 @@
       } 
 
       //sort the results so playlists are on top
-      res.sort((a, b) => {
-        if (a.type == "playlist" && b.type == "song") {
+      res = res.sort((a, b) => {
+        //only add playlists on top if they start with the query
+        if ((a.type == "playlist" && b.type == "song") && a.prettyName?.startsWith(input)) {
           return -1;
-        } else if (a.type == "song" && b.type == "playlist") {
+        } else if ((a.type == "song" && b.type == "playlist") && b.prettyName?.startsWith(input)) {
           return 1;
         } else {
           return 0;
@@ -72,9 +74,7 @@
       //let tag = $tagDB[selsong.prettyName]
       if (filename !== 'nothing_selected') {
         if (selsong.type === "song") {
-          //@ts-ignore
           let tag = $tagDB[filename]
-
           $detailsData = {
             coversrc: tag.cover,
             title: tag?.title ?? "Unknown Title",
@@ -82,13 +82,15 @@
             album: tag?.album ?? "Unknown Album",
           }
         } else if (selsong.type === "playlist") {
-          //TODO differentiate between com and not com playlist
+          let isCom = Object.keys($config.comPlaylists).includes(selsong.fullpath)
           $detailsData = {
-            coversrc: playlistPic,
+            coversrc: isCom ? generated : playlistPic,
             title: selsong.filename,
             artist: `Playlist${bull}${selsong.songs.length / 2} Songs`,
             album: selsong.fullpath,
           }
+          $extraDetailsData.forceState = "hide"
+          
         }
       }
     },
