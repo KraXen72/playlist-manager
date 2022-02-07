@@ -76,6 +76,7 @@
                         }
                         Object.assign(prep, extrainfo.extrainfo)
                         $extraDetailsData = prep
+                        $viewCoverPath = false
 
                         let tag = $tagDB[data.filename]
                         $detailsData = {
