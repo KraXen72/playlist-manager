@@ -155,9 +155,7 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
   if (useEXTINF) {thisPlaylist.push("#EXTM3U")}
   for (let i = 0; i < walkSongs.length; i++) {
     const entry = walkSongs[i];
-    console.log(entry)
-    
-    let filename = entry.name
+    const filename = entry.name
     let fullpath = entry.path
 
     //if there are subfolders, they have to be prepended.
