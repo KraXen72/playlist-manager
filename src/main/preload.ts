@@ -13,10 +13,11 @@ import { initOrLoadConfig, saveConfig, getExtOrFn } from '../rblib/utils.js'
 
 //we don't need to know about config if we just pass the values from svelte here
 //import { config } from './../frontend/common/stores'
-import type { IConfig, ISongItem, ITag } from './../global';
+import type { IConfig, ISongItem, ITag, ITagDB } from './../global';
 
 const isDevelopment = process.env.NODE_ENV === "development";
 const slash = process.platform === 'win32' ? "\\" : "/"
+const pslash = "/"
 
 if (!fs.existsSync("./db")) {fs.mkdirSync("./db")}
 if (!fs.existsSync("./db/covers")) {fs.mkdirSync("./db/covers")}
@@ -137,6 +138,54 @@ const walker = {
     )*/
     return editablePlaylists
   }
+}
+
+async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
+  let useEXTINF = true // you could overrite this to disable extinf's probably
+  let thisPlaylist: string[] = []
+
+  let relativedir: string | string[] = basedDir.split(slash)
+  relativedir = relativedir[relativedir.length -1]
+
+  //find all songs in the folder
+  let walkSongs = fsWalk.walkSync(basedDir, {stats: true}).filter(entry => {
+    let ext = path.extname(entry.name).replaceAll(" ", "").replace(".", "") //strip spaces and dot from ext
+    return entry.dirent.isFile() && config.exts.includes(ext) //if is a file and valid ext, it passes
+  })
+  if (useEXTINF) {thisPlaylist.push("#EXTM3U")}
+  for (let i = 0; i < walkSongs.length; i++) {
+    const entry = walkSongs[i];
+    console.log(entry)
+    
+    let filename = entry.name
+    let fullpath = entry.path
+
+    //if there are subfolders, they have to be prepended.
+    //D:\\music\\sleep token\\Sleep Token - This Place Will Become Your Tomb\\08 - Distraction.mp3
+    //can be represented as: ??basedDir\\{prepend name}\\??filename 
+    //then split and cleaned up to get the prependName, Sleep Token - This Place Will Become Your Tomb
+    let prependName = fullpath
+      .replace(filename, "??filename")
+      .replace(basedDir, "??basedDir")
+      .split(slash)
+      .filter(part => !["??basedDir", "??filename"].includes(part))
+      .join(pslash)
+    if (prependName.length > 0) {prependName += pslash}
+    
+    //if the song extension is in allowed list
+    if (useEXTINF == true) {
+      //get extinf line about the song. consult database fist and only if it's undefined read the song
+      let extinf = tagDB[filename]?.extinf ?? await getEXTINF(entry.path, filename, false, true, false)
+      thisPlaylist.push(extinf)
+      thisPlaylist.push(`${prependName}${filename}`)
+    } else {
+      thisPlaylist.push(`${prependName}${filename}`)
+    }
+  }
+
+  console.log(thisPlaylist)
+  let lines = thisPlaylist.join("\n")
+  //fs.writeFileSync(`${basedDir + slash + relativedir}.m3u`, lines)
 }
 
 
@@ -380,7 +429,7 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags
+  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags, generateM3U
 }
 
 export type IElectronAPI = typeof context;

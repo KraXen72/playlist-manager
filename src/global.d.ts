@@ -90,5 +90,6 @@ declare global {
 }
 
 export type IConfig = Config;
+export type ITagDB = tagDB;
 export type ISongItem = SongItem;
 export type ITag = Tag;
