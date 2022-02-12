@@ -108,7 +108,6 @@ const walker = {
        songs: lines,
        type: "playlist"
      }
-     //TODO read file for contents
 
       return sItem
     })
@@ -181,11 +180,38 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
     }
   }
 
-  console.log(thisPlaylist)
+  //console.log(basedDir, thisPlaylist)
   let lines = thisPlaylist.join("\n")
-  //fs.writeFileSync(`${basedDir + slash + relativedir}.m3u`, lines)
+  fs.writeFileSync(`${basedDir + slash + relativedir}.m3u`, lines)
 }
 
+/**
+ * generate all playlists from folders given a $maindir
+ * @param maindir maindir
+ * @param blacklist any word that when included in the path, will skip the folder
+ * @param config IConfig object
+ * @returns true if all went well so you can use .then()
+ */
+async function gen(maindir: string, blacklist: string[], config: IConfig) {
+  console.time("generated all songs in: ")
+  //don't pass the big tagDB over contextBridge, read it ourselves in nodejs
+  const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
+
+  let alldirs = fsWalk.walkSync(maindir, {stats: true})
+    .filter(entry => entry.dirent.isDirectory() && !blacklist.some(blWord => entry.path.includes(blWord)))
+    .map(entry => ({filename: entry.name, fullpath: entry.path}))
+
+  console.log(alldirs)
+  
+  // we need normal for loop because .forEach doesen't like async
+  for (let i = 0; i < alldirs.length; i++) {
+      const dir = alldirs[i];
+      await generateM3U(dir.fullpath, config, tagDB)
+      //progress = `${i / alldirs.length * 100}%` //TODO proper progress tracking
+  }
+  console.timeEnd("generated all songs in: ")
+  return true
+};
 
 //read the file and get it's metadata
 /**
@@ -197,20 +223,21 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
  * @param fetchExtraInfo if true, fetch extra info
  */
  async function getEXTINF(song: string, onlysong: string, returnObj: boolean, skipCovers: boolean, fetchExtraInfo: boolean) {
-  var metadata
+  let metadata: mm.IAudioMetadata
   try {
       metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
   } catch (e) {
-      console.warn(song, e)
+      console.error(song, e)
       metadata = { //when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
-          common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["failed to get extinf"]}
+          common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["$$failed to get extinf"]}
       }
   }
-  //@ts-ignore
-  metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number of warnings
 
-  //console.log("metadata: ",metadata)
-
+  //replace warnings array with just the number of warnings
+  if (!metadata.quality.warnings.includes("$$failed to get extinf")) {
+    metadata.quality.warnings = metadata.quality.warnings.length 
+  }
+  
   let extrainfo: ExtraInfo | {} = {}
 
   var artist = metadata.common?.artist ?? "Unknown Artist"
@@ -218,15 +245,16 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
   const album = metadata.common?.album ?? "Unknown Album"
   const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
 
+  // join artists by / for oto music to parse playlists correctly
   if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
       artist = metadata.common.artists.join(" / ")
   }
-  if (fetchExtraInfo !== undefined && fetchExtraInfo === true) {
+  if (fetchExtraInfo !== undefined && fetchExtraInfo) {
         let lstat =  fs.lstatSync(song)
         extrainfo = {
           size: (lstat.size / 1000000).toFixed(2).toString() + " MB",
           format: metadata.format.codec,
-          bitrate: Math.round(metadata.format.bitrate / 1000).toString() + " kb/s",
+          bitrate: Math.round(metadata?.format?.bitrate ?? 1000 / 1000).toString() + " kb/s",
           samplerate: metadata.format.sampleRate?.toString() + " Hz",
           genre: metadata.common?.genre?.join(" / ") ?? "Unknown Genre",
           year: metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
@@ -237,7 +265,7 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
   let cover = ""
   let coverobj = <CoverObj|boolean>{}
 
-  if (skipCovers == false) {
+  if (!skipCovers) {
       const pic = mm.selectCover(metadata.common.picture)
       if (pic !== undefined && pic !== null) {
           let frmt = <"jpeg"|"png">pic.format.replaceAll("image/", "")
@@ -427,7 +455,7 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags, generateM3U
+  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags, generateM3U, gen
 }
 
 export type IElectronAPI = typeof context;

@@ -23,6 +23,7 @@
         }
 
     ]
+    const blacklist = ["#midis", "archive","on-hold",".stfolder","#deezloader downloads"]
 
     function _matchPlaylistFromFullpath(fullpath: string) {
         return $allPlaylists.find(playlist => playlist.fullpath === fullpath)
@@ -41,7 +42,7 @@
                 filename: key,
                 album: key,
                 bold: true,
-                nocover: true //TODO generated playlist covers
+                nocover: true //TODO nice playlist covers like in oto music
             }
             if (isCom) {
                 return {item, buttons}
@@ -54,12 +55,27 @@
 
     onDestroy(unsub)
 
+    function generatePlaylists() {
+        if (!genDisabled) {
+            genDisabled = true
+            api.gen($maindir, blacklist, $config).then(() => {
+                genDisabled = false
+            })
+        } else {
+            console.warn("already generating, don't spam")
+        }
+    }
+
+    let genDisabled = false
     
 </script>
 
 <aside>
     <div class="sidebar-buttons">
-        <Button variant="outlined" class="mdbutton mdborder fullwidth ">Generate Playlists</Button>
+        <Button 
+            variant="outlined" 
+            class="mdbutton mdborder fullwidth"
+            on:click={generatePlaylists}>Generate Playlists</Button>
         <Button variant="outlined" class="mdbutton mdborder fullwidth">Delete generated Playlists</Button>
         <Button variant="outlined" class="mdbutton mdborder fullwidth">
             <Label>Playlist-only mode</Label>

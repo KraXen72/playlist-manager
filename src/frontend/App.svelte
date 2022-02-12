@@ -49,8 +49,6 @@
                 }).catch((e) => {console.error(e)})
             }
 
-            api.generateM3U("D:\\music\\sleep token", $config, $tagDB)
-
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {
                 const song = $allSongs[i];

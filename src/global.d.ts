@@ -37,7 +37,7 @@ declare global {
         relativepath: string,
         type: "song" | "playlist",
         index: number,
-        prettyName?: string,
+        prettyName: string,
         tag?: Tag | string
     }
 
