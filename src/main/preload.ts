@@ -200,8 +200,6 @@ async function gen(maindir: string, blacklist: string[], config: IConfig) {
   let alldirs = fsWalk.walkSync(maindir, {stats: true})
     .filter(entry => entry.dirent.isDirectory() && !blacklist.some(blWord => entry.path.includes(blWord)))
     .map(entry => ({filename: entry.name, fullpath: entry.path}))
-
-  console.log(alldirs)
   
   // we need normal for loop because .forEach doesen't like async
   for (let i = 0; i < alldirs.length; i++) {
@@ -212,6 +210,34 @@ async function gen(maindir: string, blacklist: string[], config: IConfig) {
   console.timeEnd("generated all songs in: ")
   return true
 };
+
+function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
+  let ePlaylists = walker.editablePlaylists(maindir)
+
+  let generatedPlaylists = fsWalk.walkSync(maindir, {stats: true})
+    .filter(entry => entry.dirent.isFile() && getExtOrFn(entry.name).ext === "m3u") //only m3u files
+    .filter(entry => !ePlaylists.includes(entry.name)) //exclude user made playlists
+    .map(entry => ({filename: entry.name, fullpath: entry.path}))
+
+  let pnames = generatedPlaylists.map(entry => getExtOrFn(entry.filename).fn)
+
+  if (pnames.length > 0) {
+    let pick = dialog.showMessageBoxSync({
+      title: "Are you sure you want to delete generated playlists?",
+      message: `Are you sure you want to delete generated playlists? \n\n ${pnames.join(", ")}`,
+      buttons: ["Yes, delete", "No, keep"],
+      noLink: true
+    })
+    if (pick === 0) {
+      generatedPlaylists.forEach(playlist => {
+        fs.unlinkSync(playlist.fullpath)
+      })
+      console.log("deleted all generated playlists")
+    }
+  } else {
+    console.log("no playlists to delete")
+  }
+}
 
 //read the file and get it's metadata
 /**
@@ -455,7 +481,10 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, tagSongs, cacheTags, generateM3U, gen
+  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, 
+  tagSongs, cacheTags, 
+  generateM3U, gen,
+  deleteGeneratedPlaylists
 }
 
 export type IElectronAPI = typeof context;
