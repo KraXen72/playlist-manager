@@ -1,10 +1,9 @@
 <script lang="ts">
     import SongItem from './SongItem.svelte';
-    import type { ISongItem } from 'global';
     import placeholder from "$assets/placeholder.png";
     import playlistSrc from "$assets/playlist.png";
     import generated from "$assets/generated.png"
-    import { currPlaylist, tagDB, config } from '$common/stores'
+    import { currPlaylist, tagDB, config, playlistOnlyMode } from '$common/stores'
 
     const bull = `&nbsp;&#8226;&nbsp;`;
     const api = window.api
@@ -50,6 +49,14 @@
             }
         }
     }
+
+    const unsub = playlistOnlyMode.subscribe((val) => {
+        if (val.proposed) {
+            let mixed = $currPlaylist.some(song => song.type === "song")
+
+            
+        }
+    })
 </script>
 
 <div id="playlist-bar-wrapper">
