@@ -28,6 +28,9 @@
     function _matchPlaylistFromFullpath(fullpath: string) {
         return $allPlaylists.find(playlist => playlist.fullpath === fullpath)
     }
+    function _deleteGeneratedPlaylists() {
+        api.deleteGeneratedPlaylists($maindir, $config)
+    }
 
     const unsub = config.subscribe((val) => {
         sidebarPlaylists = api.walker.editablePlaylists($maindir).map((key: string)  => {
@@ -76,7 +79,10 @@
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
             on:click={generatePlaylists}>Generate Playlists</Button>
-        <Button variant="outlined" class="mdbutton mdborder fullwidth">Delete generated Playlists</Button>
+        <Button 
+            variant="outlined" 
+            class="mdbutton mdborder fullwidth"
+            on:click={_deleteGeneratedPlaylists}>Delete generated Playlists</Button>
         <Button variant="outlined" class="mdbutton mdborder fullwidth">
             <Label>Playlist-only mode</Label>
             <Icon class="material-icons icon-135 mdicontext">help_outline</Icon>
