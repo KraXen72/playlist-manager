@@ -47,8 +47,6 @@
                 }).catch((e) => {console.error(e)})
             }
 
-            console.log($currPlaylist)
-
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {
                 const song = $allSongs[i];

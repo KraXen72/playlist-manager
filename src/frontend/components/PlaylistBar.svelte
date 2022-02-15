@@ -40,7 +40,7 @@
             return <SongItemData>{
                 coversrc: isCom ? generated : playlistSrc,
                 title: sItemData.filename,
-                artist: `Playlist • ${sItemData.songs.length / 2} Songs`,
+                artist: `Playlist • ${sItemData.songs.length} Songs`,
                 album: sItemData.fullpath,
                 filename: sItemData.filename,
                 allSongsIndex: sItemData.index,

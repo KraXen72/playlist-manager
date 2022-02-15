@@ -13,7 +13,7 @@ import { initOrLoadConfig, saveConfig, getExtOrFn } from '../rblib/utils.js'
 
 //we don't need to know about config if we just pass the values from svelte here
 //import { config } from './../frontend/common/stores'
-import type { IConfig, ISongItem, ITag, ITagDB } from './../global';
+import type { IConfig, ISongItem, ITag, ITagDB, ISongItemPlus } from './../global';
 
 const isDevelopment = process.env.NODE_ENV === "development";
 const slash = process.platform === 'win32' ? "\\" : "/"
@@ -72,12 +72,17 @@ const dialogApi = {
  * @param playlistPath path to playlist
  * @returns array of lines
  */
-const readPlaylistForContent = (playlistPath: string) => {
-  return fs.readFileSync(playlistPath, {"encoding": "utf-8"})
+const readPlaylistForContent = (playlistPath: string, yeetExtinfs: Boolean) => {
+  let content = fs.readFileSync(playlistPath, {"encoding": "utf-8"})
     .split("\n")
     .filter(line => { 
       if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } 
     })
+  if (yeetExtinfs) {
+    return content.filter((l: string) => !l.includes("#EXTINF:"))
+  } else {
+    return content
+  }
 }
 
 /**
@@ -124,7 +129,7 @@ const walker = {
       let ext = path.extname(entry.name).replaceAll(" ", "").replace(".", "") //strip spaces and dot from ext
       return entry.dirent.isFile() && ext == "m3u" //if is a file and valid ext, it passes
     }).map((playlist, i) => {
-      let lines = readPlaylistForContent(playlist.path)
+      let lines = readPlaylistForContent(playlist.path, true)
 
       const sItem: PlaylistSongItem = {
        filename: playlist.name,
@@ -163,6 +168,15 @@ const walker = {
         return p }
     )*/
     return editablePlaylists
+  }
+}
+
+/**
+ * functions to manage the current playlist
+ */
+const currentPlaylist = {
+  save: (currPlaylist: ISongItemPlus[]) => {
+    console.log(currPlaylist)
   }
 }
 
@@ -347,6 +361,7 @@ async function tagSongs(allSongs: SongItem[]) {
       tags.push(
           new Promise(async (resolve) => {
               const tag = await getEXTINF(song.fullpath, song.filename, true, false, false)
+              //@ts-ignore
               allSongs[song.index].tag = tag
               resolve("")
           })
@@ -391,106 +406,6 @@ async function cacheTags(songs: SongItem[]) {
   return tags
 }
 
-// async function fetchAllSongs() {
-//   //clear the playlists
-//   allSongs = []
-//   allPlaylists = []
-//   songsAndPlaylists = []
-//   editablePlaylists = []
-
-//   //check for config com playlists if some are missing delete them
-//   // for (let i = 0; i < Object.keys(config.comPlaylists).length; i++) {
-//   //     const complaylist =Object.keys(config.comPlaylists)[i];
-//   //     //console.log(complaylist)
-//   //     if (!fs.existsSync(complaylist)) {
-//   //         delete config.comPlaylists[complaylist]
-//   //     }
-//   // }
-
-  
-//   //read every song and add their tag to the big object
-//   /*
-//   for (let i = 0; i < songs.length; i++) {
-//       const song = songs[i];
-//       let tag = await mm.parseFile(song.fullpath, {"skipCovers": false, "duration": false})
-//       if (tag.common.picture !== undefined) {
-//           song.pic = tag.common.picture[0]
-//       } 
-//   }*/
-//   if (songs.length > 0) {
-//       //console.log(songs)
-//       document.getElementById("command-line-input").removeAttribute("disabled")
-//       genbutton.removeAttribute("disabled")
-
-//       allSongs = songs
-
-//       utils.clearFolder("./covers")
-//       autocompArr == "both"
-//       setupAutocomplete("song or playlist")
-//   } else {
-//       document.getElementById("input-placeholder").innerHTML = "No songs found in this folder, check settings"
-//   }
-
-//   //playlists
-//   playlists = []
-//   walk.filesSync(config.maindir, (basedir, filename) => {
-//       let fp = basedir + slash + filename
-//       playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "")})
-//   })
-//   playlists = playlists.filter(playlist => {
-//       let ext = utils.getExtOrFn(playlist.filename).ext
-//       if (ext.toLowerCase() == "m3u" ) {
-//           return true
-//       } else {
-//           return false
-//       }
-//   }).map(playlist => {
-//       let lines = fs.readFileSync(playlist.fullpath, {"encoding": "utf-8"}).split("\n").filter(line => { if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } })
-//       //filter out extm3u stuff
-
-//       playlist.songs = lines
-//       playlist["type"] = "playlist"
-//       playlist.tag = {
-//           title: playlist.filename,
-//           artist: `Playlist ${bull} ${playlist.songs.length / 2} Songs`,
-//           album: utils.shortenFilename(playlist.fullpath, 60), 
-//           cover: config.comPlaylists[playlist.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
-//       } 
-//       return playlist
-//   })
-//   for (let i = 0; i < playlists.length; i++) {
-//       const playlist = playlists[i];
-//       playlist["index"] = i.toString()
-//   }
-//   allPlaylists = playlists
-//   //console.log(playlists)
-
-//   //combined
-//   songsAndPlaylists = [...songs, ...playlists]
-//   console.log(songsAndPlaylists)
-
-//   //created playlists
-//   editablePlaylists = fs.readdirSync(config.maindir).filter( //fetch teh maindir for user created playlists
-//       item => fs.lstatSync(config.maindir + slash + item).isFile()
-//   ).filter(item => { //filter out anything other than m3u
-//       let ext = utils.getExtOrFn(item).ext
-//       return ext.toLowerCase() == "m3u"
-//   }).map(item => { //fetch the playlist data from big songAndPlaylists object
-//       let fp = config.maindir + slash + item
-//       let p = {}
-//       for (let i = 0; i < songsAndPlaylists.length; i++) {
-//           const cp = songsAndPlaylists[i];
-//           if (cp.fullpath == fp) { p = cp; break; }
-//       }
-//   p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
-//       return p }
-//   )
-//   loadPlaylistsSidebar(editablePlaylists)
-//   if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
-
-//   console.log(editablePlaylists)
-// }
-
 const context = {
   /*send: (channel: string, data: any) => {
     // whitelist channels
@@ -508,11 +423,10 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, initOrLoadConfig, saveConfig,  walker, getEXTINF, 
-  dialogApi,
-  tagSongs, cacheTags, 
-  generateM3U, gen,
-  deleteGeneratedPlaylists
+  slash, initOrLoadConfig, saveConfig, //main
+  dialogApi, currentPlaylist, walker, //apis
+  tagSongs, cacheTags, getEXTINF, //tagging
+  generateM3U, gen, deleteGeneratedPlaylists //generatiog
 }
 
 

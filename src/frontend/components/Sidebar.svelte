@@ -42,7 +42,7 @@
             const parts = key.split(api.slash)
             const item: SongItemData = {
                 title: getExtOrFn(parts[parts.length - 1]).fn,
-                artist: `${typeof ASData?.songs.length !== "undefined" ? ASData?.songs.length / 2 :"--"} Songs`,
+                artist: `${typeof ASData?.songs.length !== "undefined" ? ASData?.songs.length :"--"} Songs`,
                 filename: key,
                 album: key,
                 bold: true,

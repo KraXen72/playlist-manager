@@ -1,7 +1,7 @@
 <script lang="ts">
     import Button, {Label, Group} from '@smui/button';
     import IconButton from '@smui/icon-button';
-    import { config } from '$common/stores';
+    import { config, currPlaylist } from '$common/stores';
 
     const api = window.api
 
@@ -10,11 +10,18 @@
         $config.maindir = temp[0]
         api.saveConfig("./config.json", $config)
     }
+
+    function _savePlaylist() {
+        api.currentPlaylist.save($currPlaylist)
+    }
 </script>
 
 <div id="button-bar">
     <Group variant="outlined">
-        <Button variant="outlined" class="smui-icon-btn">
+        <Button 
+            variant="outlined" 
+            class="smui-icon-btn"
+            on:click={_savePlaylist}>
             <Label class="material-icons">save</Label>
         </Button>
         <Button variant="outlined" class="smui-icon-btn">
