@@ -4,7 +4,7 @@
     import playlistSrc from "$assets/playlist.png";
     import generated from "$assets/generated.png"
     import { currPlaylist, tagDB, config, playlistOnlyMode } from '$common/stores'
-import { __values } from 'tslib';
+    import { onDestroy } from 'svelte';
 
     const bull = `&nbsp;&#8226;&nbsp;`;
     const api = window.api
@@ -36,7 +36,7 @@ import { __values } from 'tslib';
                 nocover: false
             }
         } else if (sItemData.type === "playlist") {
-            let isCom = Object.keys($config.comPlaylists).includes(sItemData.fullpath)
+            const isCom = Object.keys($config.comPlaylists).includes(sItemData.fullpath)
             return <SongItemData>{
                 coversrc: isCom ? generated : playlistSrc,
                 title: sItemData.filename,
@@ -56,11 +56,22 @@ import { __values } from 'tslib';
             let mixed = $currPlaylist.some(song => song.type === "song")
             if (!mixed) {
                 val.real = val.proposed
+            } else {
+                const question = "Are you sure you want do discard songs from playlist?"
+                const details = "You are about to enter playlist-only mode, but your current playlist also contains songs. Discard songs from current playlist and proceed?"
+                let confirmDiscard = api.dialogApi.confirmdialog(question, details)
+                if (confirmDiscard) {
+                    $currPlaylist = $currPlaylist.filter(song => song.type === "playlist")
+                    val.real = val.proposed
+                } else {
+                    val.proposed = false
+                }
             }
         } else {
             val.real = val.proposed
         }
     })
+    onDestroy(unsub)
 </script>
 
 <div id="playlist-bar-wrapper">

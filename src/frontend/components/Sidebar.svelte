@@ -24,6 +24,7 @@
 
     ]
     const blacklist = ["#midis", "archive","on-hold",".stfolder","#deezloader downloads"]
+    const pomExplanation = "playlist-only mode: make a combined playlist out of more playlists that later can be easily refreshed/regenerated"
 
     function _matchPlaylistFromFullpath(fullpath: string) {
         return $allPlaylists.find(playlist => playlist.fullpath === fullpath)
@@ -88,6 +89,7 @@
         <Button 
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
+            title={pomExplanation}
             on:click={() => {$playlistOnlyMode.proposed = !$playlistOnlyMode.proposed}}>
             <span class:btn-activef={$playlistOnlyMode.real} class="playlistOnlymodeWrapperSpan">
                 <Label>Playlist-only mode</Label>

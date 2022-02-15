@@ -10,7 +10,7 @@
   export let completeFrom = <SongItem[]>[];
   export let disabled = false
 
-  let searchMode = {
+  export let searchMode = {
     special: false,
     artist: false
   }//special, artist
@@ -22,7 +22,7 @@
 
   // @ts-ignore
   import { getExtOrFn, autocompleteDestroy } from '$rblib/esm/lib';
-  import { detailsData, currPlaylist, tagDB, config, extraDetailsData } from '$common/stores';
+  import { detailsData, currPlaylist, tagDB, config, extraDetailsData, playlistOnlyMode } from '$common/stores';
 
   let options = {
     search: (input: string) => {
@@ -36,11 +36,14 @@
         return !inPlaylist
       })
 
+      if ($playlistOnlyMode.real && searchMode.artist) { searchMode.artist = false }
+
       //find matches for artist mode vs normal mode
       if (!searchMode.artist) { //normal
         res = res.filter(song => song.filename.toLowerCase().includes(input.toLowerCase()));
       } else if (searchMode.artist) { //artist
-        res = res.filter(song => song.type !== "playlist").filter(song => $tagDB[song.filename].artist.toLowerCase().includes((input.toLowerCase())))
+        res = res.filter(song => song.type !== "playlist")
+          .filter(song => $tagDB[song.filename].artist.toLowerCase().includes((input.toLowerCase())))
       }
       
       //special mode
@@ -49,19 +52,23 @@
         res = res.filter((song) => song.filename.match(regex));
       } 
 
-      //sort the results so playlists are on top
-      res = res.sort((a, b) => {
-        //only add playlists on top if they start with the query
-        if ((a.type == "playlist" && b.type == "song") && a.prettyName?.startsWith(input)) {
-          return -1;
-        } else if ((a.type == "song" && b.type == "playlist") && b.prettyName?.startsWith(input)) {
-          return 1;
-        } else {
-          return 0;
-        }
-      });
-
-      if (searchMode.special || searchMode.artist) {
+      if ($playlistOnlyMode.real) {
+        res = res.filter(song => song.type === "playlist")
+      } else {
+        //sort the results so playlists are on top
+        res = res.sort((a, b) => {
+          //only add playlists on top if they start with the query
+          if ((a.type == "playlist" && b.type == "song") && a.prettyName?.startsWith(input)) {
+            return -1;
+          } else if ((a.type == "song" && b.type == "playlist") && b.prettyName?.startsWith(input)) {
+            return 1;
+          } else {
+            return 0;
+          }
+        });
+      }
+     
+      if (searchMode.special || searchMode.artist || $playlistOnlyMode.real) {
         return res
       } else {
         return res.slice(0, 10)
@@ -135,7 +142,6 @@
     <ul class="autocomplete-result-list" />
   </div>
   <Group variant="outlined">
-    <!-- variant="{searchMode.special ? "unelevated" : "outlined"}" -->
     <Button 
       variant="outlined" title="find songs with hard to type titles"
       class="smui-icon-btn {searchMode.special ? "btn-activef" : ""}" 
@@ -144,7 +150,10 @@
     </Button>
     <Button 
       variant="outlined" title="search by artist"
-      class="smui-icon-btn {searchMode.artist ? "btn-activef" : ""}"
+      disabled = {$playlistOnlyMode.real ? true : null}
+      class="smui-icon-btn 
+        {searchMode.artist && !$playlistOnlyMode.real ? "btn-activef" : ""}
+        {$playlistOnlyMode.real ? "btn-force-default opacity50" : ""}"
       on:click={() => searchMode.artist = !searchMode.artist}>
         <Label class="material-icons">person_search</Label>
     </Button>

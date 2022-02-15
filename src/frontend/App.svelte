@@ -9,13 +9,11 @@
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
     import CoverView from './components/CoverView.svelte';
 
-    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists, viewCoverPath } from './common/stores'
+    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists, viewCoverPath, currPlaylist } from './common/stores'
     import { onDestroy } from 'svelte';
 
     const api = window.api
 
-    //let prog = {c: 0, f: 0}
-    //let progElem: HTMLDivElement
 
     $config = api.initOrLoadConfig("config.json")
     let searchDisabled = true
@@ -48,6 +46,8 @@
                     $tagDB = localTagDB
                 }).catch((e) => {console.error(e)})
             }
+
+            console.log($currPlaylist)
 
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {

@@ -126,7 +126,7 @@
                                 ...ASData.songs.filter((l: string) => !l.includes("#EXTINF:"))
                             ]
                     }
-                    api.infodialog(lines.join("\n"))
+                    api.dialogApi.infodialog(lines.join("\n"))
                 }
             },
         ]
