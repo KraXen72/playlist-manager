@@ -6,7 +6,7 @@
     const api = window.api
 
     function pick() {
-        let temp = api.pickFolder("Pick the main music folder") ?? [$config.maindir]
+        let temp = api.dialogApi.pickFolder("Pick the main music folder") ?? [$config.maindir]
         $config.maindir = temp[0]
         api.saveConfig("./config.json", $config)
     }

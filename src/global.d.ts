@@ -87,6 +87,10 @@ declare global {
     interface tagDB {
         [filename: string]: Tag;//indexer
     }
+    interface playlistOnlyMode {
+        proposed: Boolean,
+        real: Boolean
+    }
 }
 
 export type IConfig = Config;

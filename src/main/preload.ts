@@ -22,22 +22,49 @@ const pslash = "/"
 if (!fs.existsSync("./db")) {fs.mkdirSync("./db")}
 if (!fs.existsSync("./db/covers")) {fs.mkdirSync("./db/covers")}
 
-const infodialog = (text: string) => {
-  dialog.showMessageBoxSync({message: text})
-}
+
 // electron stuff
 
 /**
- * opens electron's folder select dialog
- * @param title the title of the dialog
+ * streamlined electron dialog api. only reveals needed dialog functions, not the entire module.
  */
-const pickFolder = (title: string) => {
-  let opts: OpenDialogSyncOptions = {
-    title, properties: ["openDirectory"]
+const dialogApi = {
+  /**
+   * show a OpenDialog to pick a folder
+   * @param title dialog window title
+   * @returns folder path or null
+   */
+  pickFolder: (title: string) => {
+    let opts: OpenDialogSyncOptions = {
+      title, properties: ["openDirectory"]
+    }
+  
+    let pick = dialog.showOpenDialogSync(opts)
+    return pick
+  },
+  /**
+   * show a plain information dialog with an ok button.
+   * alternative to built-in alert. (don't use alert, it freezes the app)
+   * @param text the message to show
+   */
+  infodialog: (text: string) => {
+    dialog.showMessageBoxSync({message: text})
+  },
+  /**
+   * show a confirmation dialog to confirm an action
+   * @param question question/title to ask user
+   * @param details details of the message
+   * @returns true or false
+   */
+  confirmdialog: (question: string, details: string) => {
+    let pick = dialog.showMessageBoxSync({
+      title: question,
+      message: question + "\n" + details,
+      buttons: ["Yes", "No"],
+      noLink: true
+    })
+    return pick === 0 ? true : false
   }
-
-  let pick = dialog.showOpenDialogSync(opts)
-  return pick
 }
 
 /**
@@ -481,11 +508,13 @@ const context = {
           ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
   },*/
-  slash, infodialog, initOrLoadConfig, pickFolder, saveConfig,  walker, getEXTINF, 
+  slash, initOrLoadConfig, saveConfig,  walker, getEXTINF, 
+  dialogApi,
   tagSongs, cacheTags, 
   generateM3U, gen,
   deleteGeneratedPlaylists
 }
+
 
 export type IElectronAPI = typeof context;
 contextBridge.exposeInMainWorld( "api", context );

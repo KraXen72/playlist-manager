@@ -3,7 +3,7 @@
     import TextDivider from './TextDivider.svelte';
     import SongItem from './SongItem.svelte';
 
-    import { config, maindir, allPlaylists } from '$common/stores'
+    import { config, maindir, allPlaylists, playlistOnlyMode } from '$common/stores'
     import { onDestroy } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
 
@@ -56,9 +56,9 @@
         console.log("fetched playlists")
     })
 
-    onDestroy(unsub)
+    
 
-    function generatePlaylists() {
+    function _generatePlaylists() {
         if (!genDisabled) {
             genDisabled = true
             api.gen($maindir, blacklist, $config).then(() => {
@@ -70,6 +70,8 @@
     }
 
     let genDisabled = false
+
+    onDestroy(unsub)
     
 </script>
 
@@ -78,14 +80,20 @@
         <Button 
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
-            on:click={generatePlaylists}>Generate Playlists</Button>
+            on:click={_generatePlaylists}>Generate Playlists</Button>
         <Button 
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
             on:click={_deleteGeneratedPlaylists}>Delete generated Playlists</Button>
-        <Button variant="outlined" class="mdbutton mdborder fullwidth">
-            <Label>Playlist-only mode</Label>
-            <Icon class="material-icons icon-135 mdicontext">help_outline</Icon>
+        <Button 
+            variant="outlined" 
+            class="mdbutton mdborder fullwidth"
+            on:click={() => {$playlistOnlyMode.proposed = !$playlistOnlyMode.proposed}}>
+            <span class:btn-activef={$playlistOnlyMode.real} class="playlistOnlymodeWrapperSpan">
+                <Label>Playlist-only mode</Label>
+                <Icon class="material-icons icon-135 mdicontext">help_outline</Icon>
+            </span>
+            
         </Button>
     </div>
     <TextDivider content="Your Playlists: "/>
