@@ -1,9 +1,9 @@
-import { writable, derived, Writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 
 export const currPlaylist = writable<SongItem[]>([])
 export const config = writable<Config>()
 export const maindir = derived(config, $config => $config?.maindir)
-export const playlistOnlyMode: Writable<playlistOnlyMode> = writable({proposed: false, real: false})
+export const playlistOnlyMode = writable<playlistOnlyMode>({proposed: false, real: false})
 export const allSongs = writable<SongItem[]>([])  //TODO change this into readable store
 export const allPlaylists = writable<PlaylistSongItem[]>([])
 export const allSongsAndPlaylists = writable<SongItemPlus[]>([]) //derived([allSongs, allPlaylists], ([value1, value2]) => [...value1, ...value2]);

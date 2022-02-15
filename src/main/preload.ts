@@ -73,11 +73,11 @@ const dialogApi = {
  * @returns array of lines
  */
 const readPlaylistForContent = (playlistPath: string) => {
-  return fs.readFileSync(playlistPath, {"encoding": "utf-8"}
-  ).split("\n"
-  ).filter(line => { 
-    if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } 
-  })
+  return fs.readFileSync(playlistPath, {"encoding": "utf-8"})
+    .split("\n")
+    .filter(line => { 
+      if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } 
+    })
 }
 
 /**

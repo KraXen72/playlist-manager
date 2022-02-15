@@ -4,6 +4,7 @@
     import playlistSrc from "$assets/playlist.png";
     import generated from "$assets/generated.png"
     import { currPlaylist, tagDB, config, playlistOnlyMode } from '$common/stores'
+import { __values } from 'tslib';
 
     const bull = `&nbsp;&#8226;&nbsp;`;
     const api = window.api
@@ -53,8 +54,11 @@
     const unsub = playlistOnlyMode.subscribe((val) => {
         if (val.proposed) {
             let mixed = $currPlaylist.some(song => song.type === "song")
-
-            
+            if (!mixed) {
+                val.real = val.proposed
+            }
+        } else {
+            val.real = val.proposed
         }
     })
 </script>
