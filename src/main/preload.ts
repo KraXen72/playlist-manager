@@ -76,7 +76,7 @@ const readPlaylistForContent = (playlistPath: string, yeetExtinfs: Boolean) => {
   let content = fs.readFileSync(playlistPath, {"encoding": "utf-8"})
     .split("\n")
     .filter(line => { 
-      if (line == "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } 
+      if (line === "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } 
     })
   if (yeetExtinfs) {
     return content.filter((l: string) => !l.includes("#EXTINF:"))
@@ -127,7 +127,7 @@ const walker = {
     let playlists = fsWalk.walkSync(basedDir, {stats: true}
     ).filter(entry => {
       let ext = path.extname(entry.name).replaceAll(" ", "").replace(".", "") //strip spaces and dot from ext
-      return entry.dirent.isFile() && ext == "m3u" //if is a file and valid ext, it passes
+      return entry.dirent.isFile() && ext === "m3u" //if is a file and valid ext, it passes
     }).map((playlist, i) => {
       let lines = readPlaylistForContent(playlist.path, true)
 
@@ -156,13 +156,13 @@ const walker = {
         item => fs.lstatSync(basedDir + slash + item).isFile()
     ).filter(item => { //filter out anything other than m3u
         let ext = getExtOrFn(item).ext
-        return ext.toLowerCase() == "m3u"
+        return ext.toLowerCase() === "m3u"
     })/*.map(item => { //fetch the playlist data from big songAndPlaylists object
         let fp = basedDir + slash + item
         let p = {}
         for (let i = 0; i < songsAndPlaylists.length; i++) {
             const cp = songsAndPlaylists[i];
-            if (cp.fullpath == fp) { p = cp; break; }
+            if (cp.fullpath === fp) { p = cp; break; }
         }
     p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
         return p }
@@ -175,8 +175,38 @@ const walker = {
  * functions to manage the current playlist
  */
 const currentPlaylist = {
-  save: (currPlaylist: ISongItemPlus[]) => {
-    console.log(currPlaylist)
+  save: (currPlaylist: ISongItemPlus[], allSongs: ISongItemPlus[], maindir: string) => {
+    const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
+    let unWrapped: string[] = []
+    
+    unWrapped.push("#EXTM3U")
+    for (let i = 0; i < currPlaylist.length; i++) {
+        const song = currPlaylist[i];
+        if (song.type === "song") {
+            unWrapped.push(tagDB[song.filename].extinf)
+            unWrapped.push(song.relativepath.replaceAll(slash, pslash))
+        } else if (song.type === "playlist") {
+            if (typeof song.songs === "undefined") {throw "playlist doesen't have any songs"}
+
+            let parts = song.relativepath.split(slash)
+            let relpath = parts
+              .slice(0, parts.length-1) // remove the last one. e.g: corpse/corpse.m3u => corpse
+              .join(pslash) // join them back into a path with forward slash
+            //console.log({parts, relpath})
+
+            for (let i = 0; i < song.songs.length; i++) {
+                const item = song.songs[i];
+                const fnparts = item.split(pslash)
+                let filename = fnparts[fnparts.length - 1]
+                const extinf = tagDB[filename]?.extinf ?? "$$failed to get extinf"
+                if (extinf === "$$failed to get extinf") {console.error(`${extinf} for ${filename}`)}
+                unWrapped.push(extinf)
+                unWrapped.push([relpath, item].join(pslash))
+            }
+        }
+    }
+
+    console.log(currPlaylist, unWrapped)
   }
 }
 
@@ -211,7 +241,7 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
     if (prependName.length > 0) {prependName += pslash}
     
     //if the song extension is in allowed list
-    if (useEXTINF == true) {
+    if (useEXTINF === true) {
       //get extinf line about the song. consult database fist and only if it's undefined read the song
       let extinf = tagDB[filename]?.extinf ?? await getEXTINF(entry.path, filename, false, true, false)
       thisPlaylist.push(extinf)
@@ -310,7 +340,7 @@ function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
   var artist = metadata.common?.artist ?? "Unknown Artist"
   const title = metadata.common?.title ?? onlysong
   const album = metadata.common?.album ?? "Unknown Album"
-  const duration = metadata.format.duration == undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
+  const duration = metadata.format.duration === undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".","")
 
   // join artists by / for oto music to parse playlists correctly
   if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
@@ -346,7 +376,7 @@ function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
   }
 
   //console.log(extinf)
-  if (returnObj == true) {
+  if (returnObj === true) {
       return {artist, title, album, duration, cover, extinf, coverobj, extrainfo}
   } else {
       return extinf

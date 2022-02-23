@@ -1,18 +1,18 @@
 <script lang="ts">
     import Button, {Label, Group} from '@smui/button';
     import IconButton from '@smui/icon-button';
-    import { config, currPlaylist } from '$common/stores';
+    import { allSongs, config, currPlaylist, maindir } from '$common/stores';
 
     const api = window.api
 
     function pick() {
         let temp = api.dialogApi.pickFolder("Pick the main music folder") ?? [$config.maindir]
         $config.maindir = temp[0]
-        api.saveConfig("./config.json", $config)
+        api.saveConfig("./config.json", $config, false)
     }
 
     function _savePlaylist() {
-        api.currentPlaylist.save($currPlaylist)
+        api.currentPlaylist.save($currPlaylist, $allSongs, $maindir)
     }
 </script>
 

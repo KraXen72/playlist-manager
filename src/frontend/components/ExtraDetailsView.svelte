@@ -32,7 +32,7 @@
             // @ts-ignore
             return { key, val: data[key], desc: desc[key]}
         }).filter(item => {
-            if (item.key == "forceState") { return false } else {return true}
+            if (item.key === "forceState") { return false } else {return true}
         })
         return disp
     }

@@ -58,9 +58,9 @@
         //sort the results so playlists are on top
         res = res.sort((a, b) => {
           //only add playlists on top if they start with the query
-          if ((a.type == "playlist" && b.type == "song") && a.prettyName?.startsWith(input)) {
+          if ((a.type === "playlist" && b.type === "song") && a.prettyName?.startsWith(input)) {
             return -1;
-          } else if ((a.type == "song" && b.type == "playlist") && b.prettyName?.startsWith(input)) {
+          } else if ((a.type === "song" && b.type === "playlist") && b.prettyName?.startsWith(input)) {
             return 1;
           } else {
             return 0;
