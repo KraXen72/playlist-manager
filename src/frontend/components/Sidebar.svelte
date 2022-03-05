@@ -33,8 +33,8 @@
         api.deleteGeneratedPlaylists($maindir, $config)
     }
 
-    const unsub = config.subscribe((val) => {
-        sidebarPlaylists = api.walker.editablePlaylists($maindir).map((key: string)  => {
+    function _fetchPlaylists() {
+        return api.walker.editablePlaylists($maindir).map((key: string)  => {
             let fullpath = `${$maindir}${api.slash}${key}`
             let isCom = Object.keys($config.comPlaylists).includes(fullpath)
             let ASData = _matchPlaylistFromFullpath(fullpath)
@@ -54,6 +54,10 @@
                 return {item,  buttons: [buttons[1]]}
             }
         })
+    }
+
+    const unsub = config.subscribe((val) => {
+        sidebarPlaylists = _fetchPlaylists()
         console.log("fetched playlists")
     })
 

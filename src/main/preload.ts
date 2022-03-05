@@ -175,38 +175,46 @@ const walker = {
  * functions to manage the current playlist
  */
 const currentPlaylist = {
-  save: (currPlaylist: ISongItemPlus[], allSongs: ISongItemPlus[], maindir: string) => {
-    const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
-    let unWrapped: string[] = []
-    
-    unWrapped.push("#EXTM3U")
-    for (let i = 0; i < currPlaylist.length; i++) {
-        const song = currPlaylist[i];
-        if (song.type === "song") {
-            unWrapped.push(tagDB[song.filename].extinf)
-            unWrapped.push(song.relativepath.replaceAll(slash, pslash))
-        } else if (song.type === "playlist") {
-            if (typeof song.songs === "undefined") {throw "playlist doesen't have any songs"}
+  save: (currPlaylist: ISongItemPlus[], maindir: string, playlistName: string, playlistImg) => {
+    if (playlistName && playlistName !== "") {
+      const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
+      let unWrapped: string[] = []
+      
+      unWrapped.push("#EXTM3U")
+      for (let i = 0; i < currPlaylist.length; i++) {
+          const song = currPlaylist[i];
+          if (song.type === "song") {
+              unWrapped.push(tagDB[song.filename].extinf)
+              unWrapped.push(song.relativepath.replaceAll(slash, pslash))
+          } else if (song.type === "playlist") {
+              if (typeof song.songs === "undefined") {throw "playlist doesen't have any songs"}
 
-            let parts = song.relativepath.split(slash)
-            let relpath = parts
-              .slice(0, parts.length-1) // remove the last one. e.g: corpse/corpse.m3u => corpse
-              .join(pslash) // join them back into a path with forward slash
-            //console.log({parts, relpath})
+              let parts = song.relativepath.split(slash)
+              let relpath = parts
+                .slice(0, parts.length-1) // remove the last one. e.g: corpse/corpse.m3u => corpse
+                .join(pslash) // join them back into a path with forward slash
+              //console.log({parts, relpath})
 
-            for (let i = 0; i < song.songs.length; i++) {
-                const item = song.songs[i];
-                const fnparts = item.split(pslash)
-                let filename = fnparts[fnparts.length - 1]
-                const extinf = tagDB[filename]?.extinf ?? "$$failed to get extinf"
-                if (extinf === "$$failed to get extinf") {console.error(`${extinf} for ${filename}`)}
-                unWrapped.push(extinf)
-                unWrapped.push([relpath, item].join(pslash))
-            }
-        }
+              for (let i = 0; i < song.songs.length; i++) {
+                  const item = song.songs[i];
+                  const fnparts = item.split(pslash)
+                  let filename = fnparts[fnparts.length - 1]
+                  const extinf = tagDB[filename]?.extinf ?? "$$failed to get extinf"
+                  if (extinf === "$$failed to get extinf") {console.error(`${extinf} for ${filename}`)}
+                  unWrapped.push(extinf)
+                  unWrapped.push([relpath, item].join(pslash))
+              }
+          }
+      }
+
+      fs.writeFileSync(`${maindir}${slash}${playlistName}.m3u`, unWrapped.join("\n"), {encoding: "utf-8"})
+      new Notification("playlist-manager", {
+        body: `Your playlist has been saved to:\n${maindir}${slash}${playlistName}.m3u`,
+        icon: playlistImg
+      })
+    } else {
+      dialogApi.infodialog("Please name your playlist before saving")
     }
-
-    console.log(currPlaylist, unWrapped)
   }
 }
 
@@ -333,6 +341,8 @@ function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
   //replace warnings array with just the number of warnings
   if (!metadata.quality.warnings.includes("$$failed to get extinf")) {
     metadata.quality.warnings = metadata.quality.warnings.length 
+  } else {
+    console.warn("failed to get extinf for:", metadata)
   }
   
   let extrainfo: ExtraInfo | {} = {}
