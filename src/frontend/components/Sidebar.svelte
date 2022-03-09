@@ -33,8 +33,8 @@
         api.deleteGeneratedPlaylists($maindir, $config)
     }
 
-    function _fetchPlaylists() {
-        return api.walker.editablePlaylists($maindir).map((key: string)  => {
+    export function fetchPlaylists() {
+        sidebarPlaylists = api.walker.editablePlaylists($maindir).map((key: string)  => {
             let fullpath = `${$maindir}${api.slash}${key}`
             let isCom = Object.keys($config.comPlaylists).includes(fullpath)
             let ASData = _matchPlaylistFromFullpath(fullpath)
@@ -57,11 +57,9 @@
     }
 
     const unsub = config.subscribe((val) => {
-        sidebarPlaylists = _fetchPlaylists()
+        fetchPlaylists()
         console.log("fetched playlists")
     })
-
-    
 
     function _generatePlaylists() {
         if (!genDisabled) {
@@ -75,9 +73,7 @@
     }
 
     let genDisabled = false
-
     onDestroy(unsub)
-    
 </script>
 
 <aside>

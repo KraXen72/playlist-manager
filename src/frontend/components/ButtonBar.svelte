@@ -3,8 +3,8 @@
     import IconButton from '@smui/icon-button';
     import { allSongs, config, currPlaylist, maindir, playlistName } from '$common/stores';
     import playlistImg from "$assets/playlist.png"
-    // import { createEventDispatcher } from 'svelte';
-    // const dispatch = createEventDispatcher()
+    import { createEventDispatcher } from 'svelte';
+    const dispatch = createEventDispatcher()
 
     const api = window.api
 
@@ -16,7 +16,7 @@
 
     function _savePlaylist() {
         api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-        //dispatch('forceRefresh','sidebar')
+        dispatch("refresh", "sidebar")
     }
 </script>
 

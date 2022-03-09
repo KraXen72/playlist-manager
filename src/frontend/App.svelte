@@ -73,6 +73,13 @@
             */
         })
     onDestroy(unsub)
+
+    let sidebarBinder: any;
+    function _refreshSidebar() {
+        console.log("refreshing in 2.5s")
+        //TODO update to get length of the playlist or sumn
+        setTimeout(() => {sidebarBinder.fetchPlaylists()}, 2500)
+    }
 </script>
 
 
@@ -80,9 +87,9 @@
     <AppTitle/>
     <PlaylistTitle/>
     <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/>
-    <Sidebar/>
+    <Sidebar bind:this={sidebarBinder}/>
 	<PlaylistBar/>
-	<ButtonBar/>
+	<ButtonBar on:refresh={_refreshSidebar}/>
     <div id="main-content">
         {#if $viewCoverPath !== false}
             <CoverView src={$viewCoverPath}/>

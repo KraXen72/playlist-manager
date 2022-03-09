@@ -175,7 +175,7 @@ const walker = {
  * functions to manage the current playlist
  */
 const currentPlaylist = {
-  save: (currPlaylist: ISongItemPlus[], maindir: string, playlistName: string, playlistImg) => {
+  save: (currPlaylist: ISongItemPlus[], maindir: string, playlistName: string, playlistImg: any) => {
     if (playlistName && playlistName !== "") {
       const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
       let unWrapped: string[] = []
@@ -206,7 +206,7 @@ const currentPlaylist = {
               }
           }
       }
-
+      
       fs.writeFileSync(`${maindir}${slash}${playlistName}.m3u`, unWrapped.join("\n"), {encoding: "utf-8"})
       new Notification("playlist-manager", {
         body: `Your playlist has been saved to:\n${maindir}${slash}${playlistName}.m3u`,
