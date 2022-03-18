@@ -20,6 +20,7 @@
 		"@smui/button": "^6.0.0-beta.14",
 		"@smui/circular-progress": "^6.0.0-beta.14",
 		"@smui/icon-button": "^6.0.0-beta.14",
+		"@smui/linear-progress": "^6.0.0-beta.15",
 		"@smui/list": "^6.0.0-beta.14",
 		"@smui/menu": "^6.0.0-beta.14",
 		"@smui/textfield": "^6.0.0-beta.14",
@@ -46,11 +47,11 @@
 		"vite-plugin-time-reporter": "^1.0.0"
 	},
 	"dependencies": {
-		"@electron/remote": "^2.0.5",
+		"@electron/remote": "^2.0.8",
 		"@nodelib/fs.walk": "^1.2.8",
 		"@trevoreyre/autocomplete-js": "^2.2.0",
 		"fs-extra": "^10.0.1",
 		"hashids": "^2.2.10",
-		"music-metadata": "^7.11.8"
+		"music-metadata": "^7.12.2"
 	}
 }
