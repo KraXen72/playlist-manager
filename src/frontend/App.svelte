@@ -36,6 +36,7 @@
             if ($allSongs.every(song => Object.keys(localTagDB).includes(song.filename))) {
                 console.log(`all ${Object.keys(localTagDB).length} songs have cached tags.`)
                 $tagDB = localTagDB
+                searchDisabled = false
             } else {
                 console.log("not all songs have cached tags. getting tags from songs...")
                 console.time(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
@@ -44,8 +45,25 @@
                     api.saveConfig(`./db/${btoa($maindir)}.json`, localTagDB, true)
                     console.timeEnd(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
                     $tagDB = localTagDB
+                    searchDisabled = false
                 }).catch((e) => {console.error(e)})
             }
+
+            window.addEventListener("message", (event) => {
+                // event.source === window means the message is coming from the preload
+                // script, as opposed to from an <iframe> or other source.
+                if (event.source === window) {
+                    const value = event.data?.purpose 
+                    switch (value) {
+                        //all of these are skipped because they are going to be handled elsewhere
+                        case "cacheTagsProgress":
+                            break;
+                        default:
+                            console.log("from preload:", event.data);
+                            break;
+                    }
+                }
+            });
 
             /*const tags = []
             for (let i = 0; i < $allSongs.length; i++) {

@@ -418,10 +418,18 @@ async function tagSongs(allSongs: SongItem[]) {
 async function cacheTags(songs: SongItem[]) {
   let tags = {}
   let buffers = {}
+
+  let lastUpdate = -1
   for (let i = 0; i < songs.length; i++) {
     const song = songs[i];
     //@ts-ignore
     const tag: ITag = await getEXTINF(song.fullpath, song.filename, true, false, false)
+    const percDone = Math.floor(i / (songs.length-1) * 100)
+    
+    if (percDone % 10 === 0 && percDone > lastUpdate) {
+      window.postMessage({purpose: "cacheTagsProgress", value: percDone}, "*")
+      lastUpdate = percDone
+    }
     //console.log("fetched")
 
     let coverpath = ''

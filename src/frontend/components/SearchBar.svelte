@@ -1,9 +1,12 @@
 <script lang="ts">
   import Textfield from "@smui/textfield";
-  import Icon from '@smui/textfield/icon';
-  import CircularProgress from '@smui/circular-progress';
+  // import Icon from '@smui/textfield/icon';
+  // import CircularProgress from '@smui/circular-progress';
   import Button, { Label, Group } from "@smui/button";
+  import LinearProgress from '@smui/linear-progress';
+
   import { onDestroy, onMount } from "svelte";
+
   import playlistPic from "$assets/playlist.png";
   import generated from "$assets/generated.png"
 
@@ -19,9 +22,10 @@
   let autocomp_bind
   let inpVal = ""
   const bull = `&nbsp;&#8226;&nbsp;`;
+  let cacheTagsProgress = 0
 
   // @ts-ignore
-  import { getExtOrFn, autocompleteDestroy } from '$rblib/esm/lib';
+  import { getExtOrFn, autocompleteDestroy, precisionRound } from '$rblib/esm/lib';
   import { detailsData, currPlaylist, tagDB, config, extraDetailsData, playlistOnlyMode } from '$common/stores';
 
   let options = {
@@ -135,6 +139,23 @@
     class: 'fullwidth'
   }
   const inpTitle = "Please wait, getting tags for songs..."
+
+  window.addEventListener("message", (event) => {
+      // event.source === window means the message is coming from the preload
+      // script, as opposed to from an <iframe> or other source.
+      if (event.source === window) {
+          const value = event.data?.purpose 
+          switch (value) {
+              //all of these are skipped because they are going to be handled elsewhere
+              case "cacheTagsProgress":
+                  cacheTagsProgress = event.data.value
+                  break;
+              default:
+                  console.log("from preload:", event.data);
+                  break;
+          }
+      }
+  });
 </script>
 
 <div class="comp" class:notready={disabled}>
@@ -161,6 +182,17 @@
   </Group>
 </div>
 
+{#if disabled}
+  <div class="comp blocker">
+      <div class="progress-text">
+        Fetching metadata for songs...
+      </div>
+      <div class="progress-bar">
+        <LinearProgress progress={precisionRound(cacheTagsProgress/100, 2)} /> {cacheTagsProgress}%
+      </div>
+  </div>
+{/if}
+
 <style>
   div.comp {
     grid-area: SearchBar;
@@ -171,11 +203,21 @@
     padding: var(--standard-padding);
     background: var(--bg-secondary);
   }
+  .comp.blocker {
+    flex-direction: column;
+  }
+
+  .comp .progress-text, .comp .progress-bar {
+    width: 100%;
+  }
+  .comp .progress-bar {
+    display: flex;
+    align-items: center;
+    column-gap: 1rem;
+  }
 
   .notready {
-    /* pointer-events: none !important;
-    filter: grayscale();
-    cursor: not-allowed !important; */
+   display:none !important;
   }
 
   /*.progHolder {
