@@ -426,7 +426,7 @@ async function cacheTags(songs: SongItem[]) {
     const tag: ITag = await getEXTINF(song.fullpath, song.filename, true, false, false)
     const percDone = Math.floor(i / (songs.length-1) * 100)
     
-    if (percDone % 10 === 0 && percDone > lastUpdate) {
+    if (percDone % 9 === 0 && percDone > lastUpdate) {
       window.postMessage({purpose: "cacheTagsProgress", value: percDone}, "*")
       lastUpdate = percDone
     }
