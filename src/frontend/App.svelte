@@ -123,8 +123,6 @@
     </ul>
 </div>
 
-<!-- {Math.round((prog.c / prog.f) * 100)}% -->
-<!--<div class="prog" bind:this={progElem}></div>-->
 <style>
     main#main-grid {
         display: grid;

@@ -78,6 +78,7 @@
 
 <aside>
     <div class="sidebar-buttons">
+        <!-- i added an :if block to only render the gen button when it's not generating but it did the generation so fast, it didn't even dissaper, it just stayed there. i will add a success toast rather than block the button later. -->
         <Button 
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
