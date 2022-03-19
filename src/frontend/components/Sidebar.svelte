@@ -33,7 +33,22 @@
         api.deleteGeneratedPlaylists($maindir, $config)
     }
 
+    /**
+     * delete comPlaylists entries for playlists that don't exist
+    */
+    export function validateComPlaylists() {
+        const names = Object.keys($config.comPlaylists)
+        let statuses = api.walker.validate(names)
+        statuses.forEach(path => {
+            if (path.status === false) {
+                delete $config.comPlaylists[path.path]
+            }
+        })
+        api.saveConfig("./config.json", $config, false)
+    }
+
     export function fetchPlaylists() {
+        validateComPlaylists()
         sidebarPlaylists = api.walker.editablePlaylists($maindir).map((key: string)  => {
             let fullpath = `${$maindir}${api.slash}${key}`
             let isCom = Object.keys($config.comPlaylists).includes(fullpath)
