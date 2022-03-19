@@ -22,6 +22,11 @@
         mode = "edit"
         backupPlaylistName = $playlistName
     }
+    function _checkEnter(event: any) {
+        if (event.keyCode == 13) {
+            updateName()
+        }
+    }
 
 </script>
 
@@ -31,7 +36,7 @@
         <Button variant="outlined" class="smui-icon-btn" on:click={editmode}><Label class='material-icons'>edit</Label></Button>
     {:else if mode === 'edit'}
     <!-- use={[(node) => node.focus()]} -->
-        <Textfield input$id = "test-id" bind:value={$playlistName} input$autofocus label="Playlist name" class="fullwidth"></Textfield>
+        <Textfield input$id = "test-id" bind:value={$playlistName} input$autofocus label="Playlist name" class="fullwidth" on:keypress={(event) =>{_checkEnter(event)}}></Textfield>
         <Group variant="outlined">
             <Button variant="outlined" class="smui-icon-btn" on:click={updateName}><Label class='material-icons'>done</Label></Button>
             <Button variant="outlined" class="smui-icon-btn" on:click={cancel}><Label class='material-icons'>close</Label></Button>
