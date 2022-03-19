@@ -168,6 +168,13 @@ const walker = {
         return p }
     )*/
     return editablePlaylists
+  },
+  validate: (paths: string[]) => {
+    const statuses: {path: string, status: boolean}[] = []
+    paths.forEach(path => {
+      statuses.push({path, status: fs.existsSync(path)})
+    })
+    return statuses
   }
 }
 
@@ -179,7 +186,6 @@ const currentPlaylist = {
     if (playlistName && playlistName !== "") {
       const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
       let unWrapped: string[] = []
-      
       unWrapped.push("#EXTM3U")
       for (let i = 0; i < currPlaylist.length; i++) {
           const song = currPlaylist[i];
