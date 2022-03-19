@@ -79,7 +79,7 @@ declare global {
         exts: string[], 
         ignore: string[],
         comPlaylists: {
-            [index: string]: comPlaylist
+            [index: string]: comPlaylist[]
         }
     }
 
