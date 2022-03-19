@@ -19,7 +19,7 @@
   }//special, artist
 
   import Autocomplete from "@trevoreyre/autocomplete-js";
-  let autocomp_bind
+  let autocomp_bind: any
   let inpVal = ""
   const bull = `&nbsp;&#8226;&nbsp;`;
   let cacheTagsProgress = 0
