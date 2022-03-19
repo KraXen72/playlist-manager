@@ -64,31 +64,6 @@
                     }
                 }
             });
-
-            /*const tags = []
-            for (let i = 0; i < $allSongs.length; i++) {
-                const song = $allSongs[i];
-                tags.push(
-                    new Promise(async (resolve) => {
-                        const tag = await api.getEXTINF(song.fullpath, song.filename, true, false, false)
-                        $allSongs[song.index].tag = tag
-                        prog.c += 1
-                        progElem.style.width = `${Math.round((prog.c / prog.f) * 100)}%`
-                        resolve("")
-                    })
-                )
-            }
-            Promise.all(tags).then(() => {
-                console.timeEnd("got tags in")
-                setTimeout(() => {progElem.style.opacity = "0"}, 500)
-            })*
-            //backend
-            api.tagSongs($allSongs).then(val => {
-                $allSongs = val
-                //console.timeEnd("got tags in")
-                searchDisabled = false
-            })
-            */
         })
     onDestroy(unsub)
 
@@ -96,7 +71,12 @@
     function _refreshSidebar() {
         console.log("refreshing in 2.5s")
         //TODO update to get length of the playlist or sumn
-        setTimeout(() => {sidebarBinder.fetchPlaylists()}, 2500)
+        setTimeout(() => {
+            $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
+            $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
+            
+            sidebarBinder.fetchPlaylists()
+        }, 2500)
     }
 </script>
 
