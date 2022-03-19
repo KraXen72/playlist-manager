@@ -103,7 +103,7 @@
 
     <div class="sidebar-playlists">
         {#each sidebarPlaylists as ply}
-            <SongItem data={ply.item} buttons={ply.buttons}/>
+            <SongItem data={ply.item} buttons={ply.buttons} noFly={true}/>
         {/each}
     </div>
     

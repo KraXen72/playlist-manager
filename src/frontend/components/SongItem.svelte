@@ -142,7 +142,7 @@
     class="songitem" 
     class:nocover={data.nocover} 
     on:contextmenu={(event) => _handleButtonClick("moremenu", data, event)} 
-    in:fly|local={{delay: 80, duration: 380, y:5}}>
+    in:fly|local={{delay: noFly ? 0 : 80, duration: noFly ? 0 : 380, y:noFly ? 0 :5}}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
         <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{data.coversrc}" bind:this={coverelem} alt="cover"/>
