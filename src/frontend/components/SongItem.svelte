@@ -1,10 +1,14 @@
 <script lang="ts">
-    import { summonMenu } from '$rblib/esm/lib';
+    
     import { Icon } from '@smui/icon-button';
+
     import { onMount } from 'svelte';
-    import placeholder from "$assets/placeholder.png";
+    import { fly } from 'svelte/transition';
+
     import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists, config, viewCoverPath } from '$common/stores';
-    import { zeropad } from "$rblib/esm/lib"
+
+    import placeholder from "$assets/placeholder.png";
+    import { summonMenu, zeropad } from '$rblib/esm/lib';
 
     const bull = `&nbsp;&#8226;&nbsp;`;
     const api = window.api
@@ -19,9 +23,10 @@
         allSongsIndex: -1,
         bold: false,
         nocover: false,
-        type: "song", //song or playlis
+        type: "song", //song or playlist
     }
     export let buttons = <SongItemButton[]>[]
+    export let noFly = false
 
     let coverelem: HTMLImageElement;
     //data.coversrc = ""
@@ -132,11 +137,12 @@
         ]
     }
 </script>
-
+<!-- TODO respect noFly to remove in: -->
 <div 
     class="songitem" 
     class:nocover={data.nocover} 
-    on:contextmenu={(event) => _handleButtonClick("moremenu", data, event)}>
+    on:contextmenu={(event) => _handleButtonClick("moremenu", data, event)} 
+    in:fly|local={{delay: 80, duration: 380, y:5}}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
         <img class="songitem-cover cover-{data.coverid}" draggable="false" loading="lazy" src="{data.coversrc}" bind:this={coverelem} alt="cover"/>

@@ -39,3 +39,19 @@
 .sp-cover-placeholder, .songitem-cover-placeholder {
     background-image: url("assets/placeholder.png");
 }
+
+.animate-enter {
+    opacity: 0;
+    animation: enter 500ms forwards;
+    animation-delay: 200ms;
+}
+@keyframes enter {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}

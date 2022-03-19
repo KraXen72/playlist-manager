@@ -4,7 +4,7 @@
     import SongItem from './SongItem.svelte';
 
     import { config, maindir, allPlaylists, playlistOnlyMode } from '$common/stores'
-    import { onDestroy } from 'svelte'
+    import { onDestroy, onMount } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
 
     const api = window.api
