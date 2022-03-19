@@ -33,7 +33,7 @@
       if (input.trim().length < 1) { return [] }
 
       let res = completeFrom;
-
+      
       //filter out songs already in currPlaylist
       res = res.filter(item => { 
         let inPlaylist = $currPlaylist.some(song => song.fullpath === item.fullpath)
@@ -72,7 +72,6 @@
           }
         });
       }
-     
       if (searchMode.special || searchMode.artist || $playlistOnlyMode.real) {
         return res
       } else {
@@ -108,8 +107,12 @@
     },
     onSubmit: (result: SongItem) => {
       //console.log(result)
-      $currPlaylist = [...$currPlaylist, result]
-      inpVal = ''
+      if (typeof result !== "undefined") {
+        $currPlaylist = [...$currPlaylist, result]
+        inpVal = ''
+      } else {
+        console.error("No results for given query")
+      }
     },
     autoSelect: true,
     getResultValue: (result: SongItem) => {
@@ -130,7 +133,7 @@
     autocompleteDestroy(autocomp_bind)
   })
 
-  const txtProps = {
+  let txtProps = {
     label: "Start typing a name of a song or playlist...",
     value: "",
     variant: "outlined",

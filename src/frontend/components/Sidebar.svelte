@@ -68,7 +68,7 @@
                 genDisabled = false
             })
         } else {
-            console.warn("already generating, don't spam")
+            console.error("already generating, don't spam")
         }
     }
 

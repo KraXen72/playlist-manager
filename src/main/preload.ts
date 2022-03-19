@@ -342,7 +342,7 @@ function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
   if (!metadata.quality.warnings.includes("$$failed to get extinf")) {
     metadata.quality.warnings = metadata.quality.warnings.length 
   } else {
-    console.warn("failed to get extinf for:", metadata)
+    console.error("failed to get extinf for:", metadata)
   }
   
   let extrainfo: ExtraInfo | {} = {}
