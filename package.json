@@ -50,8 +50,8 @@
 		"@electron/remote": "^2.0.8",
 		"@nodelib/fs.walk": "^1.2.8",
 		"@trevoreyre/autocomplete-js": "^2.2.0",
-		"fs-extra": "^10.0.1",
+		"fs-extra": "^10.1.0",
 		"hashids": "^2.2.10",
-		"music-metadata": "^7.12.2"
+		"music-metadata": "^7.12.3"
 	}
 }
