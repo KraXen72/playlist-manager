@@ -56,9 +56,7 @@
             $currPlaylist = []
             $playlistName = ""
         } else {
-            const question = "Do you want to discard current playlist?"
-            const details = "The current progress/changes will be lost."
-            let confirmDiscard = api.dialogApi.confirmdialog(question, details)
+            let confirmDiscard = api.dialogApi.confirmDiscard()
             if (confirmDiscard) {
                 $currPlaylist = []
                 $playlistName = ""

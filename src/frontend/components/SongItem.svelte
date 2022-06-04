@@ -38,33 +38,40 @@
         }
     })
 
-    function _removeSong(index: number) {
-        $currPlaylist = $currPlaylist.filter(song => song.index !== index)
-    }
+    function _removeSong(index: number) { $currPlaylist = $currPlaylist.filter(song => song.index !== index) }
 
     function _editPlaylist(index: number) {
         const ASData = $allSongsAndPlaylists[index] as PlaylistSongItem
         console.log(ASData, "isCom:", data.comPlaylist)
 
-        if (!data.comPlaylist) {
-            //TODO add confirmation
-            const songsInPlaylist: SongItem[] = []
+        function loadPlaylist() {
+            if (!data.comPlaylist) {
+                const songsInPlaylist: SongItem[] = []
 
-            for (let i = 0; i < ASData.songs.length; i++) {
-                const song = ASData.songs[i];
-                
-                const fullpath = [ $maindir, ...song.split("/") ].join(api.slash)
-                const songObj = $allSongsAndPlaylists.find(item => item.fullpath === fullpath) ?? "notfound"
+                for (let i = 0; i < ASData.songs.length; i++) {
+                    const song = ASData.songs[i];
+                    
+                    const fullpath = [ $maindir, ...song.split("/") ].join(api.slash)
+                    const songObj = $allSongsAndPlaylists.find(item => item.fullpath === fullpath) ?? "notfound"
 
-                if (songObj !== "notfound") songsInPlaylist.push(songObj)
+                    if (songObj !== "notfound") songsInPlaylist.push(songObj)
+                }
+                    
+                $currPlaylist = songsInPlaylist
+                $changesSaved = true
+                //console.log("loaded", songsInPlaylist)
+            } else {
+                console.log("loading complaylists not implemented yet")
             }
-                
-            $currPlaylist = songsInPlaylist
-            changesSaved.set(true)
-            console.log("loaded", songsInPlaylist)
-        } else {
-            console.log("loading complaylists not implemented yet")
         }
+
+        if ($changesSaved) {
+            loadPlaylist()
+        } else {
+            if (api.dialogApi.confirmDiscard()) loadPlaylist()
+        }
+
+        
     }
     
     function _handleButtonClick(action: string, data: SongItemData, event: Event) {

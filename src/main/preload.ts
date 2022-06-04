@@ -64,6 +64,14 @@ const dialogApi = {
       noLink: true
     })
     return pick === 0 ? true : false
+  },
+  /**
+   * simple "confirm discard? dialog"
+   */
+  confirmDiscard: () => {
+    const question = "Do you want to discard current playlist?"
+    const details = "The current progress/changes will be lost."
+    return dialogApi.confirmdialog(question, details)
   }
 }
 
