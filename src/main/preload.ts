@@ -339,7 +339,8 @@ function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
       metadata = await mm.parseFile(song, {"skipCovers": skipCovers, "duration": false})
   } catch (e) {
       console.error(song, e)
-      metadata = { //when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
+      //@ts-ignore when we get Error: EINVAL: invalid argument, read for certain songs, make a dummy extinf
+      metadata = { 
           common: {}, format: { duration: 1, bitrate: "unknown", sampleRate: "unknown" }, quality: {warnings: ["$$failed to get extinf"]}
       }
   }
