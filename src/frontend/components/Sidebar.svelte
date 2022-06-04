@@ -52,6 +52,7 @@
             let fullpath = `${$maindir}${api.slash}${key}`
             let isCom = Object.keys($config.comPlaylists).includes(fullpath)
             let ASData = _matchPlaylistFromFullpath(fullpath)
+            //console.log("asdata: ", ASData)
 
             const parts = key.split(api.slash)
             const item: SongItemData = {
@@ -60,8 +61,9 @@
                 filename: key,
                 album: key,
                 bold: true,
-                nocover: true //TODO nice playlist covers like in oto music
-                
+                nocover: true, //TODO nice playlist covers like in oto music
+                allSongsIndex: ASData?.index ?? -1,
+                comPlaylist: isCom
             }
             if (isCom) {
                 return {item, buttons}

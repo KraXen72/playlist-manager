@@ -2,14 +2,12 @@
     import Button, {Label, Group} from '@smui/button';
     import IconButton from '@smui/icon-button';
 
-    import { config, currPlaylist, maindir, playlistName, playlistOnlyMode } from '$common/stores';
+    import { config, currPlaylist, maindir, playlistName, playlistOnlyMode, changesSaved } from '$common/stores';
     import { createEventDispatcher, onDestroy } from 'svelte';
-
-    import playlistImg from "$assets/playlist.png"
     const dispatch = createEventDispatcher()
+    import playlistImg from "$assets/playlist.png"
 
     const api = window.api
-    let changesSaved = true
 
     function pick() {
         let temp = api.dialogApi.pickFolder("Pick the main music folder") ?? [$config.maindir]
@@ -21,7 +19,7 @@
         //console.log($playlistOnlyMode.real)
         function _postSave() {
             dispatch("refresh", "sidebar")
-            changesSaved = true
+            $changesSaved = true
         }
 
         if ($playlistOnlyMode.real) {
@@ -54,7 +52,7 @@
     }
 
     function _discardPlaylist() {
-        if (changesSaved) {
+        if ($changesSaved) {
             $currPlaylist = []
             $playlistName = ""
         } else {
@@ -70,9 +68,9 @@
     
     const unsub = currPlaylist.subscribe((val) => {
         if (val.length === 0) {
-            changesSaved = true
+            $changesSaved = true
         } else {
-            changesSaved = false
+            $changesSaved = false
         }
     })
     onDestroy(unsub)
@@ -84,7 +82,7 @@
             variant="outlined" 
             class="smui-icon-btn"
             on:click={_savePlaylist}>
-            <Label class="material-icons {`${changesSaved === false ? "btn-danger" : ""}`}">save</Label>
+            <Label class="material-icons {`${$changesSaved === false ? "btn-danger" : ""}`}">save</Label>
         </Button>
         <Button 
             variant="outlined" 

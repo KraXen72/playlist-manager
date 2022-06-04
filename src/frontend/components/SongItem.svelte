@@ -1,11 +1,11 @@
 <script lang="ts">
-    
+    // component for both songs and playlist in a list
     import { Icon } from '@smui/icon-button';
 
     import { onMount } from 'svelte';
     import { fly } from 'svelte/transition';
 
-    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists, config, viewCoverPath } from '$common/stores';
+    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists, config, viewCoverPath, maindir, changesSaved } from '$common/stores';
 
     import placeholder from "$assets/placeholder.png";
     import { summonMenu, zeropad } from '$rblib/esm/lib';
@@ -24,6 +24,7 @@
         bold: false,
         nocover: false,
         type: "song", //song or playlist
+        comPlaylist: false
     }
     export let buttons = <SongItemButton[]>[]
     export let noFly = false
@@ -40,6 +41,31 @@
     function _removeSong(index: number) {
         $currPlaylist = $currPlaylist.filter(song => song.index !== index)
     }
+
+    function _editPlaylist(index: number) {
+        const ASData = $allSongsAndPlaylists[index] as PlaylistSongItem
+        console.log(ASData, "isCom:", data.comPlaylist)
+
+        if (!data.comPlaylist) {
+            //TODO add confirmation
+            const songsInPlaylist: SongItem[] = []
+
+            for (let i = 0; i < ASData.songs.length; i++) {
+                const song = ASData.songs[i];
+                
+                const fullpath = [ $maindir, ...song.split("/") ].join(api.slash)
+                const songObj = $allSongsAndPlaylists.find(item => item.fullpath === fullpath) ?? "notfound"
+
+                if (songObj !== "notfound") songsInPlaylist.push(songObj)
+            }
+                
+            $currPlaylist = songsInPlaylist
+            changesSaved.set(true)
+            console.log("loaded", songsInPlaylist)
+        } else {
+            console.log("loading complaylists not implemented yet")
+        }
+    }
     
     function _handleButtonClick(action: string, data: SongItemData, event: Event) {
         switch (action) {
@@ -47,10 +73,13 @@
             case 'remove':
                 _removeSong(data.allSongsIndex)
                 break;
+            case 'edit':
+                _editPlaylist(data.allSongsIndex)
+                break;
             case 'moremenu':
                 if (data.type === "song") {
                     //@ts-ignore
-                    summonMenu(songMenuOptions, event)
+                    summonMenu(songMenuOptions, event);
                 } else if (data.type === "playlist") {
                     //@ts-ignore
                     summonMenu(playlistMenuOptions, event)
@@ -137,7 +166,6 @@
         ]
     }
 </script>
-<!-- TODO respect noFly to remove in: -->
 <div 
     class="songitem" 
     class:nocover={data.nocover} 

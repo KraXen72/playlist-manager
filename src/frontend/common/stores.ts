@@ -13,5 +13,6 @@ export const detailsData = writable({})
 //@ts-ignore
 export const extraDetailsData = writable<ExtraDetailsData>({})
 export const viewCoverPath = writable<(string|false)>(false)
+export const changesSaved = writable<boolean>(true)
 
 export const tagDB = writable<tagDB>({})

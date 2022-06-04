@@ -67,6 +67,7 @@ declare global {
         bold: boolean,
         nocover: boolean,
         type?: "song" | "playlist", //song or playlis
+        comPlaylist?: boolean
     }
     
     interface comPlaylist {
