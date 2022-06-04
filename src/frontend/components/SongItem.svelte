@@ -55,7 +55,7 @@
                     //@ts-ignore
                     summonMenu(playlistMenuOptions, event)
                 } else {
-                    console.error("this SongItem's type is neither 'song' or 'playlist'")
+                    console.error(`this SongItem's type is neither 'song' or 'playlist'. it's '${data.type}'`)
                 }
                 break;
             default:
@@ -67,18 +67,18 @@
     //you can reference local variables/functions here vv
     // gonna use this for the three dots button action, since each songitem will only have this as the moremenu
     let songMenuOptions = {
-        buttons: [
+        menuItems: [
             {
                 text: "Details",
                 run: () => {
                     let ASData = $allSongs[data.allSongsIndex] // we need this to get fullpath of song
                     api.getEXTINF(ASData.fullpath, data.filename, true, true, true).then(extrainfo => {
                         if (typeof extrainfo === "string"){throw Error('Impossible')} // this apparently eliminates the x is not on type "string" errors
-                        let prep: ExtraDetailsData = {
+                        let prep = {
                             duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
                             path: ASData.fullpath,
                             forceState: "show"
-                        }
+                        } as ExtraDetailsData
                         Object.assign(prep, extrainfo.extrainfo)
                         $extraDetailsData = prep
                         $viewCoverPath = false
@@ -97,7 +97,7 @@
             {
                 text: "View cover",
                 run: () => {
-                    $viewCoverPath = data.coversrc
+                    $viewCoverPath = data.coversrc ?? false
                     $extraDetailsData.forceState = "hide"
 
                     let tag = $tagDB[data.filename]
@@ -113,7 +113,7 @@
     }
 
     let playlistMenuOptions = {
-        buttons: [
+        menuItems: [
             {
                 text: "Details",
                 run: () => {

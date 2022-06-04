@@ -43,7 +43,7 @@
         transition: opacity .2s;
     }
     #view-cover:hover .close-wrapper {
-        opacity: .15;
+        opacity: 0;
     }
     .close-wrapper:hover {
         opacity: 1 !important;

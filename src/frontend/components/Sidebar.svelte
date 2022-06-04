@@ -21,9 +21,8 @@
             desc: "Edit Playlist",
             fn: "edit"
         }
-
     ]
-    const blacklist = ["#midis", "archive","on-hold",".stfolder","#deezloader downloads"]
+    const blacklist = $config.ignore
     const pomExplanation = "playlist-only mode: make a combined playlist out of more playlists that later can be easily refreshed/regenerated"
 
     function _matchPlaylistFromFullpath(fullpath: string) {
@@ -62,10 +61,11 @@
                 album: key,
                 bold: true,
                 nocover: true //TODO nice playlist covers like in oto music
+                
             }
             if (isCom) {
                 return {item, buttons}
-            } else {
+            } else {   
                 return {item,  buttons: [buttons[1]]}
             }
         })
