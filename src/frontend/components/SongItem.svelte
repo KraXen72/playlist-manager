@@ -2,7 +2,7 @@
     // component for both songs and playlist in a list
     import { Icon } from '@smui/icon-button';
 
-    import { onMount } from 'svelte';
+    import { onMount, tick } from 'svelte';
     import { fly } from 'svelte/transition';
 
     import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists, config, viewCoverPath, maindir, changesSaved } from '$common/stores';
@@ -32,11 +32,7 @@
     let coverelem: HTMLImageElement;
     //data.coversrc = ""
 
-    onMount(() => {
-        coverelem.onerror = () => {
-            coverelem.src = placeholder
-        }
-    })
+    onMount(() => { coverelem.onerror = () => { try { coverelem.src = placeholder } catch (e) {} } })
 
     function _removeSong(index: number) { $currPlaylist = $currPlaylist.filter(song => song.index !== index) }
 
@@ -44,7 +40,7 @@
         const ASData = $allSongsAndPlaylists[index] as PlaylistSongItem
         console.log(ASData, "isCom:", data.comPlaylist)
 
-        function loadPlaylist() {
+        async function loadPlaylist() {
             if (!data.comPlaylist) {
                 const songsInPlaylist: SongItem[] = []
 
@@ -57,7 +53,11 @@
                     if (songObj !== "notfound") songsInPlaylist.push(songObj)
                 }
                     
+                //$currPlaylist = songsInPlaylist
+                $currPlaylist  = []
+                await tick();
                 $currPlaylist = songsInPlaylist
+
                 $changesSaved = true
                 //console.log("loaded", songsInPlaylist)
             } else {
@@ -70,8 +70,6 @@
         } else {
             if (api.dialogApi.confirmDiscard()) loadPlaylist()
         }
-
-        
     }
     
     function _handleButtonClick(action: string, data: SongItemData, event: Event) {
