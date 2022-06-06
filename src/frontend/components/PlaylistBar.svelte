@@ -7,7 +7,7 @@
 
     import { summonMenu, zeropad } from '$rblib/esm/lib';
 
-    import { currPlaylist, tagDB, config, playlistOnlyMode, detailsData, extraDetailsData, viewCoverPath } from '$common/stores'
+    import { currPlaylist, tagDB, config, playlistOnlyMode, detailsData, extraDetailsData, viewCoverPath, changesSaved } from '$common/stores'
     import { onDestroy } from 'svelte';
     
     //const bull = `&nbsp;&#8226;&nbsp;`;
@@ -44,6 +44,11 @@
         }
     }
 
+    let playlistWrapperBinder: HTMLDivElement
+    export function resetScrollPos() {
+        playlistWrapperBinder.scrollTo({top: 0})
+    }
+
     const unsub = playlistOnlyMode.subscribe((val) => {
         if (val.proposed) {
             let mixed = $currPlaylist.some(song => song.type === "song")
@@ -52,7 +57,7 @@
             } else {
                 const question = "Are you sure you want do discard songs from playlist?"
                 const details = "You are about to enter playlist-only mode, but your current playlist also contains songs. Discard songs from current playlist and proceed?"
-                let confirmDiscard = api.dialogApi.confirmdialog(question, details)
+                let confirmDiscard = changesSaved ? true : api.dialogApi.confirmdialog(question, details)
                 if (confirmDiscard) {
                     $currPlaylist = $currPlaylist.filter(song => song.type === "playlist")
                     val.real = val.proposed
@@ -167,7 +172,7 @@
 
 </script>
 
-<div id="playlist-bar-wrapper">
+<div id="playlist-bar-wrapper" bind:this={playlistWrapperBinder}>
     <div id="playlist-scroll-wrap">
       <div id="playlist-bar">
         {#each $currPlaylist as i, index}

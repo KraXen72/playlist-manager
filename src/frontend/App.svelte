@@ -68,6 +68,8 @@
     onDestroy(unsub)
 
     let sidebarBinder: any;
+    let playlistBinder: any;
+
     function _refreshSidebar() {
         console.log("refreshing in 2.5s")
         //TODO update to get length of the playlist or sumn
@@ -85,8 +87,8 @@
     <AppTitle/>
     <PlaylistTitle/>
     <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/>
-    <Sidebar bind:this={sidebarBinder}/>
-	<PlaylistBar/>
+    <Sidebar bind:this={sidebarBinder} on:loadedPlaylist={playlistBinder.resetScrollPos}/>
+	<PlaylistBar bind:this={playlistBinder}/>
 	<ButtonBar on:refresh={_refreshSidebar}/>
     <div id="main-content">
         {#if $viewCoverPath !== false}

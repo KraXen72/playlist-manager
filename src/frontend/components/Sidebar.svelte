@@ -5,10 +5,11 @@
     import SongItemButton from './SongItemButton.svelte';
 
     import { config, maindir, allPlaylists, playlistOnlyMode, changesSaved, allSongsAndPlaylists, currPlaylist } from '$common/stores'
-    import { onDestroy, tick } from 'svelte'
+    import { onDestroy, tick, createEventDispatcher } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
 
     const api = window.api
+    const dispatch = createEventDispatcher()
 
     let sidebarPlaylists: SongItemData[] = []
 
@@ -93,6 +94,7 @@
                 $currPlaylist = songsInPlaylist
 
                 $changesSaved = true
+                dispatch("loadedPlaylist") //for the playlistBar to reset Scroll pos
             } else {
                 console.log("loading complaylists not implemented yet")
             }

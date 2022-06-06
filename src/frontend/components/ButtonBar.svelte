@@ -4,10 +4,11 @@
 
     import { config, currPlaylist, maindir, playlistName, playlistOnlyMode, changesSaved } from '$common/stores';
     import { createEventDispatcher, onDestroy } from 'svelte';
-    const dispatch = createEventDispatcher()
+    
     import playlistImg from "$assets/playlist.png"
 
     const api = window.api
+    const dispatch = createEventDispatcher()
 
     function pick() {
         let temp = api.dialogApi.pickFolder("Pick the main music folder") ?? [$config.maindir]
