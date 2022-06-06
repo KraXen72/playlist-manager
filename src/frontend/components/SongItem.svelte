@@ -1,14 +1,12 @@
 <script lang="ts">
     // component for both songs and playlist in a list
-    import { Icon } from '@smui/icon-button';
 
     import { onMount, tick } from 'svelte';
     import { fly } from 'svelte/transition';
 
-    import { allSongs, currPlaylist, extraDetailsData, detailsData, tagDB, allSongsAndPlaylists, config, viewCoverPath, maindir, changesSaved } from '$common/stores';
+    import { currPlaylist, allSongsAndPlaylists, maindir, changesSaved } from '$common/stores';
 
     import placeholder from "$assets/placeholder.png";
-    import { summonMenu, zeropad } from '$rblib/esm/lib';
 
     const bull = `&nbsp;&#8226;&nbsp;`;
     const api = window.api
@@ -26,15 +24,13 @@
         type: "song", //song or playlist
         comPlaylist: false
     }
-    export let buttons = <SongItemButton[]>[]
+    //export let buttons = <SongItemButton[]>[]
     export let noFly = false
 
     let coverelem: HTMLImageElement;
     //data.coversrc = ""
 
     onMount(() => { coverelem.onerror = () => { try { coverelem.src = placeholder } catch (e) {} } })
-
-    function _removeSong(index: number) { $currPlaylist = $currPlaylist.filter(song => song.index !== index) }
 
     function _editPlaylist(index: number) {
         const ASData = $allSongsAndPlaylists[index] as PlaylistSongItem
@@ -71,110 +67,11 @@
             if (api.dialogApi.confirmDiscard()) loadPlaylist()
         }
     }
-    
-    function _handleButtonClick(action: string, data: SongItemData, event: Event) {
-        switch (action) {
-            //TODO implement regen, edit, moremenu
-            case 'remove':
-                _removeSong(data.allSongsIndex)
-                break;
-            case 'edit':
-                _editPlaylist(data.allSongsIndex)
-                break;
-            case 'moremenu':
-                if (data.type === "song") {
-                    //@ts-ignore
-                    summonMenu(songMenuOptions, event);
-                } else if (data.type === "playlist") {
-                    //@ts-ignore
-                    summonMenu(playlistMenuOptions, event)
-                } else {
-                    console.error(`this SongItem's type is neither 'song' or 'playlist'. it's '${data.type}'`)
-                }
-                break;
-            default:
-                console.error(`unknown button click action '${action}'`)
-                break;
-        }
-    }
-
-    //you can reference local variables/functions here vv
-    // gonna use this for the three dots button action, since each songitem will only have this as the moremenu
-    let songMenuOptions = {
-        menuItems: [
-            {
-                text: "Details",
-                run: () => {
-                    let ASData = $allSongs[data.allSongsIndex] // we need this to get fullpath of song
-                    api.getEXTINF(ASData.fullpath, data.filename, true, true, true).then(extrainfo => {
-                        if (typeof extrainfo === "string"){throw Error('Impossible')} // this apparently eliminates the x is not on type "string" errors
-                        let prep = {
-                            duration: `${Math.floor(Math.floor(extrainfo.duration)/1000 / 60)}:${zeropad(Math.floor(extrainfo.duration/1000) % 60, 2)}`,
-                            path: ASData.fullpath,
-                            forceState: "show"
-                        } as ExtraDetailsData
-                        Object.assign(prep, extrainfo.extrainfo)
-                        $extraDetailsData = prep
-                        $viewCoverPath = false
-
-                        let tag = $tagDB[data.filename]
-                        $detailsData = {
-                            coversrc: tag.cover,
-                            title: tag?.title ?? "Unknown Title",
-                            album: tag?.album ?? "Unknown Album",
-                            artist: tag?.artist ?? "Unknown artist",
-                        }
-                    })
-                    
-                }
-            },
-            {
-                text: "View cover",
-                run: () => {
-                    $viewCoverPath = data.coversrc ?? false
-                    $extraDetailsData.forceState = "hide"
-
-                    let tag = $tagDB[data.filename]
-                    $detailsData = {
-                        coversrc: tag.cover,
-                        title: tag?.title ?? "Unknown Title",
-                        album: tag?.album ?? "Unknown Album",
-                        artist: tag?.artist ?? "Unknown artist",
-                    }
-                }
-            }
-        ]
-    }
-
-    let playlistMenuOptions = {
-        menuItems: [
-            {
-                text: "Details",
-                run: () => {
-                    let ASData = $allSongsAndPlaylists[data.allSongsIndex]
-                    let isCom = Object.keys($config.comPlaylists).includes(ASData.fullpath)
-                    let lines = []
-                    if (isCom) {
-                        lines = [
-                                "This generated playlist contains: ", "",
-                                ...$config.comPlaylists[ASData.fullpath].map(item => item.filename)
-                            ]
-                    } else {
-                        lines = [
-                                "This playlist contains: ", "",
-                                ...ASData.songs.filter((l: string) => !l.includes("#EXTINF:"))
-                            ]
-                    }
-                    api.dialogApi.infodialog(lines.join("\n"))
-                }
-            },
-        ]
-    }
 </script>
 <div 
     class="songitem" 
     class:nocover={data.nocover} 
-    on:contextmenu={(event) => _handleButtonClick("moremenu", data, event)} 
+    on:contextmenu
     in:fly|local={{delay: noFly ? 0 : 80, duration: noFly ? 0 : 380, y:noFly ? 0 :5}}>
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder"></div>
@@ -190,11 +87,8 @@
     </div>
     <div class="songitem-filename" hidden>{data.filename}</div>
     <div class="songitem-button-wrap">
-        {#each buttons as btn, i}
-            <button class="songitem-button noselect" on:click={(event) => _handleButtonClick(btn.fn, data, event)} title={btn.desc}>
-                <Icon class="material-icons" touch>{btn.icon}</Icon>
-            </button>
-        {/each}
+        <!-- this slot is for the buttons, expects to have SongItemButton components -->
+        <slot></slot>
     </div>
 </div>
 
@@ -246,6 +140,10 @@
         background-position: center;
         background-repeat: no-repeat;
     }
+    .songitem:hover .hidden {
+        display: flex !important;
+    }
+
     .songitem-button-wrap {
         grid-area: button;
         width: 100%;
@@ -255,35 +153,7 @@
         justify-content: flex-end;
         align-items: center;
     }
-    .songitem:hover .hidden {
-        display: flex !important;
-    }
-    .songitem-button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        /*width: 24px;*/
-
-        border: none;
-        background: transparent;
-        color: var(--text);
-        transition: opacity 0.1s;
-    }
-    .songitem-button:focus-visible{
-        outline: none !important;
-        color: white;
-    }
-    .songitem-button:focus-visible i {
-        box-shadow: 0px 0px 19px 0px rgba(0,0,0,1);  
-    }
-    .songitem-button:hover {
-        opacity: 80%;
-    }
-    .songitem-button:active {
-        opacity: 50%;
-    }
-
+    /* button styles are in separate component */
 
     .songitem-title {
         grid-area: title;
