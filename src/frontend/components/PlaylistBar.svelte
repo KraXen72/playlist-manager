@@ -55,9 +55,9 @@
             if (!mixed) {
                 val.real = val.proposed
             } else {
-                const question = "Are you sure you want do discard songs from playlist?"
+                const question = "Are you sure you want to discard songs from playlist?"
                 const details = "You are about to enter playlist-only mode, but your current playlist also contains songs. Discard songs from current playlist and proceed?"
-                let confirmDiscard = changesSaved ? true : api.dialogApi.confirmdialog(question, details)
+                let confirmDiscard = $changesSaved ? true : api.dialogApi.confirmdialog(question, details)
                 if (confirmDiscard) {
                     $currPlaylist = $currPlaylist.filter(song => song.type === "playlist")
                     val.real = val.proposed

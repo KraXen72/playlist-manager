@@ -80,6 +80,7 @@
             if (!data.comPlaylist) {
                 const songsInPlaylist: SongItemPlus[] = []
 
+
                 for (let i = 0; i < ASData.songs.length; i++) {
                     const song = ASData.songs[i];
                     
@@ -100,15 +101,24 @@
             }
         }
 
-        if ($changesSaved) {
+        if ($changesSaved && !$playlistOnlyMode.real) {
             loadPlaylist()
         } else {
-            if (api.dialogApi.confirmDiscard()) loadPlaylist()
+            //changes are saved but i'm still in playlist-only mode
+            if ($changesSaved && $playlistOnlyMode.real) {
+                $playlistOnlyMode.proposed = false
+                loadPlaylist()
+            } else if (!$changesSaved) { //changes are not saved. confirm discard and exit playlist-only mode
+                if (api.dialogApi.confirmDiscard()) {
+                    $playlistOnlyMode.proposed = false
+                    loadPlaylist() 
+                }
+            }
         }
     }
     let genDisabled = false
 
-    const unsub = config.subscribe((val) => { fetchPlaylists(); console.log("fetched playlists") })
+    const unsub = config.subscribe((val) => { fetchPlaylists(); /*console.log("fetched playlists")*/ })
     onDestroy(unsub)
 </script>
 

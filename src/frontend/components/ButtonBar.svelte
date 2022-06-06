@@ -19,6 +19,7 @@
     function _savePlaylist() {
         //console.log($playlistOnlyMode.real)
         function _postSave() {
+            console.log("postSave")
             dispatch("refresh", "sidebar")
             $changesSaved = true
         }
