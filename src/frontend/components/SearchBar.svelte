@@ -18,6 +18,7 @@
     artist: false
   }//special, artist
 
+  //@ts-ignore
   import Autocomplete from "@trevoreyre/autocomplete-js";
   let autocomp_bind: any
   let inpVal = ""
