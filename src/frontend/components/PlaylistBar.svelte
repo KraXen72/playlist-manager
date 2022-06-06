@@ -144,7 +144,7 @@
                             ...$config.comPlaylists[songItem.fullpath].map(item => item.filename)
                         ]
                 } else {
-                    let songLines = ( songItem.hasOwnProperty('songs') )
+                    let songLines = ( songItem.songs && Array.isArray(songItem.songs) )
                     ? [...songItem.songs.filter((l: string) => !l.includes("#EXTINF:"))] 
                     : ["No songs..."] ;
                     
@@ -158,7 +158,7 @@
                 {
                     text: "Details",
                     run: _playlistDetails
-                } 
+                }
             ]
         }
         //@ts-ignore the type is correct but idk

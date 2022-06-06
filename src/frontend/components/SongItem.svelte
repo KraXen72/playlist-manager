@@ -1,15 +1,12 @@
 <script lang="ts">
     // component for both songs and playlist in a list
 
-    import { onMount, tick } from 'svelte';
+    import { onMount } from 'svelte';
     import { fly } from 'svelte/transition';
-
-    import { currPlaylist, allSongsAndPlaylists, maindir, changesSaved } from '$common/stores';
 
     import placeholder from "$assets/placeholder.png";
 
     const bull = `&nbsp;&#8226;&nbsp;`;
-    const api = window.api
 
     export let data: SongItemData = {
         coverid: "",
@@ -24,49 +21,12 @@
         type: "song", //song or playlist
         comPlaylist: false
     }
-    //export let buttons = <SongItemButton[]>[]
     export let noFly = false
 
     let coverelem: HTMLImageElement;
     //data.coversrc = ""
 
     onMount(() => { coverelem.onerror = () => { try { coverelem.src = placeholder } catch (e) {} } })
-
-    function _editPlaylist(index: number) {
-        const ASData = $allSongsAndPlaylists[index] as PlaylistSongItem
-        console.log(ASData, "isCom:", data.comPlaylist)
-
-        async function loadPlaylist() {
-            if (!data.comPlaylist) {
-                const songsInPlaylist: SongItem[] = []
-
-                for (let i = 0; i < ASData.songs.length; i++) {
-                    const song = ASData.songs[i];
-                    
-                    const fullpath = [ $maindir, ...song.split("/") ].join(api.slash)
-                    const songObj = $allSongsAndPlaylists.find(item => item.fullpath === fullpath) ?? "notfound"
-
-                    if (songObj !== "notfound") songsInPlaylist.push(songObj)
-                }
-                    
-                //$currPlaylist = songsInPlaylist
-                $currPlaylist  = []
-                await tick();
-                $currPlaylist = songsInPlaylist
-
-                $changesSaved = true
-                //console.log("loaded", songsInPlaylist)
-            } else {
-                console.log("loading complaylists not implemented yet")
-            }
-        }
-
-        if ($changesSaved) {
-            loadPlaylist()
-        } else {
-            if (api.dialogApi.confirmDiscard()) loadPlaylist()
-        }
-    }
 </script>
 <div 
     class="songitem" 

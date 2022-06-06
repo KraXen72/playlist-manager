@@ -2,28 +2,19 @@
     import Button, { Icon, Label } from '@smui/button'
     import TextDivider from './TextDivider.svelte';
     import SongItem from './SongItem.svelte';
+    import SongItemButton from './SongItemButton.svelte';
 
-    import { config, maindir, allPlaylists, playlistOnlyMode } from '$common/stores'
-    import { onDestroy, onMount } from 'svelte'
+    import { config, maindir, allPlaylists, playlistOnlyMode, changesSaved, allSongsAndPlaylists, currPlaylist } from '$common/stores'
+    import { onDestroy, tick } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
 
     const api = window.api
 
-    let sidebarPlaylists: any[] = []
-    let buttons: SongItemButton[] = [
-        {
-            icon: "autorenew",
-            desc: "re-make / update: generate this playlist again if you added new songs or removed some",
-            fn: "regen"
-        },
-        {
-            icon: "drive_file_rename_outline",
-            desc: "Edit Playlist",
-            fn: "edit"
-        }
-    ]
+    let sidebarPlaylists: SongItemData[] = []
+
     const blacklist = $config.ignore
     const pomExplanation = "playlist-only mode: make a combined playlist out of more playlists that later can be easily refreshed/regenerated"
+    const regenExplanation = "re-make / update: generate this playlist again if you added new songs or removed some"
 
     function _matchPlaylistFromFullpath(fullpath: string) {
         return $allPlaylists.find(playlist => playlist.fullpath === fullpath)
@@ -65,18 +56,9 @@
                 allSongsIndex: ASData?.index ?? -1,
                 comPlaylist: isCom
             }
-            if (isCom) {
-                return {item, buttons}
-            } else {   
-                return {item,  buttons: [buttons[1]]}
-            }
+            return item
         })
     }
-
-    const unsub = config.subscribe((val) => {
-        fetchPlaylists()
-        console.log("fetched playlists")
-    })
 
     function _generatePlaylists() {
         if (!genDisabled) {
@@ -89,7 +71,42 @@
         }
     }
 
+    function _editPlaylist(data: SongItemData) {
+        const ASData = $allSongsAndPlaylists[data.allSongsIndex] as PlaylistSongItem
+        //console.log(ASData, "isCom:", data.comPlaylist)
+
+        async function loadPlaylist() {
+            if (!data.comPlaylist) {
+                const songsInPlaylist: SongItemPlus[] = []
+
+                for (let i = 0; i < ASData.songs.length; i++) {
+                    const song = ASData.songs[i];
+                    
+                    const fullpath = [ $maindir, ...song.split("/") ].join(api.slash)
+                    const songObj = $allSongsAndPlaylists.find(item => item.fullpath === fullpath) ?? "notfound"
+
+                    if (songObj !== "notfound") songsInPlaylist.push(songObj)
+                }
+                    
+                $currPlaylist  = []
+                await tick();
+                $currPlaylist = songsInPlaylist
+
+                $changesSaved = true
+            } else {
+                console.log("loading complaylists not implemented yet")
+            }
+        }
+
+        if ($changesSaved) {
+            loadPlaylist()
+        } else {
+            if (api.dialogApi.confirmDiscard()) loadPlaylist()
+        }
+    }
     let genDisabled = false
+
+    const unsub = config.subscribe((val) => { fetchPlaylists(); console.log("fetched playlists") })
     onDestroy(unsub)
 </script>
 
@@ -120,7 +137,16 @@
 
     <div class="sidebar-playlists">
         {#each sidebarPlaylists as ply}
-            <SongItem data={ply.item} buttons={ply.buttons} noFly={true}/>
+            <SongItem data={ply} noFly={true}>
+                {#if ply.comPlaylist } 
+                    <SongItemButton icon="autorenew" desc="{regenExplanation}" /> 
+                {/if}
+                <SongItemButton 
+                    icon="drive_file_rename_outline" 
+                    desc="Edit Playlist"
+                    on:click={() => _editPlaylist(ply)} 
+                />
+            </SongItem>
         {/each}
     </div>
     

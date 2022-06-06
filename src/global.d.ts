@@ -50,12 +50,6 @@ declare global {
         songs?: string[]
     }
     
-    interface SongItemButton {
-        icon: string,
-        desc: string,
-        fn: string
-    }
-    
     interface SongItemData {
         coverid?: string | "",
         coversrc?: string | "",
