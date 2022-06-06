@@ -4,7 +4,7 @@
     import SongItem from './SongItem.svelte';
     import SongItemButton from './SongItemButton.svelte';
 
-    import { config, maindir, allPlaylists, playlistOnlyMode, changesSaved, allSongsAndPlaylists, currPlaylist } from '$common/stores'
+    import { config, maindir, allPlaylists, playlistOnlyMode, changesSaved, allSongsAndPlaylists, currPlaylist, playlistName } from '$common/stores'
     import { onDestroy, tick, createEventDispatcher } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
 
@@ -80,7 +80,6 @@
             if (!data.comPlaylist) {
                 const songsInPlaylist: SongItemPlus[] = []
 
-
                 for (let i = 0; i < ASData.songs.length; i++) {
                     const song = ASData.songs[i];
                     
@@ -89,7 +88,8 @@
 
                     if (songObj !== "notfound") songsInPlaylist.push(songObj)
                 }
-                    
+                
+                $playlistName = data.title
                 $currPlaylist  = []
                 await tick();
                 $currPlaylist = songsInPlaylist
