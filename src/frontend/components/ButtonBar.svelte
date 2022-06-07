@@ -16,16 +16,8 @@
         api.saveConfig("./config.json", $config, false)
     }
 
-    export function _savePlaylist() {
+    function _savePlaylist() {
         //console.log($playlistOnlyMode.real)
-
-        function _postSave(status: string) {
-            console.log("> (postSave) status: " + status)
-            if (status === "success") {
-                dispatch("refresh", "sidebar")
-                $changesSaved = true
-            }
-        }
 
         if ($playlistOnlyMode.real) {
             const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
@@ -37,10 +29,10 @@
                         relativepath: item.relativepath
                     }
                 })]
-                api.saveConfig("./config.json", $config, false)
-                _postSave(saveStatus)
+                api.saveConfig("./config.json", $config, false, "saving playlist")
+                return saveStatus
             } else {
-                _postSave(saveStatus)
+                return saveStatus
             }
         } else if ($playlistOnlyMode.real === false && $currPlaylist.every(item => item.type === "playlist")) {
             //propose saving as playlist only.
@@ -49,14 +41,12 @@
             let confirmCombined = api.dialogApi.confirmdialog(question, details)
             if (confirmCombined) {
                 $playlistOnlyMode.proposed = true
-                _savePlaylist()
+                _savePlaylist() //this might be a problem given the new return rewrite
             } else {
-                const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-                _postSave(saveStatus)
+                return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
             }
         } else {
-            const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-            _postSave(saveStatus)
+            return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
         }
     }
 
@@ -71,6 +61,15 @@
                 $playlistName = ""
             }
         }   
+    }
+
+    export function saveWrapper() {
+        const result = _savePlaylist() //wait for saving of playlist
+        console.log("> (postSave) status: " + result)
+        if (result === "success") {
+            dispatch("refresh", "sidebar")
+            $changesSaved = true
+        }
     }
     
     const unsub = currPlaylist.subscribe((val) => {
@@ -88,7 +87,7 @@
         <Button 
             variant="outlined" 
             class="smui-icon-btn"
-            on:click={_savePlaylist}>
+            on:click={saveWrapper}>
             <Label class="material-icons {`${$changesSaved === false ? "btn-danger" : ""}`}">save</Label>
         </Button>
         <Button 

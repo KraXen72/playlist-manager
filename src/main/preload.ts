@@ -288,7 +288,7 @@ async function generateM3U(basedDir: string, config: IConfig, tagDB: ITagDB) {
  * @returns true if all went well so you can use .then()
  */
 async function gen(maindir: string, blacklist: string[], config: IConfig) {
-	console.time("generated all songs in: ")
+	console.time("> (gen) generated all songs in: ")
 	//don't pass the big tagDB over contextBridge, read it ourselves in nodejs
 	const tagDB: ITagDB = JSON.parse(fs.readFileSync(`./db/${btoa(maindir)}.json`, 'utf-8'))
 
@@ -297,12 +297,14 @@ async function gen(maindir: string, blacklist: string[], config: IConfig) {
 		.map(entry => ({ filename: entry.name, fullpath: entry.path }))
 
 	// we need normal for loop because .forEach doesen't like async
+	const genPromises = []
 	for (let i = 0; i < alldirs.length; i++) {
 		const dir = alldirs[i];
-		await generateM3U(dir.fullpath, config, tagDB)
+		genPromises.push( new Promise(resolve => generateM3U(dir.fullpath, config, tagDB).then(resolve)) )
 		//progress = `${i / alldirs.length * 100}%` //TODO proper progress tracking
 	}
-	console.timeEnd("generated all songs in: ")
+	await Promise.all(genPromises)
+	console.timeEnd("> (gen) generated all songs in: ")
 	return true
 };
 

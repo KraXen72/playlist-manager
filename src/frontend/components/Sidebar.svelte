@@ -35,7 +35,7 @@
                 delete $config.comPlaylists[path.path]
             }
         })
-        api.saveConfig("./config.json", $config, false)
+        api.saveConfig("./config.json", $config, false, "reloading sidebar")
     }
 
     export function fetchPlaylists() {
@@ -61,14 +61,15 @@
         })
     }
 
-    function _generatePlaylists() {
+    async function _generatePlaylists() {
         if (!genDisabled) {
             genDisabled = true
-            api.gen($maindir, blacklist, $config).then(() => {
-                genDisabled = false
-            })
+            await api.gen($maindir, blacklist, $config)
+            genDisabled = false
+            return "success"
         } else {
             console.error("already generating, don't spam")
+            return "wait"
         }
     }
 
@@ -136,10 +137,10 @@
         }
     }
 
-    function _regenPlaylist(playlist: SongItemData) {
-        console.log("regen")
-        console.time("regened this playlist in: ")
-        _generatePlaylists() //regen them
+    async function _regenPlaylist(playlist: SongItemData) {
+        console.log("starting regen...")
+        console.time("> (regen) regened this playlist in: ")
+        await _generatePlaylists() //regen them
         _editPlaylist(playlist, false) //load the playlist without ticking
         dispatch("regenPlaylist") // make button bar save and discard the playlist
     }

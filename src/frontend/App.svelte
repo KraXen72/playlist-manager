@@ -80,11 +80,11 @@
 
     /** second part of regening playlist: save and discard afterwards */
     function regenPlaylist() {
-        buttonBarBinder._savePlaylist()
+        buttonBarBinder.saveWrapper()
         buttonBarBinder._discardPlaylist()
         $playlistOnlyMode.proposed = false
 
-        console.timeEnd("regened this playlist in: ")
+        console.timeEnd("> (regen) regened this playlist in: ")
     }
 </script>
 
