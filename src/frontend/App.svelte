@@ -24,7 +24,7 @@
 
     type RegenCustomEvent = { detail: SongItemData }
 
-    // flow of regen (AAAAAAAAAAAAAAAAAA)
+    // flow of regen (mayb optimize later)
     // Sidebar --- RegenCustomEvent ---> App.svelte
     // App: regenPlaylist(RegenCustomEvent) - generates the playlist files
     // App: setupAppStores(RegenCustomEvent) - re-initializes the app's stores
@@ -49,7 +49,7 @@
         $playlistOnlyMode.proposed = false
 
         console.timeEnd("> (regen) regened this playlist in: ")
-        refreshSidebar()
+        //refreshSidebar()
     }
 
     /** 
