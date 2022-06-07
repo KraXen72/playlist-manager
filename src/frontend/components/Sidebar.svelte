@@ -77,6 +77,8 @@
         //console.log(ASData, "isCom:", data.comPlaylist)
 
         async function loadPlaylist() {
+
+            $playlistName = data.title
             if (!data.comPlaylist) {
                 const songsInPlaylist: SongItemPlus[] = []
 
@@ -89,16 +91,28 @@
                     if (songObj !== "notfound") songsInPlaylist.push(songObj)
                 }
                 
-                $playlistName = data.title
                 $currPlaylist  = []
                 await tick();
                 $currPlaylist = songsInPlaylist
 
-                $changesSaved = true
-                dispatch("loadedPlaylist") //for the playlistBar to reset Scroll pos
             } else {
-                console.log("loading complaylists not implemented yet")
+                const consistsOf: PlaylistSongItem[] = []
+
+                $config.comPlaylists[ASData.fullpath].forEach(playlist => {
+                    const result = _matchPlaylistFromFullpath(playlist.fullpath)
+
+                    if (typeof result !== "undefined") consistsOf.push(result)
+                })
+
+                $currPlaylist  = []
+                await tick();
+                $playlistOnlyMode.proposed = true
+                $currPlaylist = consistsOf
+                
             }
+
+            $changesSaved = true
+            dispatch("loadedPlaylist") //for the playlistBar to reset Scroll pos
         }
 
         if ($changesSaved && !$playlistOnlyMode.real) {
