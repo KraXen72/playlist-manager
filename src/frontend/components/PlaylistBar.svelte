@@ -36,7 +36,11 @@
             Object.assign(shared, {
                 coversrc: isCom ? generated : playlistSrc,
                 title: sItemData.filename,
-                artist: `Playlist • ${sItemData.songs.length} Songs`,
+                artist: `Playlist • ${
+              sItemData.songs && Array.isArray(sItemData.songs) 
+              ? sItemData.songs.length 
+              : "??"
+            } Songs`,
                 album: sItemData.fullpath,
                 type: "playlist",
             })

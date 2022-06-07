@@ -98,7 +98,11 @@
           $detailsData = {
             coversrc: isCom ? generated : playlistPic,
             title: selsong.filename,
-            artist: `Playlist${bull}${selsong.songs.length} Songs`,
+            artist: `Playlist${bull}${
+              selsong.songs && Array.isArray(selsong.songs) 
+              ? selsong.songs.length 
+              : "??"
+            } Songs`,
             album: selsong.fullpath,
           }
           $extraDetailsData.forceState = "hide"
