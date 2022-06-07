@@ -72,7 +72,12 @@
         }
     }
 
-    function _editPlaylist(data: SongItemData) {
+    /**
+     * load playlist into playlistBar
+     * @param data the songitem data in SidebarPlaylists
+     * @param doTick wether to wait for svelte to render an empty playlist bar. default is true
+    */
+    function _editPlaylist(data: SongItemData, doTick = true) {
         const ASData = $allSongsAndPlaylists[data.allSongsIndex] as PlaylistSongItem
         //console.log(ASData, "isCom:", data.comPlaylist)
 
@@ -92,7 +97,7 @@
                 }
                 
                 $currPlaylist  = []
-                await tick();
+                if (doTick) await tick();
                 $currPlaylist = songsInPlaylist
 
             } else {
@@ -105,7 +110,7 @@
                 })
 
                 $currPlaylist  = []
-                await tick();
+                if (doTick) await tick();
                 $playlistOnlyMode.proposed = true
                 $currPlaylist = consistsOf
                 
@@ -130,6 +135,15 @@
             }
         }
     }
+
+    function _regenPlaylist(playlist: SongItemData) {
+        console.log("regen")
+        console.time("regened this playlist in: ")
+        _generatePlaylists() //regen them
+        _editPlaylist(playlist, false) //load the playlist without ticking
+        dispatch("regenPlaylist") // make button bar save and discard the playlist
+    }
+
     let genDisabled = false
 
     const unsub = config.subscribe((val) => { fetchPlaylists(); /*console.log("fetched playlists")*/ })
@@ -156,7 +170,6 @@
                 <Label>Playlist-only mode</Label>
                 <Icon class="material-icons icon-135 mdicontext">help_outline</Icon>
             </span>
-            
         </Button>
     </div>
     <TextDivider content="Your Playlists: "/>
@@ -165,13 +178,9 @@
         {#each sidebarPlaylists as ply}
             <SongItem data={ply} noFly={true}>
                 {#if ply.comPlaylist } 
-                    <SongItemButton icon="autorenew" desc="{regenExplanation}" /> 
+                    <SongItemButton icon="autorenew" desc="{regenExplanation}" on:click={() => _regenPlaylist(ply)}/> 
                 {/if}
-                <SongItemButton 
-                    icon="drive_file_rename_outline" 
-                    desc="Edit Playlist"
-                    on:click={() => _editPlaylist(ply)} 
-                />
+                <SongItemButton icon="drive_file_rename_outline" desc="Edit Playlist" on:click={() => _editPlaylist(ply)}/>
             </SongItem>
         {/each}
     </div>

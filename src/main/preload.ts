@@ -226,8 +226,10 @@ const currentPlaylist = {
 				body: `Your playlist has been saved to:\n${maindir}${slash}${playlistName}.m3u`,
 				icon: playlistImg
 			})
+			return "success"
 		} else {
 			dialogApi.infodialog("Please name your playlist before saving")
+			return "fail"
 		}
 	}
 }

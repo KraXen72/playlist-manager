@@ -9,7 +9,7 @@
     import ExtraDetailsView from '$components/ExtraDetailsView.svelte';
     import CoverView from './components/CoverView.svelte';
 
-    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists, viewCoverPath, currPlaylist } from './common/stores'
+    import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists, viewCoverPath, playlistOnlyMode, currPlaylist } from './common/stores'
     import { onDestroy } from 'svelte';
 
     const api = window.api
@@ -67,18 +67,24 @@
         })
     onDestroy(unsub)
 
-    let sidebarBinder: any;
-    let playlistBinder: any;
+    let sidebarBinder: any, 
+        playlistBinder: any, 
+        buttonBarBinder: any
 
-    function _refreshSidebar() {
-        console.log("refreshing in 2.5s")
-        //TODO update to get length of the playlist or sumn
-        setTimeout(() => {
-            $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
-            $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
-            
-            sidebarBinder.fetchPlaylists()
-        }, 2500)
+    function refreshSidebar() {
+        $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
+        $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
+        
+        sidebarBinder.fetchPlaylists()
+    }
+
+    /** second part of regening playlist: save and discard afterwards */
+    function regenPlaylist() {
+        buttonBarBinder._savePlaylist()
+        buttonBarBinder._discardPlaylist()
+        $playlistOnlyMode.proposed = false
+
+        console.timeEnd("regened this playlist in: ")
     }
 </script>
 
@@ -87,9 +93,9 @@
     <AppTitle/>
     <PlaylistTitle/>
     <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/>
-    <Sidebar bind:this={sidebarBinder} on:loadedPlaylist={playlistBinder.resetScrollPos}/>
-	<PlaylistBar bind:this={playlistBinder}/>
-	<ButtonBar on:refresh={_refreshSidebar}/>
+    <Sidebar bind:this={sidebarBinder} on:loadedPlaylist={playlistBinder.resetScrollPos} on:regenPlaylist={regenPlaylist}/>
+	<PlaylistBar bind:this={playlistBinder} />
+	<ButtonBar bind:this={buttonBarBinder} on:refresh={refreshSidebar}/>
     <div id="main-content">
         {#if $viewCoverPath !== false}
             <CoverView src={$viewCoverPath}/>

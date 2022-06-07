@@ -16,25 +16,32 @@
         api.saveConfig("./config.json", $config, false)
     }
 
-    function _savePlaylist() {
+    export function _savePlaylist() {
         //console.log($playlistOnlyMode.real)
-        function _postSave() {
-            console.log("postSave")
-            dispatch("refresh", "sidebar")
-            $changesSaved = true
+
+        function _postSave(status: string) {
+            console.log("> (postSave) status: " + status)
+            if (status === "success") {
+                dispatch("refresh", "sidebar")
+                $changesSaved = true
+            }
         }
 
         if ($playlistOnlyMode.real) {
-            api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-            $config.comPlaylists[`${$maindir}${api.slash}${$playlistName}.m3u`] = [...$currPlaylist.map(item => {
-                return {
-                    filename: item.filename,
-                    fullpath: item.fullpath,
-                    relativepath: item.relativepath
-                }
-            })]
-            api.saveConfig("./config.json", $config, false)
-            _postSave()
+            const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
+            if (saveStatus === "success") {
+                $config.comPlaylists[`${$maindir}${api.slash}${$playlistName}.m3u`] = [...$currPlaylist.map(item => {
+                    return {
+                        filename: item.filename,
+                        fullpath: item.fullpath,
+                        relativepath: item.relativepath
+                    }
+                })]
+                api.saveConfig("./config.json", $config, false)
+                _postSave(saveStatus)
+            } else {
+                _postSave(saveStatus)
+            }
         } else if ($playlistOnlyMode.real === false && $currPlaylist.every(item => item.type === "playlist")) {
             //propose saving as playlist only.
             const question = "Do you want to save as combined playlist?"
@@ -44,16 +51,16 @@
                 $playlistOnlyMode.proposed = true
                 _savePlaylist()
             } else {
-                api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-                _postSave()
+                const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
+                _postSave(saveStatus)
             }
         } else {
-            api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-            _postSave()
+            const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
+            _postSave(saveStatus)
         }
     }
 
-    function _discardPlaylist() {
+    export function _discardPlaylist() {
         if ($changesSaved) {
             $currPlaylist = []
             $playlistName = ""
