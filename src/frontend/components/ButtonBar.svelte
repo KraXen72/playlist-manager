@@ -16,9 +16,7 @@
         api.saveConfig("./config.json", $config, false)
     }
 
-    function _savePlaylist() {
-        //console.log($playlistOnlyMode.real)
-
+    function _savePlaylist(): SaveSucess {
         if ($playlistOnlyMode.real) {
             const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
             if (saveStatus === "success") {
@@ -29,11 +27,9 @@
                         relativepath: item.relativepath
                     }
                 })]
-                api.saveConfig("./config.json", $config, false, "saving playlist")
-                return saveStatus
-            } else {
-                return saveStatus
+                return "success"
             }
+            return saveStatus
         } else if ($playlistOnlyMode.real === false && $currPlaylist.every(item => item.type === "playlist")) {
             //propose saving as playlist only.
             const question = "Do you want to save as combined playlist?"
@@ -41,7 +37,7 @@
             let confirmCombined = api.dialogApi.confirmdialog(question, details)
             if (confirmCombined) {
                 $playlistOnlyMode.proposed = true
-                _savePlaylist() //this might be a problem given the new return rewrite
+                return _savePlaylist()
             } else {
                 return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
             }
@@ -63,9 +59,12 @@
         }   
     }
 
+    /** save function */
     export function saveWrapper() {
+        //console.log($currPlaylist)
         const result = _savePlaylist() //wait for saving of playlist
         console.log("> (postSave) status: " + result)
+
         if (result === "success") {
             dispatch("refresh", "sidebar")
             $changesSaved = true

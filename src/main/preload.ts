@@ -301,7 +301,6 @@ async function gen(maindir: string, blacklist: string[], config: IConfig) {
 	for (let i = 0; i < alldirs.length; i++) {
 		const dir = alldirs[i];
 		genPromises.push( new Promise(resolve => generateM3U(dir.fullpath, config, tagDB).then(resolve)) )
-		//progress = `${i / alldirs.length * 100}%` //TODO proper progress tracking
 	}
 	await Promise.all(genPromises)
 	console.timeEnd("> (gen) generated all songs in: ")

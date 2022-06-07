@@ -86,6 +86,8 @@ declare global {
         proposed: Boolean,
         real: Boolean
     }
+
+    type SaveSucess = "success" | "fail"
 }
 
 export type IConfig = Config;

@@ -61,7 +61,7 @@
         })
     }
 
-    async function _generatePlaylists() {
+    export async function _generatePlaylists() {
         if (!genDisabled) {
             genDisabled = true
             await api.gen($maindir, blacklist, $config)
@@ -78,7 +78,7 @@
      * @param data the songitem data in SidebarPlaylists
      * @param doTick wether to wait for svelte to render an empty playlist bar. default is true
     */
-    function _editPlaylist(data: SongItemData, doTick = true) {
+    export function _editPlaylist(data: SongItemData, doTick = true) {
         const ASData = $allSongsAndPlaylists[data.allSongsIndex] as PlaylistSongItem
         //console.log(ASData, "isCom:", data.comPlaylist)
 
@@ -118,7 +118,7 @@
             }
 
             $changesSaved = true
-            dispatch("loadedPlaylist") //for the playlistBar to reset Scroll pos
+            if (doTick) dispatch("loadedPlaylist") //for the playlistBar to reset Scroll pos
         }
 
         if ($changesSaved && !$playlistOnlyMode.real) {
@@ -138,11 +138,8 @@
     }
 
     async function _regenPlaylist(playlist: SongItemData) {
-        console.log("starting regen...")
         console.time("> (regen) regened this playlist in: ")
-        await _generatePlaylists() //regen them
-        _editPlaylist(playlist, false) //load the playlist without ticking
-        dispatch("regenPlaylist") // make button bar save and discard the playlist
+        dispatch("regenPlaylist", playlist) // make button bar save and discard the playlist
     }
 
     let genDisabled = false

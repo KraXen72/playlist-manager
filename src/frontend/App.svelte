@@ -14,40 +14,87 @@
 
     const api = window.api
 
-
     $config = api.initOrLoadConfig("config.json")
     let searchDisabled = true
     let localTagDB = $tagDB
 
-    console.log("mounted")
-    const unsub = maindir.subscribe(val => {
-            $allSongs = api.walker.songs($maindir, $config)
-            console.log("fetched songs. checking if we have cached tags...")
+    let sidebarBinder: any, 
+        playlistBinder: any, 
+        buttonBarBinder: any
 
-            $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
-            //console.log($allPlaylists)
+    type RegenCustomEvent = { detail: SongItemData }
 
-            $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
+    // flow of regen (AAAAAAAAAAAAAAAAAA)
+    // Sidebar --- RegenCustomEvent ---> App.svelte
+    // App: regenPlaylist(RegenCustomEvent) - generates the playlist files
+    // App: setupAppStores(RegenCustomEvent) - re-initializes the app's stores
+    // App: setupAppStores: regenPlaylistPart2(RegenCustomEvent) - loads playlist, save it and discard it
 
-            // ($allSongs.length > Object.keys($tagDB).length && Object.keys($tagDB).length > 0)
-            localTagDB = api.initOrLoadConfig(`./db/${btoa($maindir)}.json`, {})
+    /**
+     * first part of regening playlist: generates new playlists and set ups app stores
+    */
+    async function regenPlaylist(event: RegenCustomEvent) {
+        await sidebarBinder._generatePlaylists()
+        _setupAppStores(event)
+    }
 
-            //check if all songs have a cached tag already or nah.
-            if ($allSongs.every(song => Object.keys(localTagDB).includes(song.filename))) {
-                console.log(`all ${Object.keys(localTagDB).length} songs have cached tags.`)
+    /** 
+     * second part of regening playlist: load, save and discard the playlist
+     * @param event a svelte CustomEvent. the detail is a SongItemData
+     */
+    function regenPlaylistPart2(event: RegenCustomEvent) {
+        sidebarBinder._editPlaylist( event.detail, false )
+        buttonBarBinder.saveWrapper()
+        buttonBarBinder._discardPlaylist()
+        $playlistOnlyMode.proposed = false
+
+        console.timeEnd("> (regen) regened this playlist in: ")
+        refreshSidebar()
+    }
+
+    /** 
+     * fully set up app stores by requesting them from the backend. 
+     * should only happen when app is refreshed or playlist is regenerated
+     * @param regen false if not regen, Event from regen custom event if true
+    */
+    function _setupAppStores(regen: RegenCustomEvent | false = false) {
+        $allSongs = api.walker.songs($maindir, $config)
+        console.log("fetched songs. checking if we have cached tags...")
+
+        $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
+        //console.log($allPlaylists)
+
+        $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
+
+        // ($allSongs.length > Object.keys($tagDB).length && Object.keys($tagDB).length > 0)
+        localTagDB = api.initOrLoadConfig(`./db/${btoa($maindir)}.json`, {})
+
+        //check if all songs have a cached tag already or nah.
+        //TODO rewrite with array.some, fetch tags for the someS
+        if ($allSongs.every(song => Object.keys(localTagDB).includes(song.filename))) {
+            console.log(`all ${Object.keys(localTagDB).length} songs have cached tags.`)
+            $tagDB = localTagDB
+            searchDisabled = false
+
+            if (regen !== false) regenPlaylistPart2(regen)
+        } else {
+            console.log("not all songs have cached tags. getting tags from songs...")
+            console.time(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
+            api.cacheTags($allSongs).then(val => {
+                localTagDB = val
+                api.saveConfig(`./db/${btoa($maindir)}.json`, localTagDB, true)
+                console.timeEnd(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
                 $tagDB = localTagDB
                 searchDisabled = false
-            } else {
-                console.log("not all songs have cached tags. getting tags from songs...")
-                console.time(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
-                api.cacheTags($allSongs).then(val => {
-                    localTagDB = val
-                    api.saveConfig(`./db/${btoa($maindir)}.json`, localTagDB, true)
-                    console.timeEnd(`fetched tags for all ${Object.keys(localTagDB).length} songs`)
-                    $tagDB = localTagDB
-                    searchDisabled = false
-                }).catch((e) => {console.error(e)})
-            }
+
+                if (regen !== false) regenPlaylistPart2(regen)
+            }).catch((e) => {console.error(e)})
+        }
+    }
+
+    console.log("mounted")
+    const unsub = maindir.subscribe(val => {
+            _setupAppStores()
 
             window.addEventListener("message", (event) => {
                 // event.source === window means the message is coming from the preload
@@ -67,24 +114,11 @@
         })
     onDestroy(unsub)
 
-    let sidebarBinder: any, 
-        playlistBinder: any, 
-        buttonBarBinder: any
-
     function refreshSidebar() {
         $allPlaylists = api.walker.playlists($maindir, $allSongs.length)
         $allSongsAndPlaylists = [...$allSongs, ...$allPlaylists]
         
         sidebarBinder.fetchPlaylists()
-    }
-
-    /** second part of regening playlist: save and discard afterwards */
-    function regenPlaylist() {
-        buttonBarBinder.saveWrapper()
-        buttonBarBinder._discardPlaylist()
-        $playlistOnlyMode.proposed = false
-
-        console.timeEnd("> (regen) regened this playlist in: ")
     }
 </script>
 
@@ -93,7 +127,11 @@
     <AppTitle/>
     <PlaylistTitle/>
     <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/>
-    <Sidebar bind:this={sidebarBinder} on:loadedPlaylist={playlistBinder.resetScrollPos} on:regenPlaylist={regenPlaylist}/>
+    <Sidebar 
+        bind:this={sidebarBinder} 
+        on:loadedPlaylist={playlistBinder.resetScrollPos} 
+        on:regenPlaylist={ event => regenPlaylist(event) }
+    />
 	<PlaylistBar bind:this={playlistBinder} />
 	<ButtonBar bind:this={buttonBarBinder} on:refresh={refreshSidebar}/>
     <div id="main-content">
