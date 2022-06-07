@@ -99,7 +99,8 @@
         </Label>
     </span>
     <span class="squishy">
-        <IconButton class="material-icons">settings</IconButton>
+        <!-- remove the onclick binding in prod -->
+        <IconButton class="material-icons" on:click={() => {console.log($currPlaylist)}}>settings</IconButton>
     </span>
 </div>
 
