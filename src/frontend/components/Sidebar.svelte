@@ -7,6 +7,7 @@
     import { config, maindir, allPlaylists, playlistOnlyMode, changesSaved, allSongsAndPlaylists, currPlaylist, playlistName } from '$common/stores'
     import { onDestroy, tick, createEventDispatcher } from 'svelte'
     import { getExtOrFn } from '$rblib/esm/lib';
+    import { toast } from '$common/toast'
 
     const api = window.api
     const dispatch = createEventDispatcher()
@@ -61,11 +62,16 @@
         })
     }
 
-    export async function _generatePlaylists() {
+    /**
+     * generate playlists.
+     * @param tick if it's an Event, it comes from here and should toast. if false, don't emit toast
+    */
+    export async function generatePlaylists(tick: Event | false) {
         if (!genDisabled) {
             genDisabled = true
             await api.gen($maindir, blacklist, $config)
             genDisabled = false
+            if (tick !== false) toast.success("Generated Playlists!")
             return "success"
         } else {
             console.error("already generating, don't spam")
@@ -78,7 +84,7 @@
      * @param data the songitem data in SidebarPlaylists
      * @param doTick wether to wait for svelte to render an empty playlist bar. default is true
     */
-    export function _editPlaylist(data: SongItemData, doTick = true) {
+    export function editPlaylist(data: SongItemData, doTick = true) {
         const ASData = $allSongsAndPlaylists[data.allSongsIndex] as PlaylistSongItem
         //console.log(ASData, "isCom:", data.comPlaylist)
 
@@ -154,7 +160,7 @@
         <Button 
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
-            on:click={_generatePlaylists}>Generate Playlists</Button>
+            on:click={generatePlaylists}>Generate Playlists</Button>
         <Button 
             variant="outlined" 
             class="mdbutton mdborder fullwidth"
@@ -178,7 +184,7 @@
                 {#if ply.comPlaylist } 
                     <SongItemButton icon="autorenew" desc="{regenExplanation}" on:click={() => _regenPlaylist(ply)}/> 
                 {/if}
-                <SongItemButton icon="drive_file_rename_outline" desc="Edit Playlist" on:click={() => _editPlaylist(ply)}/>
+                <SongItemButton icon="drive_file_rename_outline" desc="Edit Playlist" on:click={() => editPlaylist(ply)}/>
             </SongItem>
         {/each}
     </div>

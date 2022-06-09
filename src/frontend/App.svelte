@@ -12,6 +12,9 @@
     import { config, maindir, allSongs, detailsData, extraDetailsData, tagDB, allPlaylists, allSongsAndPlaylists, viewCoverPath, playlistOnlyMode, currPlaylist } from './common/stores'
     import { onDestroy } from 'svelte';
 
+    import { SvelteToast } from '@zerodevx/svelte-toast';
+    import { toast } from '$common/toast'
+
     const api = window.api
 
     $config = api.initOrLoadConfig("config.json")
@@ -34,7 +37,7 @@
      * first part of regening playlist: generates new playlists and set ups app stores
     */
     async function regenPlaylist(event: RegenCustomEvent) {
-        await sidebarBinder._generatePlaylists()
+        await sidebarBinder.generatePlaylists(false)
         _setupAppStores(event)
     }
 
@@ -43,12 +46,13 @@
      * @param event a svelte CustomEvent. the detail is a SongItemData
      */
     function regenPlaylistPart2(event: RegenCustomEvent) {
-        sidebarBinder._editPlaylist( event.detail, false )
+        sidebarBinder.editPlaylist( event.detail, false )
         buttonBarBinder.saveWrapper()
-        buttonBarBinder._discardPlaylist()
+        buttonBarBinder.discardPlaylist()
         $playlistOnlyMode.proposed = false
 
         console.timeEnd("> (regen) regened this playlist in: ")
+        toast.success(`re-generated '${event.detail.title}'`)
         //refreshSidebar()
     }
 
@@ -120,6 +124,11 @@
         
         sidebarBinder.fetchPlaylists()
     }
+
+    const toastOptions = {
+        duration: 2500,
+        reversed: true
+    }
 </script>
 
 
@@ -141,6 +150,7 @@
         <DetailsView {...$detailsData}/>
         <ExtraDetailsView hide={true} data={$extraDetailsData}/>
     </div>
+    <SvelteToast options={toastOptions} />
 </main>
 
 <div id="moremenu" class="hidden">
@@ -169,5 +179,22 @@
         padding-right: 1rem;
         box-sizing: border-box;
     }
+
+    :root {
+        --toastContainerTop: auto;
+        --toastContainerRight: .5rem;
+        --toastContainerBottom: 3.5rem;
+        --toastContainerLeft: auto;
+
+        --toastBackground: var(--bg-secondary);
+        --toastColor: var(--text);
+        --toastBorderRadius: var(--mdc-shape-small, 4px);
+        --toastMsgPadding: 1rem;
+        --toastWidth: max-content;
+
+        --toastBarHeight: 3px;
+        --toastBarBackground: var(--fg-rosebox);
+    }
+    
 </style>
 

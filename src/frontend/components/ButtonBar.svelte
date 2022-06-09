@@ -1,6 +1,7 @@
 <script lang="ts">
     import Button, {Label, Group} from '@smui/button';
     import IconButton from '@smui/icon-button';
+    import { toast } from '$common/toast';
 
     import { config, currPlaylist, maindir, playlistName, playlistOnlyMode, changesSaved } from '$common/stores';
     import { createEventDispatcher, onDestroy } from 'svelte';
@@ -46,7 +47,7 @@
         }
     }
 
-    export function _discardPlaylist() {
+    export function discardPlaylist() {
         if ($changesSaved) {
             $currPlaylist = []
             $playlistName = ""
@@ -92,7 +93,7 @@
         <Button 
             variant="outlined" 
             class="smui-icon-btn"
-            on:click={_discardPlaylist}>
+            on:click={discardPlaylist}>
             <Label class="material-icons">close</Label>
         </Button>
     </Group>
@@ -105,7 +106,7 @@
     </span>
     <span class="squishy">
         <!-- remove the onclick binding in prod -->
-        <IconButton class="material-icons" on:click={() => {console.log($currPlaylist)}}>settings</IconButton>
+        <IconButton class="material-icons" on:click={() => {console.log($currPlaylist); toast.info() }}>settings</IconButton>
     </span>
 </div>
 

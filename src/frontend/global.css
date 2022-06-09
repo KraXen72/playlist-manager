@@ -55,3 +55,5 @@
         transform: none;
     }
 }
+
+._toastItem { max-width: 28rem }
