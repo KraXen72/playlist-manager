@@ -15,9 +15,10 @@
         let temp = api.dialogApi.pickFolder("Pick the main music folder") ?? [$config.maindir]
         $config.maindir = temp[0]
         api.saveConfig("./config.json", $config, false)
-    }
+    }  
 
-    function _savePlaylist(): SaveSucess {
+    /** the function that actually saves the playlist */
+    function _internalSavePlaylist(): SaveSucess {
         if ($playlistOnlyMode.real) {
             const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
             if (saveStatus === "success") {
@@ -38,7 +39,7 @@
             let confirmCombined = api.dialogApi.confirmdialog(question, details)
             if (confirmCombined) {
                 $playlistOnlyMode.proposed = true
-                return _savePlaylist()
+                return _internalSavePlaylist()
             } else {
                 return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
             }
@@ -60,14 +61,15 @@
         }   
     }
 
-    /** save function */
-    export function saveWrapper() {
+    //TODO refactor this into 1 function
+    /** save function, calls internal function does postsave stuff */
+    export function savePlaylist(doTick: Event | false) {
         //console.log($currPlaylist)
-        const result = _savePlaylist() //wait for saving of playlist
+        const result = _internalSavePlaylist() //wait for saving of playlist
         console.log("> (postSave) status: " + result)
 
         if (result === "success") {
-            toast.success("Saved playlist!")
+            if (doTick !== false) toast.success("Saved playlist!")
             dispatch("refresh", "sidebar")
             $changesSaved = true
         }
@@ -88,7 +90,7 @@
         <Button 
             variant="outlined" 
             class="smui-icon-btn"
-            on:click={saveWrapper}>
+            on:click={savePlaylist}>
             <Label class="material-icons {`${$changesSaved === false ? "btn-danger" : ""}`}">save</Label>
         </Button>
         <Button 
