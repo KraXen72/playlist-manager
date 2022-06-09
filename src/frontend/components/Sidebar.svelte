@@ -67,12 +67,12 @@
      * generate playlists.
      * @param tick if it's an Event, it comes from here and should toast. if false, don't emit toast
     */
-    export async function generatePlaylists(tick: Event | false) {
+    export async function generatePlaylists(doTick: Event | false) {
         if (!genDisabled) {
             genDisabled = true
             await api.gen($maindir, blacklist, $config)
             genDisabled = false
-            if (tick !== false) toast.success("Generated Playlists!")
+            if (doTick !== false) toast.success("Generated Playlists!")
             return "success"
         } else {
             console.error("already generating, don't spam")
