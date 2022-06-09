@@ -47,7 +47,7 @@
      */
     function regenPlaylistPart2(event: RegenCustomEvent) {
         sidebarBinder.editPlaylist( event.detail, false )
-        buttonBarBinder.saveWrapper()
+        buttonBarBinder.savePlaylist( false )
         buttonBarBinder.discardPlaylist()
         $playlistOnlyMode.proposed = false
 
