@@ -9,7 +9,7 @@ const opts = {
 
 export const toast = {
     success: (text: string = "Success!") => {
-        t.push(text, { ...opts, theme: { '--toastBarBackground': '#a3be8c'} })
+        t.push(text, { ...opts, theme: { '--toastBarBackground': 'rgb(103, 165, 139)'} })
     },
     info: (text: string = "Info") => {
         t.push(text, { ...opts, duration: 3000, pausable: true })
