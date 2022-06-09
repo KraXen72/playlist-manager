@@ -222,10 +222,11 @@ const currentPlaylist = {
 			}
 
 			fs.writeFileSync(`${maindir}${slash}${playlistName}.m3u`, unWrapped.join("\n"), { encoding: "utf-8" })
-			new Notification("playlist-manager", {
-				body: `Your playlist has been saved to:\n${maindir}${slash}${playlistName}.m3u`,
-				icon: playlistImg
-			})
+			//TODO maybe re-enable this notif
+			// new Notification("playlist-manager", {
+			// 	body: `Your playlist has been saved to:\n${maindir}${slash}${playlistName}.m3u`,
+			// 	icon: playlistImg
+			// })
 			return "success"
 		} else {
 			dialogApi.infodialog("Please name your playlist before saving")
@@ -307,7 +308,7 @@ async function gen(maindir: string, blacklist: string[], config: IConfig) {
 	return true
 };
 
-function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
+function deleteGeneratedPlaylists(maindir: string, config: IConfig): SaveSucess {
 	let ePlaylists = walker.editablePlaylists(maindir)
 
 	let generatedPlaylists = fsWalk.walkSync(maindir, { stats: true })
@@ -329,9 +330,13 @@ function deleteGeneratedPlaylists(maindir: string, config: IConfig) {
 				fs.unlinkSync(playlist.fullpath)
 			})
 			console.log("deleted all generated playlists")
+			return "success"
 		}
+		console.log("user cancelled")
+		return "fail"
 	} else {
 		console.log("no playlists to delete")
+		return "fail"
 	}
 }
 

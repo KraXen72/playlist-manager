@@ -22,7 +22,8 @@
         return $allPlaylists.find(playlist => playlist.fullpath === fullpath)
     }
     function _deleteGeneratedPlaylists() {
-        api.deleteGeneratedPlaylists($maindir, $config)
+        const res = api.deleteGeneratedPlaylists($maindir, $config)
+        if (res === "success") toast.success("Deleted generated Playlists")
     }
 
     /**

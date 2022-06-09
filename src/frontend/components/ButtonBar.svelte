@@ -67,6 +67,7 @@
         console.log("> (postSave) status: " + result)
 
         if (result === "success") {
+            toast.success("Saved playlist!")
             dispatch("refresh", "sidebar")
             $changesSaved = true
         }
@@ -106,7 +107,9 @@
     </span>
     <span class="squishy">
         <!-- remove the onclick binding in prod -->
-        <IconButton class="material-icons" on:click={() => {console.log($currPlaylist); toast.info() }}>settings</IconButton>
+        <IconButton 
+            class="material-icons" 
+            on:click={() => {console.log($currPlaylist); toast.info("logged $currPlaylist") }}>settings</IconButton>
     </span>
 </div>
 

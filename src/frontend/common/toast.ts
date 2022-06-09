@@ -4,14 +4,14 @@ const opts = {
     reversed: true,
     initial: 0,
     next: 1,
-    duration: 5000
+    duration: 4250
 }
 
 export const toast = {
     success: (text: string = "Success!") => {
-        t.push(text, { theme: { '--toastBarBackground': '#a3be8c'}, ...opts })
+        t.push(text, { ...opts, theme: { '--toastBarBackground': '#a3be8c'} })
     },
     info: (text: string = "Info") => {
-        t.push(text, opts)
+        t.push(text, { ...opts, duration: 3000, pausable: true })
     }
 }

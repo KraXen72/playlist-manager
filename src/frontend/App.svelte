@@ -52,7 +52,7 @@
         $playlistOnlyMode.proposed = false
 
         console.timeEnd("> (regen) regened this playlist in: ")
-        toast.success(`re-generated '${event.detail.title}'`)
+        toast.success(`re-generated '${event.detail.album}'`)
         //refreshSidebar()
     }
 
@@ -179,22 +179,5 @@
         padding-right: 1rem;
         box-sizing: border-box;
     }
-
-    :root {
-        --toastContainerTop: auto;
-        --toastContainerRight: .5rem;
-        --toastContainerBottom: 3.5rem;
-        --toastContainerLeft: auto;
-
-        --toastBackground: var(--bg-secondary);
-        --toastColor: var(--text);
-        --toastBorderRadius: var(--mdc-shape-small, 4px);
-        --toastMsgPadding: 1rem;
-        --toastWidth: max-content;
-
-        --toastBarHeight: 3px;
-        --toastBarBackground: var(--fg-rosebox);
-    }
-    
 </style>
 

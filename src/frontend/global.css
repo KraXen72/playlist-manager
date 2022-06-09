@@ -56,4 +56,22 @@
     }
 }
 
-._toastItem { max-width: 28rem }
+:root {
+    --toastContainerTop: 5rem;
+    --toastContainerRight: .5rem;
+    --toastContainerBottom: auto;
+    --toastContainerLeft: auto;
+    
+
+    --toastBackground: var(--bg-secondary);
+    --toastColor: var(--text);
+    --toastBorderRadius: var(--mdc-shape-small, 4px);
+    --toastMsgPadding: 1rem;
+    --toastWidth: 20rem;
+    --toastMargin: 0 0 0.5rem auto;
+
+    --toastBarHeight: 3px;
+    --toastBarBackground: var(--fg-rosebox);
+}
+
+/* ._toastItem { max-width: 28rem } */
