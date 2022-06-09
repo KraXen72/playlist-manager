@@ -61,6 +61,8 @@ declare global {
         bold: boolean,
         nocover: boolean,
         type?: "song" | "playlist", //song or playlis
+
+        // playlist specific, optional stuff for sidebar
         comPlaylist?: boolean
     }
     
