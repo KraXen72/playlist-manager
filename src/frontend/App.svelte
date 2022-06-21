@@ -46,6 +46,7 @@
      * @param event a svelte CustomEvent. the detail is a SongItemData
      */
     function regenPlaylistPart2(event: RegenCustomEvent) {
+        //TODO handle user not wanting to discard the current playlist when re-genning
         sidebarBinder.editPlaylist( event.detail, false )
         buttonBarBinder.savePlaylist( false )
         buttonBarBinder.discardPlaylist()
