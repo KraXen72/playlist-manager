@@ -17,37 +17,6 @@
         api.saveConfig("./config.json", $config, false)
     }  
 
-    /** the function that actually saves the playlist */
-    function _internalSavePlaylist(): SaveSucess {
-        if ($playlistOnlyMode.real) {
-            const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-            if (saveStatus === "success") {
-                $config.comPlaylists[`${$maindir}${api.slash}${$playlistName}.m3u`] = [...$currPlaylist.map(item => {
-                    return {
-                        filename: item.filename,
-                        fullpath: item.fullpath,
-                        relativepath: item.relativepath
-                    }
-                })]
-                return "success"
-            }
-            return saveStatus
-        } else if ($playlistOnlyMode.real === false && $currPlaylist.every(item => item.type === "playlist")) {
-            //propose saving as playlist only.
-            const question = "Do you want to save as combined playlist?"
-            const details = "Your playlist only contains playlists. Do you want to save it as a combined playlist? Combined playlists can be later regenerated if you add any songs to them."
-            let confirmCombined = api.dialogApi.confirmdialog(question, details)
-            if (confirmCombined) {
-                $playlistOnlyMode.proposed = true
-                return _internalSavePlaylist()
-            } else {
-                return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-            }
-        } else {
-            return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
-        }
-    }
-
     export function discardPlaylist() {
         if ($changesSaved) {
             $currPlaylist = []
@@ -61,10 +30,38 @@
         }   
     }
 
-    //TODO refactor this into 1 function
     /** save function, calls internal function does postsave stuff */
     export function savePlaylist(doTick: Event | false) {
-        //console.log($currPlaylist)
+        function _internalSavePlaylist(): SaveSucess {
+            if ($playlistOnlyMode.real) {
+                const saveStatus = api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
+                if (saveStatus === "success") {
+                    $config.comPlaylists[`${$maindir}${api.slash}${$playlistName}.m3u`] = [...$currPlaylist.map(item => {
+                        return {
+                            filename: item.filename,
+                            fullpath: item.fullpath,
+                            relativepath: item.relativepath
+                        }
+                    })]
+                    return "success"
+                }
+                return saveStatus
+            } else if ($playlistOnlyMode.real === false && $currPlaylist.every(item => item.type === "playlist")) {
+                //propose saving as playlist only.
+                const question = "Do you want to save as combined playlist?"
+                const details = "Your playlist only contains playlists. Do you want to save it as a combined playlist? Combined playlists can be later regenerated if you add any songs to them."
+                let confirmCombined = api.dialogApi.confirmdialog(question, details)
+                if (confirmCombined) {
+                    $playlistOnlyMode.proposed = true
+                    return _internalSavePlaylist()
+                } else {
+                    return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
+                }
+            } else {
+                return api.currentPlaylist.save($currPlaylist, $maindir, $playlistName, playlistImg)
+            }
+        }
+
         const result = _internalSavePlaylist() //wait for saving of playlist
         console.log("> (postSave) status: " + result)
 
