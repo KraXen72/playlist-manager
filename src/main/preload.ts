@@ -384,7 +384,7 @@ async function getEXTINF(song: string, onlysong: string, returnObj: boolean, ski
 		extrainfo = {
 			size: (lstat.size / 1000000).toFixed(2).toString() + " MB",
 			format: metadata.format.codec,
-			bitrate: Math.round(metadata?.format?.bitrate ?? 1000 / 1000).toString() + " kb/s",
+			bitrate: Math.round((metadata?.format?.bitrate ?? 1000) / 1000).toString() + " kb/s",
 			samplerate: metadata.format.sampleRate?.toString() + " Hz",
 			genre: metadata.common?.genre?.join(" / ") ?? "Unknown Genre",
 			year: metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
