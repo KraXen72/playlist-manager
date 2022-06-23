@@ -3,9 +3,10 @@
 
     export let icon = "adjust" //placeholder icon
     export let desc = "this is a SongItemButton"
+    export let disabled = false
 </script>
 
-<button class="songitem-button noselect" on:click title={desc}>
+<button class="songitem-button noselect" on:click title={desc} { disabled }>
     <Icon class="material-icons" touch>{icon}</Icon>
 </button>
 
@@ -22,6 +23,11 @@
         color: var(--text);
         transition: opacity 0.1s;
     }
+    .songitem-button:disabled {
+        opacity: .5;
+        pointer-events: none;
+    }
+
     .songitem-button:focus-visible{
         outline: none !important;
         color: white;

@@ -10,6 +10,7 @@
 
     const api = window.api
     const dispatch = createEventDispatcher()
+    export let disabled = false
 
     function pick() {
         let temp = api.dialogApi.pickFolder("Pick the main music folder") ?? [$config.maindir]
@@ -85,12 +86,14 @@
 <div id="button-bar">
     <Group variant="outlined">
         <Button 
+            { disabled }
             variant="outlined" 
             class="smui-icon-btn"
             on:click={savePlaylist}>
             <Label class="material-icons {`${$changesSaved === false ? "btn-danger" : ""}`}">save</Label>
         </Button>
         <Button 
+            { disabled }
             variant="outlined" 
             class="smui-icon-btn"
             on:click={discardPlaylist}>
@@ -99,7 +102,7 @@
     </Group>
     <span class="button-separator">&nbsp;|&nbsp;</span>
     <span class="folder-select">
-        <Button variant="outlined" class="mdborder mdbutton" on:click={pick}>Select</Button>
+        <Button variant="outlined" class="mdborder mdbutton" on:click={pick} { disabled } >Select</Button>
         <Label>
             {$config.maindir || "No folder selected"}
         </Label>

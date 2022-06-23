@@ -13,6 +13,7 @@
     const dispatch = createEventDispatcher()
 
     let sidebarPlaylists: SongItemData[] = []
+    export let disabled = true
 
     const blacklist = $config.ignore
     const pomExplanation = "playlist-only mode: make a combined playlist out of more playlists that later can be easily refreshed/regenerated"
@@ -145,6 +146,14 @@
     }
 
     async function _regenPlaylist(playlist: SongItemData) {
+        if (!$changesSaved) { //make sure user discards a playlist before re-generating
+            if (api.dialogApi.confirmDiscard()) {
+                $currPlaylist = []
+                $playlistName = ""
+                $changesSaved = true
+            } else { return ; }
+        }
+
         console.time("> (regen) regened this playlist in: ")
         dispatch("regenPlaylist", playlist) // make button bar save and discard the playlist
     }
@@ -159,15 +168,15 @@
     <div class="sidebar-buttons">
         <!-- i added an :if block to only render the gen button when it's not generating but it did the generation so fast, it didn't even dissaper, it just stayed there. i will add a success toast rather than block the button later. -->
         <Button 
-            variant="outlined" 
+            variant="outlined" { disabled }
             class="mdbutton mdborder fullwidth"
             on:click={generatePlaylists}>Generate Playlists</Button>
         <Button 
-            variant="outlined" 
+            variant="outlined" { disabled }
             class="mdbutton mdborder fullwidth"
             on:click={_deleteGeneratedPlaylists}>Delete generated Playlists</Button>
         <Button 
-            variant="outlined" 
+            variant="outlined" { disabled }
             class="mdbutton mdborder fullwidth"
             title={pomExplanation}
             on:click={() => {$playlistOnlyMode.proposed = !$playlistOnlyMode.proposed}}>
@@ -183,9 +192,19 @@
         {#each sidebarPlaylists as ply}
             <SongItem data={ply} noFly={true}>
                 {#if ply.comPlaylist } 
-                    <SongItemButton icon="autorenew" desc="{regenExplanation}" on:click={() => _regenPlaylist(ply)}/> 
+                    <SongItemButton
+                        { disabled } 
+                        icon="autorenew" 
+                        desc="{regenExplanation}" 
+                        on:click={() => _regenPlaylist(ply)}
+                    /> 
                 {/if}
-                <SongItemButton icon="drive_file_rename_outline" desc="Edit Playlist" on:click={() => editPlaylist(ply)}/>
+                <SongItemButton 
+                    { disabled }
+                    icon="drive_file_rename_outline" 
+                    desc="Edit Playlist" 
+                    on:click={() => editPlaylist(ply)}
+                />
             </SongItem>
         {/each}
     </div>

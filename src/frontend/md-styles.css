@@ -58,3 +58,7 @@
 .mdc-linear-progress__primary-bar {
   transition: transform 0.7s ease-in-out;
 }
+
+.mdc-button--outlined:disabled {
+  color: var(--text-secondary)
+}

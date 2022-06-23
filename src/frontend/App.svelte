@@ -37,6 +37,7 @@
      * first part of regening playlist: generates new playlists and set ups app stores
     */
     async function regenPlaylist(event: RegenCustomEvent) {
+        searchDisabled = true
         await sidebarBinder.generatePlaylists(false)
         _setupAppStores(event)
     }
@@ -54,6 +55,7 @@
 
         console.timeEnd("> (regen) regened this playlist in: ")
         toast.success(`re-generated '${event.detail.album}'`)
+        searchDisabled = false
         //refreshSidebar()
     }
 
@@ -136,14 +138,15 @@
 <main id="main-grid">
     <AppTitle/>
     <PlaylistTitle/>
-    <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/>
+    <SearchBar completeFrom={$allSongsAndPlaylists} disabled={searchDisabled}/> <!-- searchDisabled -->
     <Sidebar 
         bind:this={sidebarBinder} 
         on:loadedPlaylist={playlistBinder.resetScrollPos} 
         on:regenPlaylist={ event => regenPlaylist(event) }
+        disabled={searchDisabled}
     />
 	<PlaylistBar bind:this={playlistBinder} />
-	<ButtonBar bind:this={buttonBarBinder} on:refresh={refreshSidebar}/>
+	<ButtonBar bind:this={buttonBarBinder} on:refresh={refreshSidebar} disabled={searchDisabled}/>
     <div id="main-content">
         {#if $viewCoverPath !== false}
             <CoverView src={$viewCoverPath}/>
