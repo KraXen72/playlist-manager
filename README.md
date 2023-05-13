@@ -1,6 +1,6 @@
 # playlist-manager
 
-easy to use tool to manage offline music playlists cross-device. (work in progress but core functionality is done)
+easy to use tool to manage offline music playlists cross-device. v1 (master branch) is done, v2 is in progress.
 ![app](https://cdn.discordapp.com/attachments/572445509235507252/840270887272841226/Capture_2021_m05.d07_1856.png)
 
 ## Use cases:
@@ -69,6 +69,11 @@ you can do all this with yarn instead of npm but npm works too
 - more in-app explanations of what button does what
 - proper electron window branding, not electron-quick-start
 - reordering of songs in playlist
+
+## support development
+[![Recurring donation via Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/KraXen72)
+[![One-time donation via ko-fi.com](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/kraxen72)  
+Any donations are highly appreciated! <3
 
 ## Credits:
 thanks to all the libraries used in this project:
