@@ -1,4 +1,5 @@
 # playlist-manager
+> a v2 rewrite in svelte & typescript is in-progress on the other branch, but has been paused indefinetly due to lack of time.
 
 easy to use tool to manage offline music playlists cross-device. v1 (master branch) is done, v2 is in progress.
 ![app](https://cdn.discordapp.com/attachments/572445509235507252/840270887272841226/Capture_2021_m05.d07_1856.png)
