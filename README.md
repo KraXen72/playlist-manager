@@ -1,6 +1,6 @@
 # playlist-manager
 
-easy to use tool to manage offline music playlists cross-device. v1 (master branch) is done, v2 is in progress.
+easy to use tool to manage offline music playlists cross-device.
 ![app](./screenshots/Capture_2021_m05.d07_1856.png)
 
 ## Use cases:
@@ -34,21 +34,20 @@ The best part is, this app uses relative paths in it's playlists, so if you just
 
 ## Installing
 
-**installing through npm**
-required: ``nodejs``  
+**installing through [pnpm](https://pnpm.io/installation)**
+required: `nodejs` 
 run in command prompt:  
-``npm i https://github.com/KraXen72/playlist-manager.git -g`` this will install the app globally 
+`pnpm add -g https://github.com/KraXen72/playlist-manager.git` this will install the app globally 
 to launch the program, type ``playlistm`` in terminal or windows search.
 
 **running from source**
 required: ``nodejs, git``  
 run in command prompt:  
-1. ``git clone https://github.com/KraXen72/playlist-manager``
-2. ``cd playlist-manager``
-3. ``npm i``
-4. ``npm run start`` to run the program
+1. `git clone https://github.com/KraXen72/playlist-manager`
+2. `cd playlist-manager`
+3. `pnpm i`
+4. `pnpm run start` to run the program
   
-you can do all this with yarn instead of npm but npm works too
 
 ## Other Features:
 ### General:
@@ -68,7 +67,6 @@ you can do all this with yarn instead of npm but npm works too
 - option search songs by artist, not title
 - more in-app explanations of what button does what
 - proper electron window branding, not electron-quick-start
-- reordering of songs in playlist
 
 ## support development
 [![Recurring donation via Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/KraXen72)
