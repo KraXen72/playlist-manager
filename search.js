@@ -5,6 +5,11 @@ function search(songs, query, options) {
     const results = songs.filter(song => {
         if (!filename && !artist && !album) return false;
 
+        // group objects (artist/album) always match by their own name
+        if (song.type === 'artist' || song.type === 'album') {
+            return song.filename.toLowerCase().includes(lowerQuery)
+        }
+
         const matches = [];
         if (filename && song.filename) matches.push(song.filename.toLowerCase().includes(lowerQuery));
         if (artist && song.tag?.artist) matches.push(song.tag.artist.toLowerCase().includes(lowerQuery));

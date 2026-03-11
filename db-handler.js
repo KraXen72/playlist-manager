@@ -3,6 +3,10 @@ const fs = require('fs')
 
 let stmtGet = null
 let stmtUpsert = null
+let stmtDistinctArtists = null
+let stmtDistinctAlbums = null
+let stmtPathsByArtist = null
+let stmtPathsByAlbum = null
 
 function openTagCache() {
 	const tagDb = new DatabaseSync('./tagcache.db')
@@ -26,6 +30,10 @@ function openTagCache() {
     `)
 	stmtGet = tagDb.prepare('SELECT * FROM tags WHERE path = ?')
 	stmtUpsert = tagDb.prepare('INSERT OR REPLACE INTO tags VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+	stmtDistinctArtists = tagDb.prepare('SELECT artist, COUNT(*) as cnt FROM tags GROUP BY artist ORDER BY artist')
+	stmtDistinctAlbums = tagDb.prepare('SELECT album, COUNT(*) as cnt FROM tags GROUP BY album ORDER BY album')
+	stmtPathsByArtist = tagDb.prepare('SELECT path FROM tags WHERE artist = ?')
+	stmtPathsByAlbum = tagDb.prepare('SELECT path FROM tags WHERE album = ?')
 	console.log('tagcache: opened ./tagcache.db')
 }
 
@@ -88,6 +96,11 @@ function upsertTag(songPath, tag) {
 	)
 }
 
+function getDistinctArtists() { return stmtDistinctArtists ? stmtDistinctArtists.all() : [] }
+function getDistinctAlbums() { return stmtDistinctAlbums ? stmtDistinctAlbums.all() : [] }
+function getPathsByArtist(name) { return stmtPathsByArtist ? stmtPathsByArtist.all(name).map(r => r.path) : [] }
+function getPathsByAlbum(name) { return stmtPathsByAlbum ? stmtPathsByAlbum.all(name).map(r => r.path) : [] }
+
 openTagCache()
 
-module.exports = { getTag, upsertTag }
+module.exports = { getTag, upsertTag, getDistinctArtists, getDistinctAlbums, getPathsByArtist, getPathsByAlbum }

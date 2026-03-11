@@ -47,6 +47,8 @@ var specialMode = false
 var searchModes = new Set(['filename'])
 var dragSrcEl = null
 var allSongsAreTagged = false
+var allArtistObjs = []
+var allAlbumObjs = []
 var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 var highlightedSong = null //currently highlighted autocomplete result
 
@@ -134,6 +136,22 @@ async function notReady(mode) { //true, turn on notReady, false, turn off notrea
 }
 
 //autocomplete
+function buildGroupObjects() {
+    allArtistObjs = config.includeArtistResults
+        ? db.getDistinctArtists().map((row, i) => ({
+            filename: row.artist, fullpath: `__artist__:${row.artist}`,
+            relativepath: null, type: 'artist', index: `artist-${i}`, songs: null,
+            tag: { title: row.artist, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
+        }))
+        : []
+    allAlbumObjs = config.includeAlbumResults
+        ? db.getDistinctAlbums().map((row, i) => ({
+            filename: row.album, fullpath: `__album__:${row.album}`,
+            relativepath: null, type: 'album', index: `album-${i}`, songs: null,
+            tag: { title: row.album, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
+        }))
+        : []
+}
 
 //autocomplete
 function setupAutocomplete(message) {
@@ -142,6 +160,10 @@ function setupAutocomplete(message) {
         search: input => {
             if (input.length < 1 && !specialMode && autocompArr === "both") { return [] }
             let res = autocompArr === "both" ? songsAndPlaylists : autocompArr === "playlists" ? allPlaylists : []
+            if (autocompArr === "both" && allSongsAreTagged) {
+                if (config.includeArtistResults) res = [...res, ...allArtistObjs]
+                if (config.includeAlbumResults) res = [...res, ...allAlbumObjs]
+            }
 
             const options = {
                 filename: searchModes.has('filename'),
@@ -178,10 +200,13 @@ function setupAutocomplete(message) {
         autoSelect: true,
         submitOnEnter: true,
         getResultValue: result => {
+            if (result.type === 'artist' || result.type === 'album') return result.filename
             return utils.getExtOrFn(result.filename).fn
         },
         renderResult: (result, props) => {
-            const filename = utils.getExtOrFn(result.filename).fn
+            const filename = (result.type === 'artist' || result.type === 'album')
+                ? result.filename
+                : utils.getExtOrFn(result.filename).fn
             let icon = ''
             let title = ''
             
@@ -208,6 +233,14 @@ function setupAutocomplete(message) {
 }
 //autocomplete onSubmit
 async function autocompleteSubmit(result, refocus, update) {
+    // Lazily populate songs for artist/album group objects on first selection
+    if ((result.type === 'artist' || result.type === 'album') && !result.songs) {
+        const paths = result.type === 'artist'
+            ? db.getPathsByArtist(result.filename)
+            : db.getPathsByAlbum(result.filename)
+        result.songs = paths.map(p => songsAndPlaylists.find(s => s.fullpath === p)).filter(Boolean)
+    }
+
     if (update !== undefined) {
         await updatePreview(result, false, update) //update preview without updating, basically just tag song
     } else {
@@ -324,6 +357,7 @@ function toggleSearchMode(mode) {
                 }
 
                 allSongsAreTagged = true
+                buildGroupObjects()
                 sprog.style.width = `100%`
                 setTimeout(() => { sprog.style.opacity = `0%` }, 500)
                 setTimeout(() => { sprog.style.width = `0%` }, 1250)
@@ -374,6 +408,8 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
                     album: utils.shortenFilename(song.fullpath, 55),
                     cover: config.comPlaylists[song.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
                 }
+            } else if (song.type === 'artist' || song.type === 'album') {
+                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: 'img/playlist.png' }
             }
             song.tag = tag
             document.getElementById("song-preview").setAttribute("index", song.index.toString())
@@ -695,6 +731,11 @@ function getPlaylistContent() {
                     play.push([relpath, item].join(pslash))
                 }
             }
+        } else if (song.type === 'artist' || song.type === 'album') {
+            for (const s of song.songs ?? []) {
+                play.push(s.tag.extinf)
+                play.push(s.relativepath.replaceAll(slash, pslash))
+            }
         }
     }
     //it saves all paths with normal slashes
@@ -733,6 +774,8 @@ async function addSong(songobj, refocus) {
         imgpath = `covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
     } else if (songobj.type === "playlist") {
         imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
+    } else if (songobj.type === 'artist' || songobj.type === 'album') {
+        imgpath = 'img/playlist.png'
     }
 
     songElem.className = "songitem"
@@ -807,6 +850,18 @@ async function addSong(songobj, refocus) {
                     }
                     dialog.showMessageBoxSync({
                         message: msg,
+                        type: "info",
+                        noLink: true
+                    })
+                }
+            })
+        } else if (songobj.type === 'artist' || songobj.type === 'album') {
+            opt.menuItems.push({
+                text: "Details",
+                run: () => {
+                    const list = (songobj.songs ?? []).map(s => s.tag?.title ?? s.filename).join("\n")
+                    dialog.showMessageBoxSync({
+                        message: `${songobj.type === 'artist' ? 'Artist' : 'Album'}: ${songobj.filename}\n\n${list}`,
                         type: "info",
                         noLink: true
                     })
