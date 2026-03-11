@@ -30,7 +30,8 @@ function search(songs, query, options) {
         return aLower.localeCompare(bLower);
     });
 
-    return results;
+    // cap results to avoid returning excessively large arrays
+    return results.slice(0, 100);
 }
 
 module.exports = { search };
