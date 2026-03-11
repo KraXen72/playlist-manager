@@ -1006,11 +1006,13 @@ async function addSong(songobj, refocus) {
 //return the innerhtml for a songitem element
 function generateSongitem(val) {
     let strongtag = val.strong !== undefined && val.strong ? ["<strong>", "</strong>"] : ["", ""];
-    if (!fs.existsSync(val.coversrc)) { val.coversrc = "" };
+    const checkSrc = val.coversrc.startsWith('file://') ? val.coversrc.slice(7) : val.coversrc;
+    if (checkSrc && !fs.existsSync(checkSrc)) { val.coversrc = "" };
+    const placeholderSrc = `file://${path.join(IMG_PATH, 'placeholder.png').replace(/\\/g, '/')}`;
     return `
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder" style = "${val.coversrc !== "" ? "display: none" : ""}"></div>
-        <img class="songitem-cover cover-${val.coverid}" draggable="false" loading="lazy" src="${val.coversrc}" onerror = "this.src = ${path.join(IMG_PATH, 'placeholder.png')}" style = "${val.coversrc === "" ? "display: none" : ""}"></img>
+        <img class="songitem-cover cover-${val.coverid}" draggable="false" loading="lazy" src="${val.coversrc}" onerror = "this.src = '${placeholderSrc}'" style = "${val.coversrc === "" ? "display: none" : ""}"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${strongtag[0]}${val.title}${strongtag[1]}</div>
     <div class="songitem-aa">
