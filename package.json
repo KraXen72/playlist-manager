@@ -10,8 +10,11 @@
     "dist:dir": "electron-builder --dir"
   },
   "repository": "https://github.com/KraXen72/playlist-manager",
-  "author": "KraXen72",
-  "license": "CC0-1.0",
+  "author": {
+    "name": "KraXen72",
+    "email": "dpelech1@gmail.com"
+  },
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "@material-icons/font": "^1.0.36",
