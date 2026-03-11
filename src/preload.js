@@ -17,18 +17,14 @@ const bull = `&#8226;`
 const userData = electron.app.getPath('userData')
 const cacheDir = path.join(electron.app.getPath('cache'), 'playlist-manager')
 const CONFIG_PATH = path.join(userData, 'config.json')
-const COVERS_PATH = path.join(cacheDir, 'covers')
 const IMG_PATH = path.join(__dirname, '..', 'img')
 
 fs.mkdirSync(userData, { recursive: true })
-fs.mkdirSync(COVERS_PATH, { recursive: true })
-
 
 console.log('[paths]',
 	'\n  userData :', userData,
 	'\n  cacheDir :', cacheDir,
 	'\n  config   :', CONFIG_PATH,
-	'\n  covers   :', COVERS_PATH,
 	'\n  db       :', path.join(cacheDir, 'tagcache.db'),
 )
 
@@ -45,6 +41,10 @@ var config = utils.initOrLoadConfig(CONFIG_PATH, {
 console.log("config: ", config)
 
 const db = require('./db-handler.js')
+
+let mm = null // music-metadata ESM module, loaded lazily on first tag parse
+let previewBlobUrl = null // current blob URL for the preview panel cover
+const activeBlobUrls = new Set() // blob URLs for current playlist items, revoked on remove/discard
 
 var allSongs = []
 var allPlaylists = []
@@ -197,12 +197,40 @@ async function ensureAllTagsFetched() {
     const untagged = songsAndPlaylists.filter(s => s.type === "song" && s.tag === undefined)
     const total = songsAndPlaylists.filter(s => s.type === "song").length
     let done = total - untagged.length
-    const BATCH = 12
     sprog.style.width = `0`
     sprog.style.opacity = `100%`
-    for (let i = 0; i < untagged.length; i += BATCH) {
+
+    // --- bulk DB lookup: 1 query for all paths instead of N individual queries ---
+    const paths = untagged.map(s => s.fullpath)
+    const cachedRows = db.getAllTagsMap(paths)
+
+    // --- parallel async mtime check: non-blocking, all stats in flight at once ---
+    const statResults = await Promise.allSettled(paths.map(p => fs.promises.stat(p)))
+
+    const needsParse = []
+    for (let i = 0; i < untagged.length; i++) {
+        const song = untagged[i]
+        const row = cachedRows.get(song.fullpath)
+        const statResult = statResults[i]
+        if (row && statResult.status === 'fulfilled') {
+            const mtime = Math.round(statResult.value.mtimeMs)
+            if (row.mtime === mtime) {
+                song.tag = db.rowToTag(row)
+                done++
+                continue
+            }
+        }
+        needsParse.push(song)
+    }
+
+    sprog.style.width = `${done / total * 100}%`
+    await new Promise(r => setTimeout(r, 0))
+
+    // --- parse uncached/stale songs in larger batches ---
+    const BATCH = 64
+    for (let i = 0; i < needsParse.length; i += BATCH) {
         await Promise.allSettled(
-            untagged.slice(i, i + BATCH).map(song =>
+            needsParse.slice(i, i + BATCH).map(song =>
                 getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
             )
         )
@@ -210,6 +238,7 @@ async function ensureAllTagsFetched() {
         sprog.style.width = `${done / total * 100}%`
         await new Promise(r => setTimeout(r, 0))
     }
+
     allSongsAreTagged = true
     buildGroupObjects()
     refreshSidebarPlaylists()
@@ -487,7 +516,13 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
     //console.log(tag)
     if (update) {
         if (document.getElementById("song-preview").style.visibility === "hidden") { document.getElementById("song-preview").style.visibility = "visible" }
-        document.getElementById("sp-cover").src = `${tag.cover}`
+        if (previewBlobUrl) { URL.revokeObjectURL(previewBlobUrl); previewBlobUrl = null }
+        if (tag.coverobj !== undefined && tag.coverobj !== false && tag.coverobj.data) {
+            previewBlobUrl = URL.createObjectURL(new Blob([tag.coverobj.data], { type: 'image/' + tag.coverobj.frmt }))
+            document.getElementById("sp-cover").src = previewBlobUrl
+        } else {
+            document.getElementById("sp-cover").src = tag.cover || ''
+        }
         document.getElementById("sp-title").textContent = tag.title
         document.getElementById("sp-artist").innerHTML = tag.artist
         document.getElementById("sp-album").textContent = tag.album
@@ -691,7 +726,8 @@ function discardPlaylistPrompt() {
 //discard the current playlist
 function discardPlaylist() {
     notReady(false)
-    utils.clearFolder(COVERS_PATH)
+    for (const url of activeBlobUrls) URL.revokeObjectURL(url)
+    activeBlobUrls.clear()
     document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
     currPlaylist = []
     document.getElementById("song-preview").style.visibility = "hidden"
@@ -830,12 +866,14 @@ async function addSong(songobj, refocus) {
     let moreElem = document.createElement("div")
     let id = Date.now().toString()
 
-    if (tag.coverobj !== false && songobj.type === "song") {
-        fs.writeFileSync(path.join(COVERS_PATH, `cover-${id}.${tag.coverobj.frmt}`), tag.coverobj.data)
-    }
+    let coverBlobUrl = null
     let imgpath = ""
     if (songobj.type === "song") {
-        imgpath = `file://${path.join(COVERS_PATH, `cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`).replace(/\\/g, '/')}`
+        if (tag.coverobj !== false && tag.coverobj.data) {
+            coverBlobUrl = URL.createObjectURL(new Blob([tag.coverobj.data], { type: 'image/' + tag.coverobj.frmt }))
+            activeBlobUrls.add(coverBlobUrl)
+            imgpath = coverBlobUrl
+        }
     } else if (songobj.type === "playlist") {
         imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
     } else if (songobj.type === 'artist' || songobj.type === 'album') {
@@ -974,11 +1012,7 @@ async function addSong(songobj, refocus) {
         if (currPlaylist.length === 0) {
             document.getElementById("openspan").style.display = "block"
         }
-        if (songobj.type === "song") {
-            try { fs.unlinkSync(path.join(COVERS_PATH, `cover-${id}.${tag.coverobj.frmt}`)) } catch (e) {
-                console.log("failed to delete cover, probably")
-            }
-        }
+        if (coverBlobUrl) { URL.revokeObjectURL(coverBlobUrl); activeBlobUrls.delete(coverBlobUrl) }
         songElem.remove()
     }
 
@@ -1010,8 +1044,8 @@ async function addSong(songobj, refocus) {
     }, 2, refocus)
 
     if (songobj.type === "song") {
-        songobj.tag.cover = ""
-        songobj.tag.coverobj.data = ""
+        // null out the raw buffer now that the blob owns a copy
+        if (songobj.tag.coverobj !== false) songobj.tag.coverobj.data = null
     }
 
     currPlaylist.push(songobj)
@@ -1019,8 +1053,7 @@ async function addSong(songobj, refocus) {
 //return the innerhtml for a songitem element
 function generateSongitem(val) {
     let strongtag = val.strong !== undefined && val.strong ? ["<strong>", "</strong>"] : ["", ""];
-    const checkSrc = val.coversrc.startsWith('file://') ? val.coversrc.slice(7) : val.coversrc;
-    if (checkSrc && !fs.existsSync(checkSrc)) { val.coversrc = "" };
+    if (val.coversrc.startsWith('file://') && !fs.existsSync(val.coversrc.slice(7))) { val.coversrc = "" }
     const placeholderSrc = `file://${path.join(IMG_PATH, 'placeholder.png').replace(/\\/g, '/')}`;
     return `
     <div class="songitem-cover-wrap">
@@ -1143,7 +1176,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
         if (cached) return cached
     }
 
-    const mm = await import('music-metadata')
+    if (!mm) mm = await import('music-metadata')
     var metadata
     try {
         metadata = await mm.parseFile(song, { "skipCovers": skipCovers, "duration": false })
@@ -1169,8 +1202,10 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     // always build extrainfo when caching so the DB row is always complete;
     // also satisfies fetchExtraInfo=true callers
+    let mtime
     if (returnObj) {
         const lstat = fs.lstatSync(song)
+        mtime = Math.round(lstat.mtimeMs)
         extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
         extrainfo.format = metadata.format.codec
         extrainfo.bitrate = typeof metadata.format.bitrate === 'number'
@@ -1189,21 +1224,20 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
-    let cover = ''
+    // cover stays '' — callers create blob URLs from coverobj.data on demand
+    const cover = ''
     let coverobj = false
     if (!skipCovers) {
         const pic = mm.selectCover(metadata.common.picture)
         if (pic !== undefined && pic !== null) {
-            let frmt = pic.format.replaceAll("image/", "")
-
-            cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
-            coverobj = { frmt, "data": pic.data }
+            const frmt = pic.format.replaceAll("image/", "")
+            coverobj = { frmt, data: pic.data }
         }
     }
 
-    // --- cache write ---
+    // --- cache write (pass mtime to avoid a second statSync inside upsertTag) ---
     if (returnObj) {
-        db.upsertTag(song, { artist, title, album, duration, cover, extinf, coverobj, extrainfo })
+        db.upsertTag(song, { artist, title, album, duration, cover, extinf, coverobj, extrainfo }, mtime)
     }
 
     //console.log(extinf)
@@ -1266,7 +1300,6 @@ async function fetchAllSongs() {
 
         allSongs = songs
 
-        utils.clearFolder(COVERS_PATH)
         autocompArr = "both"
         setupAutocomplete("song or playlist")
     } else {
@@ -1407,7 +1440,7 @@ async function loadPlaylist(playlist, mode) {
         for (let i = 0; i < onlysongs.length; i++) {
             const song = songsAndPlaylists.find(s => s.relativepath === onlysongs[i])
             if (song === undefined) { console.warn("Song not found in library, skipping:", onlysongs[i]); continue }
-            if (song.tag === undefined || song?.tag?.cover === "" || song?.tag?.coverobj?.data === "") {
+            if (song.tag === undefined || (song.tag.coverobj !== false && song.tag.coverobj.data === null)) {
                 song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
             }
             songobjs.push(song)
@@ -1540,7 +1573,13 @@ function loadPlaylistsSidebar(eplaylists) {
 
 //delete all generated playlists
 function purgePlaylists() {
-    let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p))
+    let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p)).filter(p => {
+        // Only consider a playlist "definitely generated" if its filename stem matches
+        // its parent folder name — that's exactly what generateM3U() produces.
+        const stem = utils.getExtOrFn(p.filename).fn
+        const parentFolder = path.basename(path.dirname(p.fullpath))
+        return stem === parentFolder
+    })
     if (!unsavedChanges) {
         if (playlists.length > 0) {
 
