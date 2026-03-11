@@ -157,6 +157,13 @@
 .songitem-aa, .songitem-album, .songitem-artist, .songitem-title {
     font-stretch: condensed;
 }
+.songitem.dragging {
+    opacity: 0.4;
+}
+.songitem.drag-over {
+    outline: 2px solid var(--accent, #5b9bd5);
+    outline-offset: -2px;
+}
 
 
 #playlist-title {

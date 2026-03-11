@@ -20,12 +20,13 @@
   "author": "KraXen72",
   "license": "CC0-1.0",
   "dependencies": {
+    "@electron/remote": "^2.1.2",
     "@material-icons/font": "^1.0.36",
     "@trevoreyre/autocomplete-js": "^3.0.3",
     "electron": "^41.0.0",
     "fs-walk": "^0.0.2",
     "graceful-fs": "^4.2.11",
     "music-metadata": "^11.12.1",
-    "roseboxlib": "https://github.com/KraXen72/roseboxlib.git"
+    "roseboxlib": "github:KraXen72/roseboxlib#e23b75ff0633b961d05d71fa3a2abd099e690436"
   }
 }
