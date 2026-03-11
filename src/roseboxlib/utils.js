@@ -52,7 +52,7 @@ function clearFolder(path) { //delete all files in a folder
         }
     }
     if (fs.existsSync(filename)) {
-        config = JSON.parse(fs.readFileSync(filename))
+        config = { ...schema, ...JSON.parse(fs.readFileSync(filename)) }
     } else {
         config = schema
         //make neccesary directories
