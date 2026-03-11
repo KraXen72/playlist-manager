@@ -13,6 +13,7 @@ function createWindow () {
     minWidth: 900,
     minHeight: 490,
     autoHideMenuBar: true,
+    icon: path.join(__dirname, '..', 'playlist-manager.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
