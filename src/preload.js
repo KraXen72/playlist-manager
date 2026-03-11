@@ -12,12 +12,12 @@ const walk = require('fs-walk')
 const Autocomplete = require('@trevoreyre/autocomplete-js')
 //const sortable = require('html5sortable/dist/html5sortable.cjs.js')
 
-const slash = process.platform === 'win32' ? "\\" : "/" //desktop file slash
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
 const userData = electron.app.getPath('userData')
+const cacheDir = electron.app.getPath('cache')
 const CONFIG_PATH = path.join(userData, 'config.json')
-const COVERS_PATH = path.join(userData, 'covers')
+const COVERS_PATH = path.join(cacheDir, 'covers')
 const IMG_PATH = path.join(__dirname, '..', 'img')
 
 
@@ -594,8 +594,7 @@ async function pickFolderAndFillInput(inputid) {
     console.log(pick)
     if (!pick.canceled) {
         let fullpath = pick.filePaths[0]
-        let splitarr = fullpath.split(slash)
-        document.getElementById(inputid).value = splitarr[splitarr.length - 1]
+        document.getElementById(inputid).value = path.basename(fullpath)
     }
 
 }
@@ -717,18 +716,18 @@ function savePlaylistPrompt() {
         } else {
             if (autocompArr === 'playlists') {
                 let cPlaylist = currPlaylist.map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
-                config.comPlaylists[`${config.maindir + slash + playlistName}.m3u`] = cPlaylist
+                config.comPlaylists[path.join(config.maindir, `${playlistName}.m3u`)] = cPlaylist
                 utils.saveConfig(CONFIG_PATH, config)
             }
             if (playlistName === lastPlaylistName && savePath !== undefined) {
                 savePlaylist()
             } else {
                 new Notification("playlist-manager", {
-                    body: `Your playlist has been saved to:\n${config.maindir + slash + playlistName}.m3u`,
+                    body: `Your playlist has been saved to:\n${path.join(config.maindir, `${playlistName}.m3u`)}`,
                     icon: path.join(IMG_PATH, "playlist.png"),
                     timeoutType: "default",
                 })
-                savePath = `${config.maindir + slash + playlistName}.m3u`
+                savePath = path.join(config.maindir, `${playlistName}.m3u`)
                 if (savePath !== undefined) { lastPlaylistName = playlistName; savePlaylist() }
             }
         }
@@ -767,9 +766,9 @@ function getPlaylistContent() {
         const song = currPlaylist[i];
         if (song.type === "song") {
             play.push(song.tag.extinf)
-            play.push(song.relativepath.replaceAll(slash, pslash))
+            play.push(song.relativepath.replaceAll(path.sep, pslash))
         } else if (song.type === "playlist") {
-            let spl = song.relativepath.split(slash)
+            let spl = song.relativepath.split(path.sep)
             let relpath = spl.slice(0, spl.length - 1).join(pslash) //what does this shit even do??
             //console.log(relpath)
 
@@ -785,7 +784,7 @@ function getPlaylistContent() {
             for (const s of song.songs ?? []) {
                 if (!s.tag?.extinf) continue
                 play.push(s.tag.extinf)
-                play.push(s.relativepath.replaceAll(slash, pslash))
+                play.push(s.relativepath.replaceAll(path.sep, pslash))
             }
         }
     }
@@ -962,7 +961,7 @@ async function addSong(songobj, refocus) {
             document.getElementById("openspan").style.display = "block"
         }
         if (songobj.type === "song") {
-            try { fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`) } catch (e) {
+            try { fs.unlinkSync(path.join(COVERS_PATH, `cover-${id}.${tag.coverobj.frmt}`)) } catch (e) {
                 console.log("failed to delete cover, probably")
             }
         }
@@ -1036,7 +1035,7 @@ const gen = async () => {
     gprog.style.opacity = `100%`
 
     walk.dirsSync(config.maindir, (basedir, filename, stats) => {
-        alldirs.push({ basedir, filename, "fullpath": basedir + slash + filename, stats })
+        alldirs.push({ basedir, filename, "fullpath": path.join(basedir, filename), stats })
     })
     if (config.ignore.length > 0) { //if there are some folders to ignore, then filter out the folders
         alldirs = alldirs.filter(dir => {
@@ -1071,8 +1070,7 @@ async function generateM3U(folder, useEXTINF) {
     const allsongs = []
 
     if (useEXTINF) { allsongs.push("#EXTM3U") }
-    let relativedir = folder.split(slash)
-    relativedir = relativedir[relativedir.length - 1]
+    let relativedir = path.basename(folder)
     let appendname = ""
     //console.log(relativedir)
 
@@ -1091,14 +1089,14 @@ async function generateM3U(folder, useEXTINF) {
         song = filename
         songext = utils.getExtOrFn(song).ext
         if (basedir.replace(folder, "").length > 0) { //stupid fucking piece of shit
-            appendname = basedir.replace(folder, "").replace(slash, "")
+            appendname = basedir.replace(folder, "").replace(path.sep, "")
             if (appendname.length > 0) { appendname += pslash }
         }
         //if the song extension is in allowed list
         if (config.exts.includes(songext)) {
 
             if (useEXTINF) {
-                let extinf = await getEXTINF(basedir + slash + song, song, false, true)
+                let extinf = await getEXTINF(path.join(basedir, song), song, false, true)
                 allsongs.push(extinf.toString())
                 allsongs.push(`${appendname}${filename}`)
             } else {
@@ -1112,7 +1110,7 @@ async function generateM3U(folder, useEXTINF) {
 
     let lines = allsongs.join("\n")
 
-    fs.writeFileSync(`${folder + slash + relativedir}.m3u`, lines)
+    fs.writeFileSync(path.join(folder, `${relativedir}.m3u`), lines)
 }
 
 //read the file and get it's metadata
@@ -1222,8 +1220,8 @@ async function fetchAllSongs() {
     genbutton.setAttribute("disabled", "true")
     let songs = []
     walk.filesSync(config.maindir, (basedir, filename) => {
-        let fp = basedir + slash + filename
-        songs.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "") })
+        let fp = path.join(basedir, filename)
+        songs.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + path.sep, "") })
     })
     songs = songs.filter(song => {
         let ext = utils.getExtOrFn(song.filename).ext
@@ -1264,8 +1262,8 @@ async function fetchAllSongs() {
     //playlists
     let playlists = []
     walk.filesSync(config.maindir, (basedir, filename) => {
-        let fp = basedir + slash + filename
-        playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "") })
+        let fp = path.join(basedir, filename)
+        playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + path.sep, "") })
     })
     playlists = playlists.filter(playlist => {
         let ext = utils.getExtOrFn(playlist.filename).ext
@@ -1310,11 +1308,11 @@ async function fetchAllSongs() {
 function refreshSidebarPlaylists() {
     if (!config.maindir) return
     const topLevel = fs.readdirSync(config.maindir).filter(
-        item => fs.lstatSync(config.maindir + slash + item).isFile()
+        item => fs.lstatSync(path.join(config.maindir, item)).isFile()
     ).filter(item => utils.getExtOrFn(item).ext.toLowerCase() === "m3u")
 
     editablePlaylists = topLevel.map(item => {
-        const fp = config.maindir + slash + item
+        const fp = path.join(config.maindir, item)
         let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
         if (!p) {
             // New file – build an entry and register it so the rest of the app can find it
@@ -1323,7 +1321,7 @@ function refreshSidebarPlaylists() {
             p = {
                 filename: item,
                 fullpath: fp,
-                relativepath: fp.replaceAll(config.maindir + slash, ""),
+                relativepath: fp.replaceAll(config.maindir + path.sep, ""),
                 songs: lines,
                 type: "playlist",
                 index: allPlaylists.length.toString(),
@@ -1387,7 +1385,7 @@ async function loadPlaylist(playlist, mode) {
         }
         document.getElementById("playlist-scroll-wrap").scrollTop = 0;
     } else {
-        let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.trim().replaceAll(pslash, slash))
+        let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.trim().replaceAll(pslash, path.sep))
         //replace all normal slashes for os slashes when loading, so it can actually load the songs.
         console.time("fetchSongObjs")
         console.log(onlysongs)

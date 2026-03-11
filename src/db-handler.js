@@ -3,7 +3,9 @@ const fs = require('fs')
 const path = require('node:path')
 
 const { app } = require('@electron/remote')
-const DB_LOCATION = path.join(app.getPath('userData'), 'tagcache.db')
+const cacheDir = app.getPath('cache')
+if (!fs.existsSync(cacheDir)) { fs.mkdirSync(cacheDir, { recursive: true }) }
+const DB_LOCATION = path.join(cacheDir, 'tagcache.db')
 
 let stmtGet = null
 let stmtUpsert = null

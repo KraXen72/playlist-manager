@@ -1,6 +1,6 @@
 // @ts-nocheck
 const fs = require('fs');
-const slash = process.platform === 'win32' ? "\\" : "/"
+const nodepath = require('node:path')
 const { shortenFilename, fixQuotes, getExtOrFn, zeropad, precisionRound, summonMenu, randomNumberBetween, sleep, memoize, first, last, sample, pluck, groupBy, autocompleteDestroy, addGlobalEventListener, qs, qsa, createElement } = require("./esm/lib")
 
 //file oriented utils
@@ -29,9 +29,9 @@ function saveConfig(filename, config, minified, extraMessage = "") { //save conf
  * @param {String} path path to folder to clear (can be relative)
  */
 function clearFolder(path) { //delete all files in a folder
-    let files = fs.readdirSync(path).filter(f => fs.lstatSync(path + slash + f).isFile() )
+    let files = fs.readdirSync(path).filter(f => fs.lstatSync(nodepath.join(path, f)).isFile() )
     files.forEach(f => {
-        fs.unlinkSync(path + slash + f)
+        fs.unlinkSync(nodepath.join(path, f))
     })
 }
 
