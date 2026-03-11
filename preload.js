@@ -1106,7 +1106,7 @@ async function fetchAllSongs() {
         allSongs = songs
 
         utils.clearFolder("./covers")
-        autocompArr === "both"
+        autocompArr = "both"
         setupAutocomplete("song or playlist")
     } else {
         document.getElementById("input-placeholder").innerHTML = "No songs found in this folder, check settings"
