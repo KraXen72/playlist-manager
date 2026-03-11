@@ -34,18 +34,28 @@ The best part is, this app uses relative paths in it's playlists, so if you just
 
 ## Installing
 
-**installing through [pnpm](https://pnpm.io/installation)**
-required: `node`, `pnpm`
-run in command prompt:  
-```bash
-pnpm add -g github:KraXen72/playlist-manager#semver:^2.0.0
-``` 
-this will install the app globally.  
-to launch the program, type `playlistm` in terminal or windows search.
+**download a release**  
+Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases) and grab the latest stable release, or use the [nightly release](https://github.com/KraXen72/playlist-manager/releases/tag/nightly) for the latest build from `master`.
 
-**running from source**
-required: `nodejs, git`
-run in command prompt:  
+| Platform | File |
+|---|---|
+| Linux | `.AppImage` |
+| Windows | `.exe` (NSIS installer) |
+| macOS | `.dmg` |
+
+**installing with [mise](https://mise.jdx.dev/) (via github plugin)**  
+required: `mise`
+```bash
+mise use -g "github:KraXen72/playlist-manager"
+```
+To pin a specific version:
+```bash
+mise use -g "github:KraXen72/playlist-manager@2.0.2"
+```
+mise will download and manage the AppImage / executable automatically. Run with `playlist-manager`.
+
+**running from source**  
+required: `nodejs`, `git`, `pnpm`
 ```bash
 git clone https://github.com/KraXen72/playlist-manager
 cd playlist-manager

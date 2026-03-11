@@ -4,12 +4,11 @@
   "description": "local playlist manager",
   "main": "main.js",
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron ."
+    "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
+    "dist": "electron-builder --publish never",
+    "dist:dir": "electron-builder --dir"
   },
   "repository": "https://github.com/KraXen72/playlist-manager",
-  "bin": {
-    "playlistm": "./start.js"
-  },
   "author": "KraXen72",
   "license": "CC0-1.0",
   "dependencies": {
@@ -22,6 +21,34 @@
     "music-metadata": "^11.12.1"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0"
+    "cross-env": "^10.1.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.kraxen72.playlist-manager",
+    "productName": "playlist-manager",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!covers/**",
+      "!screenshots/**",
+      "!.github/**",
+      "!*.md",
+      "!pnpm-lock.yaml",
+      "!pnpm-workspace.yaml"
+    ],
+    "linux": {
+      "icon": "img/playlist.png",
+      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }]
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+    }
   }
 }
