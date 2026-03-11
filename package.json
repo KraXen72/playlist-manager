@@ -1,6 +1,6 @@
 {
   "name": "playlist-manager",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "local playlist manager",
   "main": "src/main.js",
   "scripts": {
