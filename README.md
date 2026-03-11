@@ -38,7 +38,7 @@ The best part is, this app uses relative paths in it's playlists, so if you just
 required: `node`, `pnpm`
 run in command prompt:  
 ```bash
-pnpm add -g github:KraXen72/playlist-manager@2
+pnpm add -g github:KraXen72/playlist-manager#semver:^2.0.0
 ``` 
 this will install the app globally.  
 to launch the program, type `playlistm` in terminal or windows search.

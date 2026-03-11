@@ -1,19 +1,12 @@
 {
-  "name": "electron-quick-start",
+  "name": "playlist-manager",
   "version": "2.0.0",
-  "description": "A minimal Electron application",
+  "description": "local playlist manager",
   "main": "main.js",
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
-  "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
-  ],
+  "repository": "https://github.com/KraXen72/playlist-manager",
   "bin": {
     "playlistm": "./start.js"
   },
