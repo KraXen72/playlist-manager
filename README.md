@@ -62,12 +62,6 @@ run in command prompt:
 ### Playlist generation:
 - a button to delete all generated (only generated, not user made) playlist for a fresh start or if you made some folder structure changes
 
-## Planned:
-- npm package and prebuilt binaries
-- option search songs by artist, not title
-- more in-app explanations of what button does what
-- proper electron window branding, not electron-quick-start
-
 ## support development
 [![Recurring donation via Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/KraXen72)
 [![One-time donation via ko-fi.com](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/kraxen72)  
