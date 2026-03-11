@@ -15,8 +15,10 @@ const Autocomplete = require('@trevoreyre/autocomplete-js')
 const slash = process.platform === 'win32' ? "\\" : "/" //desktop file slash
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
-const CONFIG_PATH = "./../config.json"
-const IMG_PATH = "../img"
+const userData = electron.app.getPath('userData')
+const CONFIG_PATH = path.join(userData, 'config.json')
+const COVERS_PATH = path.join(userData, 'covers')
+const IMG_PATH = path.join(__dirname, '..', 'img')
 
 
 const AUDIO_EXTS = ['mp3', 'flac']
@@ -60,7 +62,7 @@ const { search } = require('./search.js')
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
-    if (!fs.existsSync("./covers")) { fs.mkdirSync("./covers") } //create covers dir if neccessary
+    if (!fs.existsSync(COVERS_PATH)) { fs.mkdirSync(COVERS_PATH, { recursive: true }) } //create covers dir if neccessary
     if (config.maindir !== "") { selectfolder(null, config) }
 
     //bottom bar
@@ -676,7 +678,7 @@ function discardPlaylistPrompt() {
 //discard the current playlist
 function discardPlaylist() {
     notReady(false)
-    utils.clearFolder("./covers")
+    utils.clearFolder(COVERS_PATH)
     document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
     currPlaylist = []
     document.getElementById("song-preview").style.visibility = "hidden"
@@ -816,11 +818,11 @@ async function addSong(songobj, refocus) {
     let id = Date.now().toString()
 
     if (tag.coverobj !== false && songobj.type === "song") {
-        fs.writeFileSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`, tag.coverobj.data)
+        fs.writeFileSync(path.join(COVERS_PATH, `cover-${id}.${tag.coverobj.frmt}`), tag.coverobj.data)
     }
     let imgpath = ""
     if (songobj.type === "song") {
-        imgpath = `../covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
+        imgpath = `file://${path.join(COVERS_PATH, `cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`).replace(/\\/g, '/')}`
     } else if (songobj.type === "playlist") {
         imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
     } else if (songobj.type === 'artist' || songobj.type === 'album') {
@@ -1250,7 +1252,7 @@ async function fetchAllSongs() {
 
         allSongs = songs
 
-        utils.clearFolder("./covers")
+        utils.clearFolder(COVERS_PATH)
         autocompArr = "both"
         setupAutocomplete("song or playlist")
     } else {

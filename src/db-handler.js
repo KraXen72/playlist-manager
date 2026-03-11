@@ -1,7 +1,9 @@
 const { DatabaseSync } = require('node:sqlite')
 const fs = require('fs')
+const path = require('node:path')
 
-const DB_LOCATION = './../tagcache.db'
+const { app } = require('@electron/remote')
+const DB_LOCATION = path.join(app.getPath('userData'), 'tagcache.db')
 
 let stmtGet = null
 let stmtUpsert = null
