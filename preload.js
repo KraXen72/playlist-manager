@@ -26,6 +26,8 @@ var config = utils.initOrLoadConfig("./config.json", {
 })
 console.log("config: ", config)
 
+const db = require('./db-handler.js')
+
 var allSongs = []
 var allPlaylists = []
 
@@ -992,6 +994,12 @@ async function generateM3U(folder, useEXTINF) {
  * @param {Boolean} fetchExtraInfo if true, fetch extra info
  */
 async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
+    // --- cache hit path ---
+    if (returnObj) {
+        const cached = db.getTag(song)
+        if (cached) return cached
+    }
+
     const mm = await import('music-metadata')
     var metadata
     try {
@@ -1015,24 +1023,26 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
     if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
         artist = metadata.common.artists.join(" / ")
     }
-    if (fetchExtraInfo !== undefined && fetchExtraInfo) {
-        let lstat = fs.lstatSync(song)
+
+    // always build extrainfo when caching so the DB row is always complete;
+    // also satisfies fetchExtraInfo=true callers
+    if (returnObj) {
+        const lstat = fs.lstatSync(song)
         extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
         extrainfo.format = metadata.format.codec
-        extrainfo.bitrate = Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
-        extrainfo.samplerate = metadata.format.sampleRate.toString() + " Hz"
-
+        extrainfo.bitrate = typeof metadata.format.bitrate === 'number'
+            ? Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
+            : "Unknown"
+        extrainfo.samplerate = metadata.format.sampleRate != null && metadata.format.sampleRate !== "unknown"
+            ? metadata.format.sampleRate.toString() + " Hz"
+            : "Unknown"
         if (metadata.common.genre !== undefined && metadata.common.genre.length !== 0) {
             extrainfo.genre = metadata.common.genre.join(" / ")
         } else {
             extrainfo.genre = "Unknown Genre"
         }
         extrainfo.year = metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
-
-
-        //console.log(extrainfo)
     }
-
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
@@ -1048,6 +1058,11 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
             cover = ""
             coverobj = false
         }
+    }
+
+    // --- cache write ---
+    if (returnObj) {
+        db.upsertTag(song, { artist, title, album, duration, cover, extinf, coverobj, extrainfo })
     }
 
     //console.log(extinf)
