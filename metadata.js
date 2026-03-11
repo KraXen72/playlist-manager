@@ -45,7 +45,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 	// always build extrainfo when caching so the DB row is always complete;
 	// also satisfies fetchExtraInfo=true callers
 	if (returnObj) {
-		const lstat = fs.lstatSync(song)
+		const lstat = await fs.promises.lstat(song)
 		extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
 		extrainfo.format = metadata.format.codec
 		extrainfo.bitrate = typeof metadata.format.bitrate === 'number'

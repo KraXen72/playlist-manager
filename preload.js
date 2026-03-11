@@ -46,13 +46,14 @@ var unsavedChanges = false
 var mainsearch
 var specialMode = false
 var dragSrcEl = null
+var allSongsAreTagged = false
 var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 var highlightedSong = null //currently highlighted autocomplete result
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
-    if (!fs.existsSync("./covers")) { fs.mkdirSync("./covers") } //create covers dir if neccessary
+    fs.promises.mkdir("./covers", { recursive: true }).catch(() => {}) //create covers dir if necessary
     if (config.maindir !== "") { selectfolder(null, config) }
 
     //bottom bar
@@ -236,7 +237,12 @@ function playlistOnlyToggle() {
     }
 }
 
-function onSearchModeClick(mode) {
+async function onSearchModeClick(mode) {
+    if (!searchModes[mode] && (mode === 'artist' || mode === 'album')) {
+        if (!allSongsAreTagged) {
+            await ensureTagsFetched()
+        }
+    }
     const changed = toggleSearchMode(mode)
     if (changed) {
         updateSearchModeButtons()
@@ -262,6 +268,68 @@ function updateSearchPlaceholder() {
     const label = active.join(' / ')
     document.getElementById('input-placeholder').textContent =
         `Search by ${label}...`
+}
+
+async function ensureTagsFetched() {
+    if (allSongsAreTagged) return
+
+    const { Worker } = require('worker_threads')
+
+    const inp = document.getElementById('command-line-input')
+    const sprog = document.getElementById('sprog')
+    sprog.style.width = '0'
+    sprog.style.opacity = '100%'
+
+    inp.setAttribute('disabled', 'true')
+    ;['filename', 'artist', 'album'].forEach(m => {
+        const b = document.getElementById(`search-mode-${m}`)
+        if (b) b.setAttribute('disabled', 'true')
+    })
+    document.getElementById('input-placeholder').textContent = 'Getting tags for each song, please wait...'
+
+    // All songs without an in-memory tag go to the worker.
+    // The worker checks DB cache per song (mtime), only parses on a miss.
+    const untagged = songsAndPlaylists.filter(s => s.type === 'song' && s.tag === undefined)
+
+    if (untagged.length > 0) {
+        // Phase 1: worker parses + writes to DB, sends {type:'progress'} per song
+        await new Promise((resolve, reject) => {
+            const w = new Worker(__dirname + '/tag-worker.js')
+            w.postMessage({
+                songs: untagged.map(s => ({ songPath: s.fullpath, filename: s.filename })),
+                dbPath: __dirname + '/tagcache.db'
+            })
+            w.on('message', ({ type, done, total }) => {
+                if (type === 'progress') {
+                    sprog.style.width = `${done / total * 100}%`
+                } else if (type === 'done') {
+                    void w.terminate()
+                    resolve()
+                }
+            })
+            w.on('error', err => { console.error('tag-worker error:', err); reject(err) })
+        })
+
+        // Phase 2: re-query DB to populate song.tag in memory
+        for (const song of untagged) {
+            const cached = db.getTag(song.fullpath)
+            if (cached) song.tag = cached
+        }
+    }
+
+    allSongsAreTagged = true
+
+    sprog.style.width = '100%'
+    setTimeout(() => { sprog.style.opacity = '0%' }, 500)
+    setTimeout(() => { sprog.style.width = '0%' }, 1250)
+
+    mainsearch.destroy()
+    inp.removeAttribute('disabled')
+    ;['filename', 'artist', 'album'].forEach(m => {
+        const b = document.getElementById(`search-mode-${m}`)
+        if (b) b.removeAttribute('disabled')
+    })
+    setupAutocomplete(autocompArr === 'both' ? 'song or playlist' : 'playlist')
 }
 
 //preview
@@ -458,7 +526,7 @@ function savePlaylistPrompt() {
                 utils.saveConfig("./config.json", config)
             }
             if (playlistName === lastPlaylistName && savePath !== undefined) {
-                savePlaylist()
+                savePlaylist().catch(err => console.error('save failed:', err))
             } else {
                 new Notification("playlist-manager", {
                     body: `Your playlist has been saved to:\n${config.maindir + slash + playlistName}.m3u`,
@@ -466,18 +534,18 @@ function savePlaylistPrompt() {
                     timeoutType: "default",
                 })
                 savePath = `${config.maindir + slash + playlistName}.m3u`
-                if (savePath !== undefined) { lastPlaylistName = playlistName; savePlaylist() }
+                if (savePath !== undefined) { lastPlaylistName = playlistName; savePlaylist().catch(err => console.error('save failed:', err)) }
             }
         }
     }
 }
 
-function savePlaylist() { //actually save the playlist
+async function savePlaylist() { //actually save the playlist
     notReady(false)
     let lines = getPlaylistContent() //this is with duplicate songs possible
     lines = removeDuplicatesFromPlaylist(lines)
 
-    fs.writeFileSync(savePath, lines.join("\n"))
+    await fs.promises.writeFile(savePath, lines.join("\n"))
 
     // Keep the in-memory entry up-to-date so refreshSidebarPlaylists shows correct song count
     const savedLines = lines.filter(l => l !== "#EXTM3U" && l.trim() !== "")
@@ -488,7 +556,7 @@ function savePlaylist() { //actually save the playlist
     }
 
     document.getElementById("save").classList.add("btn-active")
-    refreshSidebarPlaylists()
+    await refreshSidebarPlaylists()
     setTimeout(() => { document.getElementById("save").classList.remove("btn-active") }, 1000)
 }
 
@@ -549,7 +617,7 @@ async function addSong(songobj, refocus) {
     let id = Date.now().toString()
 
     if (tag.coverobj !== false && songobj.type === "song") {
-        fs.writeFileSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`, tag.coverobj.data)
+        await fs.promises.writeFile(`covers${slash}cover-${id}.${tag.coverobj.frmt}`, tag.coverobj.data)
     }
     let imgpath = ""
     if (songobj.type === "song") {
@@ -679,9 +747,7 @@ async function addSong(songobj, refocus) {
             document.getElementById("openspan").style.display = "block"
         }
         if (songobj.type === "song") {
-            try { fs.unlinkSync(`covers${slash}cover-${id}.${tag.coverobj.frmt}`) } catch (e) {
-                console.log("failed to delete cover, probably")
-            }
+            fs.promises.unlink(`covers${slash}cover-${id}.${tag.coverobj.frmt}`).catch(() => {})
         }
         songElem.remove()
     }
@@ -810,7 +876,7 @@ async function generateM3U(folder, useEXTINF) {
     let lines = allsongs.join("\n")
     //console.log(lines)
 
-    fs.writeFileSync(`${folder + slash + relativedir}.m3u`, lines)
+    await fs.promises.writeFile(`${folder + slash + relativedir}.m3u`, lines)
 }
 
 async function fetchAllSongs() {
@@ -821,12 +887,9 @@ async function fetchAllSongs() {
     editablePlaylists = []
 
     //check for config com playlists if some are missing delete them
-    for (let i = 0; i < Object.keys(config.comPlaylists).length; i++) {
-        const complaylist = Object.keys(config.comPlaylists)[i];
-        //console.log(complaylist)
-        if (!fs.existsSync(complaylist)) {
-            delete config.comPlaylists[complaylist]
-        }
+    for (const complaylist of Object.keys(config.comPlaylists)) {
+        const exists = await fs.promises.access(complaylist).then(() => true, () => false)
+        if (!exists) delete config.comPlaylists[complaylist]
     }
 
     let genbutton = document.getElementById("gen")
@@ -879,16 +942,12 @@ async function fetchAllSongs() {
         playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + slash, "") })
     })
     playlists = playlists.filter(playlist => {
-        let ext = utils.getExtOrFn(playlist.filename).ext
-        if (ext.toLowerCase() === "m3u") {
-            return true
-        } else {
-            return false
-        }
-    }).map(playlist => {
-        let lines = fs.readFileSync(playlist.fullpath, { "encoding": "utf-8" }).split("\n").map(line => line.trim()).filter(line => { if (line === "#EXTM3U" || line === "") { return false } else { return true } })
+        return utils.getExtOrFn(playlist.filename).ext.toLowerCase() === "m3u"
+    })
+    for (const playlist of playlists) {
+        const raw = await fs.promises.readFile(playlist.fullpath, { encoding: "utf-8" })
+        const lines = raw.split("\n").map(line => line.trim()).filter(line => line !== "#EXTM3U" && line !== "")
         //filter out extm3u stuff
-
         playlist.songs = lines
         playlist["type"] = "playlist"
         playlist.tag = {
@@ -897,8 +956,7 @@ async function fetchAllSongs() {
             album: utils.shortenFilename(playlist.fullpath, 60),
             cover: config.comPlaylists[playlist.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
         }
-        return playlist
-    })
+    }
     for (let i = 0; i < playlists.length; i++) {
         const playlist = playlists[i];
         playlist["index"] = i.toString()
@@ -911,25 +969,28 @@ async function fetchAllSongs() {
     console.log(songsAndPlaylists)
 
     //created playlists
-    refreshSidebarPlaylists()
+    await refreshSidebarPlaylists()
 
     console.log(editablePlaylists)
 }
 
 // Rebuild editablePlaylists from the top-level m3u files in maindir and re-render the sidebar.
 // For files not yet in songsAndPlaylists (e.g. just saved for the first time), reads them from disk.
-function refreshSidebarPlaylists() {
-    const topLevel = fs.readdirSync(config.maindir).filter(
-        item => fs.lstatSync(config.maindir + slash + item).isFile()
-    ).filter(item => utils.getExtOrFn(item).ext.toLowerCase() === "m3u")
+async function refreshSidebarPlaylists() {
+    const allItems = await fs.promises.readdir(config.maindir)
+    const stats = await Promise.all(allItems.map(item => fs.promises.lstat(config.maindir + slash + item)))
+    const topLevel = allItems.filter((item, i) =>
+        stats[i].isFile() && utils.getExtOrFn(item).ext.toLowerCase() === "m3u"
+    )
 
-    editablePlaylists = topLevel.map(item => {
+    editablePlaylists = []
+    for (const item of topLevel) {
         const fp = config.maindir + slash + item
         let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
         if (!p) {
             // New file – build an entry and register it so the rest of the app can find it
-            const lines = fs.readFileSync(fp, { encoding: "utf-8" })
-                .split("\n").map(l => l.trim()).filter(l => l !== "#EXTM3U" && l !== "")
+            const raw = await fs.promises.readFile(fp, { encoding: "utf-8" })
+            const lines = raw.split("\n").map(l => l.trim()).filter(l => l !== "#EXTM3U" && l !== "")
             p = {
                 filename: item,
                 fullpath: fp,
@@ -948,8 +1009,8 @@ function refreshSidebarPlaylists() {
             songsAndPlaylists.push(p)
         }
         p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
-        return p
-    })
+        editablePlaylists.push(p)
+    }
 
     loadPlaylistsSidebar(editablePlaylists)
     if (editablePlaylists.length > 0) { document.getElementById("yourplaylistshr").style.display = "block" }
@@ -1041,7 +1102,7 @@ function loadPlaylistsSidebar(eplaylists) {
                 await gen()
                 await fetchAllSongs()
                 await loadPlaylist(playlist, playlist.mode)
-                savePlaylist()
+                await savePlaylist()
                 discardPlaylist()
                 if (autocompArr === "playlists") { document.getElementById("com").click() }
                 playlistName = lastPlaylistName
@@ -1084,7 +1145,7 @@ function loadPlaylistsSidebar(eplaylists) {
 }
 
 //delete all generated playlists
-function purgePlaylists() {
+async function purgePlaylists() {
     let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p))
     if (!unsavedChanges) {
         if (playlists.length > 0) {
@@ -1097,10 +1158,8 @@ function purgePlaylists() {
 
             let decision = window.confirm(message)
             if (decision) {
-                let delpaths = playlists.map(p => p.fullpath)
-                delpaths.forEach(p => {
-                    fs.unlinkSync(p, (err) => console.log(err))
-                })
+                const delpaths = playlists.map(p => p.fullpath)
+                await Promise.all(delpaths.map(p => fs.promises.unlink(p).catch(err => console.error(err))))
                 console.log("deleted sucessfully")
                 prgbtn.classList.add("btn-active")
                 setTimeout(() => {
