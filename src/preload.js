@@ -21,7 +21,15 @@ const COVERS_PATH = path.join(cacheDir, 'covers')
 const IMG_PATH = path.join(__dirname, '..', 'img')
 
 
-const AUDIO_EXTS = ['mp3', 'flac']
+console.log('[paths]',
+	'\n  userData :', userData,
+	'\n  cacheDir :', cacheDir,
+	'\n  config   :', CONFIG_PATH,
+	'\n  covers   :', COVERS_PATH,
+	'\n  db       :', path.join(cacheDir, 'tagcache.db'),
+)
+
+const AUDIO_EXTS = ['mp3', 'flac', 'm4a', 'opus', 'ogg']
 
 var config = utils.initOrLoadConfig(CONFIG_PATH, {
     "maindir": "",

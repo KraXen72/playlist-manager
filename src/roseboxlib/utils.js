@@ -46,7 +46,7 @@ function clearFolder(path) { //delete all files in a folder
     if (schema === undefined) {
         schema = {
             "maindir": "",
-            "exts": ["mp3"], 
+            "exts": ["mp3", "m4a", "opus", "ogg"], 
             "ignore": [],
             "comPlaylists": {}
         }
