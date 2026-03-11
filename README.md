@@ -10,7 +10,6 @@ Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases)
 | Platform | File |
 |---|---|
 | Linux (x64) | raw binary |
-| Linux (arm64) | raw binary |
 | Windows | `.exe` (NSIS installer) |
 | macOS | `.dmg` |
 
