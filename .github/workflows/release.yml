@@ -31,10 +31,6 @@ jobs:
           node-version: latest
           cache: pnpm
 
-      - name: Install rpm tools (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y rpm
-
       - name: Install dependencies
         run: pnpm install
 
@@ -55,7 +51,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.os }}
-          path: dist/playlist-manager-*
+          path: |
+            dist/playlist-manager-*.exe
+            dist/playlist-manager-*.dmg
+            dist/playlist-manager-linux-x64
+            dist/playlist-manager-linux-arm64
 
   release:
     needs: build
