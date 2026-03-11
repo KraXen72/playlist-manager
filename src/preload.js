@@ -4,6 +4,7 @@
 const electron = require('@electron/remote')
 const dialog = electron.dialog
 const fs = require('fs')
+const path = require('node:path')
 
 const utils = require('./roseboxlib/utils.js')
 
@@ -14,11 +15,13 @@ const Autocomplete = require('@trevoreyre/autocomplete-js')
 const slash = process.platform === 'win32' ? "\\" : "/" //desktop file slash
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
+const CONFIG_PATH = "./../config.json"
+const IMG_PATH = "../img"
 
 
 const AUDIO_EXTS = ['mp3', 'flac']
 
-var config = utils.initOrLoadConfig("./config.json", {
+var config = utils.initOrLoadConfig(CONFIG_PATH, {
     "maindir": "",
     "exts": AUDIO_EXTS,
     "ignore": [],
@@ -107,12 +110,12 @@ async function selectfolder(mouseevent, inputconfig) {
                 })
                 if (msgc === 0) {
                     config.maindir = pick.filePaths[0]
-                    utils.saveConfig("./config.json", config)
+                    utils.saveConfig(CONFIG_PATH, config)
                     window.location.reload()
                 }
             } else { //if user didn't make a playlist then just reload without asking
                 config.maindir = pick.filePaths[0]
-                utils.saveConfig("./config.json", config)
+                utils.saveConfig(CONFIG_PATH, config)
                 window.location.reload()
             }
         }
@@ -141,14 +144,14 @@ function buildGroupObjects() {
         ? db.getDistinctArtists().map((row, i) => ({
             filename: row.artist, fullpath: `__artist__:${row.artist}`,
             relativepath: null, type: 'artist', index: `artist-${i}`, songs: null,
-            tag: { title: row.artist, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
+            tag: { title: row.artist, artist: `${row.cnt} Songs`, album: '', cover: path.join(IMG_PATH, 'playlist.png') }
         }))
         : []
     allAlbumObjs = config.includeAlbumResults
         ? db.getDistinctAlbums().map((row, i) => ({
             filename: row.album, fullpath: `__album__:${row.album}`,
             relativepath: null, type: 'album', index: `album-${i}`, songs: null,
-            tag: { title: row.album, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
+            tag: { title: row.album, artist: `${row.cnt} Songs`, album: '', cover: path.join(IMG_PATH, 'playlist.png') }
         }))
         : []
 }
@@ -331,13 +334,13 @@ function playlistOnlyToggle() {
         if (autocompArr === "both") {
             com.classList.add("btn-active")
 
-            mainsearch.destroy()
+            if (mainsearch) mainsearch.destroy()
             autocompArr = "playlists"
             setupAutocomplete("playlist")
         } else {
             com.classList.remove("btn-active")
 
-            mainsearch.destroy()
+            if (mainsearch) mainsearch.destroy()
             autocompArr = "both"
             setupAutocomplete("song or playlist")
         }
@@ -451,10 +454,10 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
                     title: song.filename,
                     artist: `Playlist ${bull} ${countPlaylistSongs(song.fullpath, song.songs) ?? '??'} Songs`,
                     album: utils.shortenFilename(song.fullpath, 55),
-                    cover: config.comPlaylists[song.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
+                    cover: config.comPlaylists[song.fullpath] !== undefined ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
                 }
             } else if (song.type === 'artist' || song.type === 'album') {
-                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: 'img/playlist.png' }
+                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: path.join(IMG_PATH, "playlist.png")  }
             }
             song.tag = tag
             document.getElementById("song-preview").setAttribute("index", song.index.toString())
@@ -535,7 +538,7 @@ function saveSettings() {
     if (artChk) { config.includeArtistResults = artChk.checked }
     if (albChk) { config.includeAlbumResults = albChk.checked }
 
-    utils.saveConfig("./config.json", config)
+    utils.saveConfig(CONFIG_PATH, config)
 }
 function importSettings() {
     let inp = document.getElementById('settings-config-input')
@@ -547,7 +550,7 @@ function importSettings() {
         conf = JSON.parse(inp.value)
         console.log(conf)
         inp.value = ""
-        utils.saveConfig("./config.json", conf)
+        utils.saveConfig(CONFIG_PATH, conf)
         window.location.reload()
 
     } catch (e) { //error message
@@ -713,14 +716,14 @@ function savePlaylistPrompt() {
             if (autocompArr === 'playlists') {
                 let cPlaylist = currPlaylist.map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
                 config.comPlaylists[`${config.maindir + slash + playlistName}.m3u`] = cPlaylist
-                utils.saveConfig("./config.json", config)
+                utils.saveConfig(CONFIG_PATH, config)
             }
             if (playlistName === lastPlaylistName && savePath !== undefined) {
                 savePlaylist()
             } else {
                 new Notification("playlist-manager", {
                     body: `Your playlist has been saved to:\n${config.maindir + slash + playlistName}.m3u`,
-                    icon: "img/playlist.png",
+                    icon: path.join(IMG_PATH, "playlist.png"),
                     timeoutType: "default",
                 })
                 savePath = `${config.maindir + slash + playlistName}.m3u`
@@ -817,11 +820,11 @@ async function addSong(songobj, refocus) {
     }
     let imgpath = ""
     if (songobj.type === "song") {
-        imgpath = `covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
+        imgpath = `../covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
     } else if (songobj.type === "playlist") {
-        imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
+        imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
     } else if (songobj.type === 'artist' || songobj.type === 'album') {
-        imgpath = 'img/playlist.png'
+        imgpath = path.join(IMG_PATH, "playlist.png") 
     }
 
     songElem.className = "songitem"
@@ -1005,7 +1008,7 @@ function generateSongitem(val) {
     return `
     <div class="songitem-cover-wrap">
         <div class="songitem-cover-placeholder" style = "${val.coversrc !== "" ? "display: none" : ""}"></div>
-        <img class="songitem-cover cover-${val.coverid}" draggable="false" loading="lazy" src="${val.coversrc}" onerror = "this.src = 'img/placeholder.png'" style = "${val.coversrc === "" ? "display: none" : ""}"></img>
+        <img class="songitem-cover cover-${val.coverid}" draggable="false" loading="lazy" src="${val.coversrc}" onerror = "this.src = ${path.join(IMG_PATH, 'placeholder.png')}" style = "${val.coversrc === "" ? "display: none" : ""}"></img>
     </div>
     <div class="songitem-title" title="${utils.fixQuotes(val.title)}">${strongtag[0]}${val.title}${strongtag[1]}</div>
     <div class="songitem-aa">
@@ -1277,7 +1280,7 @@ async function fetchAllSongs() {
             title: playlist.filename,
             artist: `Playlist ${bull} ${countPlaylistSongs(playlist.fullpath, playlist.songs) ?? '??'} Songs`,
             album: utils.shortenFilename(playlist.fullpath, 60),
-            cover: config.comPlaylists[playlist.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
+            cover: config.comPlaylists[playlist.fullpath] !== undefined ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, 'playlist.png')
         }
         return playlist
     })
@@ -1301,6 +1304,7 @@ async function fetchAllSongs() {
 // Rebuild editablePlaylists from the top-level m3u files in maindir and re-render the sidebar.
 // For files not yet in songsAndPlaylists (e.g. just saved for the first time), reads them from disk.
 function refreshSidebarPlaylists() {
+    if (!config.maindir) return
     const topLevel = fs.readdirSync(config.maindir).filter(
         item => fs.lstatSync(config.maindir + slash + item).isFile()
     ).filter(item => utils.getExtOrFn(item).ext.toLowerCase() === "m3u")
@@ -1323,7 +1327,7 @@ function refreshSidebarPlaylists() {
                     title: item,
                     artist: `Playlist ${bull} ${countPlaylistSongs(fp, lines) ?? '??'} Songs`,
                     album: utils.shortenFilename(fp, 60),
-                    cover: config.comPlaylists[fp] !== undefined ? "img/generated.png" : "img/playlist.png"
+                    cover: config.comPlaylists[fp] !== undefined ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, 'playlist.png')
                 }
             }
             allPlaylists.push(p)
@@ -1477,7 +1481,7 @@ function loadPlaylistsSidebar(eplaylists) {
                         editablePlaylists = editablePlaylists.filter(p => p.fullpath !== playlist.fullpath)
                         if (config.comPlaylists[playlist.fullpath]) {
                             delete config.comPlaylists[playlist.fullpath]
-                            utils.saveConfig("./config.json", config)
+                            utils.saveConfig(CONFIG_PATH, config)
                         }
                         loadPlaylistsSidebar(editablePlaylists)
                         if (editablePlaylists.length === 0) {

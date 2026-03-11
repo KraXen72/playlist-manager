@@ -101,7 +101,7 @@
     background: transparent;
 }
 .songitem-cover-placeholder {
-    background-image: url("img/placeholder.png");
+    background-image: url("../img/placeholder.png");
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -341,7 +341,7 @@
     margin: 0.5rem;
 }
 #sp-cover-placeholder {
-    background-image: url("img/placeholder.png");
+    background-image: url("../img/placeholder.png");
     border-radius: 0.5rem;
 }
 #sp-cover {

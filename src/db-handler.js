@@ -1,6 +1,8 @@
 const { DatabaseSync } = require('node:sqlite')
 const fs = require('fs')
 
+const DB_LOCATION = './../tagcache.db'
+
 let stmtGet = null
 let stmtUpsert = null
 let stmtDistinctArtists = null
@@ -9,7 +11,7 @@ let stmtPathsByArtist = null
 let stmtPathsByAlbum = null
 
 function openTagCache() {
-	const tagDb = new DatabaseSync('./tagcache.db')
+	const tagDb = new DatabaseSync(DB_LOCATION)
 	tagDb.exec(`
         CREATE TABLE IF NOT EXISTS tags (
             path          TEXT PRIMARY KEY,
@@ -34,7 +36,7 @@ function openTagCache() {
 	stmtDistinctAlbums = tagDb.prepare('SELECT album, COUNT(*) as cnt FROM tags GROUP BY album ORDER BY album')
 	stmtPathsByArtist = tagDb.prepare('SELECT path FROM tags WHERE artist = ?')
 	stmtPathsByAlbum = tagDb.prepare('SELECT path FROM tags WHERE album = ?')
-	console.log('tagcache: opened ./tagcache.db')
+	console.log(`tagcache: opened ${DB_LOCATION}`)
 }
 
 /**

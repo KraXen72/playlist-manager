@@ -2,7 +2,7 @@
   "name": "playlist-manager",
   "version": "2.1.1",
   "description": "local playlist manager",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
     "dist": "electron-builder --publish never",

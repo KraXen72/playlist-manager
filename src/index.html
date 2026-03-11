@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>playlist-manager</title>
     <link rel="stylesheet" href="matter.css">
-    <link rel="stylesheet" href="node_modules/@material-icons/font/css/all.css">
+    <link rel="stylesheet" href="../node_modules/@material-icons/font/css/all.css">
     <link rel="stylesheet" type="text/css" href="./roseboxlib/roseboxlib.css">
     <link rel="stylesheet" type="text/css" href="main.css">
     <style id="imgsrc"></style>
@@ -71,7 +71,7 @@
       <div id="main-screen">
         <div id="song-preview" style="visibility:hidden" index = "-1" type="none">
           <div id="sp-cover-placeholder"></div>
-          <div id="sp-cover-wrap"><img id="sp-cover" draggable="false" onerror = "this.src = 'img/placeholder.png'"></img></div>
+          <div id="sp-cover-wrap"><img id="sp-cover" draggable="false" onerror = "this.src = '../img/placeholder.png'"></img></div>
           <div id="sp-title"></div>
           <div id="sp-album"></div>
           <div id="sp-artist"></div>
@@ -145,7 +145,7 @@
       <div id="coverpop-header" class="popup-header">
         <button class="closepill popupclose" id="coverpop-close">&times;</button>
       </div>
-      <img src="img/placeholder.png" alt="cover" id="coverdisplay">
+      <img src="../img/placeholder.png" alt="cover" id="coverdisplay">
     </div>
     <div id="moremenu" class="hidden">
       <ul id="mm-ul">
