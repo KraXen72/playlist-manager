@@ -15,13 +15,13 @@
     "@electron/remote": "^2.1.2",
     "@material-icons/font": "^1.0.36",
     "@trevoreyre/autocomplete-js": "^3.0.3",
-    "electron": "^41.0.0",
     "fs-walk": "^0.0.2",
     "graceful-fs": "^4.2.11",
     "music-metadata": "^11.12.1"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
+    "electron": "^41.0.0",
     "electron-builder": "^25.0.0"
   },
   "build": {
@@ -42,13 +42,36 @@
     ],
     "linux": {
       "icon": "img/playlist.png",
-      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }]
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     }
   }
 }
