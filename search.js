@@ -2,7 +2,7 @@ function search(songs, query, options) {
     const { filename = false, artist = false, album = false } = options;
     const lowerQuery = query.toLowerCase();
 
-    return songs.filter(song => {
+    const results = songs.filter(song => {
         if (!filename && !artist && !album) return false;
 
         const matches = [];
@@ -12,6 +12,25 @@ function search(songs, query, options) {
 
         return matches.some(Boolean);
     });
+
+    results.sort((a, b) => {
+        const aLower = a.filename.toLowerCase();
+        const bLower = b.filename.toLowerCase();
+        const aIndex = aLower.indexOf(lowerQuery);
+        const bIndex = bLower.indexOf(lowerQuery);
+
+        if (aIndex !== bIndex) {
+            return aIndex - bIndex;
+        }
+
+        if (a.type !== b.type) {
+            return a.type === 'song' ? -1 : 1;
+        }
+
+        return aLower.localeCompare(bLower);
+    });
+
+    return results;
 }
 
 module.exports = { search };

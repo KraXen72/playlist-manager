@@ -157,8 +157,6 @@ function setupAutocomplete(message) {
                     return song.filename.match(regex)
                 })
             }
-            //sort the results so playlists are on top
-            res.sort((a, b) => { if (a.type === "playlist" && b.type === "song") { return -1 } else if (a.type === "song" && b.type === "playlist") { return 1 } else { return 0 } })
 
             //if specialmode or playlist only mode then return full results, otherwise first 10
             const hasArtistOrAlbum = searchModes.has('artist') || searchModes.has('album')
