@@ -3,8 +3,8 @@ const fs = require('fs')
 const path = require('node:path')
 
 const { app } = require('@electron/remote')
-const cacheDir = app.getPath('cache')
-if (!fs.existsSync(cacheDir)) { fs.mkdirSync(cacheDir, { recursive: true }) }
+const cacheDir = path.join(app.getPath('cache'), 'playlist-manager')
+fs.mkdirSync(cacheDir, { recursive: true })
 const DB_LOCATION = path.join(cacheDir, 'tagcache.db')
 
 let stmtGet = null

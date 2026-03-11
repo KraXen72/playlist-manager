@@ -15,10 +15,13 @@ const Autocomplete = require('@trevoreyre/autocomplete-js')
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
 const userData = electron.app.getPath('userData')
-const cacheDir = electron.app.getPath('cache')
+const cacheDir = path.join(electron.app.getPath('cache'), 'playlist-manager')
 const CONFIG_PATH = path.join(userData, 'config.json')
 const COVERS_PATH = path.join(cacheDir, 'covers')
 const IMG_PATH = path.join(__dirname, '..', 'img')
+
+fs.mkdirSync(userData, { recursive: true })
+fs.mkdirSync(COVERS_PATH, { recursive: true })
 
 
 console.log('[paths]',
@@ -36,8 +39,8 @@ var config = utils.initOrLoadConfig(CONFIG_PATH, {
     "exts": AUDIO_EXTS,
     "ignore": [],
     "comPlaylists": {},
-    "includeArtistResults": false,
-    "includeAlbumResults": false
+    "includeArtistResults": true,
+    "includeAlbumResults": true
 })
 console.log("config: ", config)
 
@@ -70,7 +73,6 @@ const { search } = require('./search.js')
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
     console.log("loaded")
-    if (!fs.existsSync(COVERS_PATH)) { fs.mkdirSync(COVERS_PATH, { recursive: true }) } //create covers dir if neccessary
     if (config.maindir !== "") { selectfolder(null, config) }
 
     //bottom bar
@@ -96,6 +98,10 @@ window.addEventListener('DOMContentLoaded', () => {
         if (e.which === 9 && highlightedSong !== null) {
             autocompleteSubmit(highlightedSong, true)
             e.target.focus()
+        }
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault()
+            savePlaylistPrompt()
         }
     })
     //settings
