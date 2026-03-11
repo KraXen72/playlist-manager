@@ -5,7 +5,7 @@ const electron = require('@electron/remote')
 const dialog = electron.dialog
 const fs = require('fs')
 
-const utils = require('./node_modules/roseboxlib/utils.js')
+const utils = require('./roseboxlib/utils.js')
 
 const walk = require('fs-walk')
 const Autocomplete = require('@trevoreyre/autocomplete-js')
@@ -22,9 +22,13 @@ var config = utils.initOrLoadConfig("./config.json", {
     "maindir": "",
     "exts": AUDIO_EXTS,
     "ignore": [],
-    "comPlaylists": {}
+    "comPlaylists": {},
+    "includeArtistResults": false,
+    "includeAlbumResults": false
 })
 console.log("config: ", config)
+
+const db = require('./db-handler.js')
 
 var allSongs = []
 var allPlaylists = []
@@ -40,11 +44,15 @@ var unsavedChanges = false
 
 var mainsearch
 var specialMode = false
-var artistMode = false
+var searchModes = new Set(['filename'])
 var dragSrcEl = null
 var allSongsAreTagged = false
+var allArtistObjs = []
+var allAlbumObjs = []
 var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 var highlightedSong = null //currently highlighted autocomplete result
+
+const { search } = require('./search.js')
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -68,7 +76,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('titleh').addEventListener("scroll", (event) => { event.target.scrollTop = 0 })
     //search
     document.getElementById('special').addEventListener("click", specialSearch)
-    document.getElementById('mode-toggle').addEventListener("click", artistModeToggle)
+    document.getElementById('search-filename').addEventListener("click", () => toggleSearchMode('filename'))
+    document.getElementById('search-artist').addEventListener("click", () => toggleSearchMode('artist'))
+    document.getElementById('search-album').addEventListener("click", () => toggleSearchMode('album'))
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if (e.which === 9 && highlightedSong !== null) {
             autocompleteSubmit(highlightedSong, true)
@@ -89,7 +99,7 @@ async function selectfolder(mouseevent, inputconfig) {
         if (!pick.canceled) {
             //we need to reload the app when picking a new folder. this checks if user wants to proceed or not
             if (currPlaylist.length > 0 && unsavedChanges) {
-                let msgc = await dialog.showMessageBoxSync({
+                let msgc = dialog.showMessageBoxSync({
                     message: "selecting a new main directory clears your current playlist. do you wish to proceed?",
                     type: "question",
                     buttons: ["Discard playlist and Proceed", "Cancel"],
@@ -126,6 +136,68 @@ async function notReady(mode) { //true, turn on notReady, false, turn off notrea
 }
 
 //autocomplete
+function buildGroupObjects() {
+    allArtistObjs = config.includeArtistResults
+        ? db.getDistinctArtists().map((row, i) => ({
+            filename: row.artist, fullpath: `__artist__:${row.artist}`,
+            relativepath: null, type: 'artist', index: `artist-${i}`, songs: null,
+            tag: { title: row.artist, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
+        }))
+        : []
+    allAlbumObjs = config.includeAlbumResults
+        ? db.getDistinctAlbums().map((row, i) => ({
+            filename: row.album, fullpath: `__album__:${row.album}`,
+            relativepath: null, type: 'album', index: `album-${i}`, songs: null,
+            tag: { title: row.album, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
+        }))
+        : []
+}
+
+function countPlaylistSongs(fullpath, songs) {
+    const components = config.comPlaylists[fullpath]
+    if (components) {
+        const needsTags = components.some(pl => pl.fullpath.startsWith("__artist__:") || pl.fullpath.startsWith("__album__:"))
+        if (needsTags && !allSongsAreTagged) return null
+        return components.reduce((total, pl) => {
+            if (pl.fullpath.startsWith("__artist__:")) {
+                return total + db.getPathsByArtist(pl.fullpath.slice("__artist__:".length)).length
+            } else if (pl.fullpath.startsWith("__album__:")) {
+                return total + db.getPathsByAlbum(pl.fullpath.slice("__album__:".length)).length
+            } else {
+                const p = allPlaylists.find(p => p.fullpath === pl.fullpath)
+                return total + (p ? p.songs.filter(s => !s.includes("#EXTINF")).length : 0)
+            }
+        }, 0)
+    }
+    return songs.filter(s => !s.includes("#EXTINF")).length
+}
+
+async function ensureAllTagsFetched() {
+    if (allSongsAreTagged) return
+    const sprog = document.getElementById("sprog")
+    const untagged = songsAndPlaylists.filter(s => s.type === "song" && s.tag === undefined)
+    const total = songsAndPlaylists.filter(s => s.type === "song").length
+    let done = total - untagged.length
+    const BATCH = 12
+    sprog.style.width = `0`
+    sprog.style.opacity = `100%`
+    for (let i = 0; i < untagged.length; i += BATCH) {
+        await Promise.allSettled(
+            untagged.slice(i, i + BATCH).map(song =>
+                getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+            )
+        )
+        done = Math.min(done + BATCH, total)
+        sprog.style.width = `${done / total * 100}%`
+        await new Promise(r => setTimeout(r, 0))
+    }
+    allSongsAreTagged = true
+    buildGroupObjects()
+    refreshSidebarPlaylists()
+    sprog.style.width = `100%`
+    setTimeout(() => { sprog.style.opacity = `0%` }, 500)
+    setTimeout(() => { sprog.style.width = `0%` }, 1250)
+}
 
 //autocomplete
 function setupAutocomplete(message) {
@@ -134,16 +206,17 @@ function setupAutocomplete(message) {
         search: input => {
             if (input.length < 1 && !specialMode && autocompArr === "both") { return [] }
             let res = autocompArr === "both" ? songsAndPlaylists : autocompArr === "playlists" ? allPlaylists : []
-
-            if (!artistMode) {
-                res = res.filter(song => { //find matches
-                    return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
-                })
-            } else {
-                res = res.filter(song => { //find matches
-                    return song.tag.artist.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
-                })
+            if (autocompArr === "both" && allSongsAreTagged) {
+                if (config.includeArtistResults) res = [...res, ...allArtistObjs]
+                if (config.includeAlbumResults) res = [...res, ...allAlbumObjs]
             }
+
+            const options = {
+                filename: searchModes.has('filename'),
+                artist: searchModes.has('artist'),
+                album: searchModes.has('album')
+            }
+            res = search(res, input, options)
 
             res = res.filter(song => { //filter out things already in playlist to avoid duplicates
                 for (let i = 0; i < currPlaylist.length; i++) { if (song.filename === currPlaylist[i].filename) { return false } }; return true
@@ -154,11 +227,10 @@ function setupAutocomplete(message) {
                     return song.filename.match(regex)
                 })
             }
-            //sort the results so playlists are on top
-            res.sort((a, b) => { if (a.type === "playlist" && b.type === "song") { return -1 } else if (a.type === "song" && b.type === "playlist") { return 1 } else { return 0 } })
 
             //if specialmode or playlist only mode then return full results, otherwise first 10
-            return specialMode || autocompArr === "playlists" || artistMode ? res : res.slice(0, 10)
+            const hasArtistOrAlbum = searchModes.has('artist') || searchModes.has('album')
+            return specialMode || autocompArr === "playlists" || hasArtistOrAlbum ? res : res.slice(0, 10)
         },
         onUpdate: (results, selectedIndex) => {
             if (selectedIndex > -1) {
@@ -174,13 +246,47 @@ function setupAutocomplete(message) {
         autoSelect: true,
         submitOnEnter: true,
         getResultValue: result => {
-            return utils.getExtOrFn(result.filename).fn + (result.type === "playlist" && autocompArr === "both" ? " (Playlist)" : "")
-        } //show the filename in the result
+            if (result.type === 'artist' || result.type === 'album') return result.filename
+            return utils.getExtOrFn(result.filename).fn
+        },
+        renderResult: (result, props) => {
+            const filename = (result.type === 'artist' || result.type === 'album')
+                ? result.filename
+                : utils.getExtOrFn(result.filename).fn
+            let icon = ''
+            let title = ''
+            
+            if (result.type === 'playlist') {
+                icon = '<i class="material-icons-round md-queue_music result-icon"></i>'
+                title = 'Playlist'
+            } else if (result.type === 'artist') {
+                icon = '<i class="material-icons-round md-person result-icon"></i>'
+                title = 'Artist'
+            } else if (result.type === 'album') {
+                icon = '<i class="material-icons-round md-album result-icon"></i>'
+                title = 'Album'
+            }
+            
+            return `
+                <li ${props}>
+                    <span class="result-text">${filename}</span>
+                    ${icon ? `<span class="result-icon-wrap" title="${title}">${icon}</span>` : ''}
+                </li>
+            `
+        }
     })
     mainsearch.destroy = () => { autocompleteDestroy(mainsearch) }
 }
 //autocomplete onSubmit
 async function autocompleteSubmit(result, refocus, update) {
+    // Lazily populate songs for artist/album group objects on first selection
+    if ((result.type === 'artist' || result.type === 'album') && !result.songs) {
+        const paths = result.type === 'artist'
+            ? db.getPathsByArtist(result.filename)
+            : db.getPathsByAlbum(result.filename)
+        result.songs = paths.map(p => songsAndPlaylists.find(s => s.fullpath === p)).filter(Boolean)
+    }
+
     if (update !== undefined) {
         await updatePreview(result, false, update) //update preview without updating, basically just tag song
     } else {
@@ -241,92 +347,79 @@ function playlistOnlyToggle() {
     }
 }
 
-async function artistModeToggle() {
-    let btn = document.getElementById("mode-toggle")
-    if (!artistMode) {
+async function toggleSearchMode(mode) {
+    if (searchModes.has(mode) && searchModes.size === 1) {
+        return
+    }
 
-
-        let disablepom = false
-        if (autocompArr === "playlists") {
-            disablepom = dialog.showMessageBoxSync({
-                message: "Searching by artist is not available in playlist only mode. What do you want to do?",
-                type: "question",
-                buttons: ["Exit playlist-only mode and search by artist", "Stay in playlist-only mode"],
-                noLink: true
-            })
-            if (disablepom === 0) {
-                disablepom = true
-                playlistOnlyToggle()
-            } else {
-                disablepom = false
-            }
-        } else {
-            disablepom = true
-        }
-        if (disablepom) {
-            btn.querySelector('.md-person_search').setAttribute("hidden", "true")
-            artistMode = true
-
-            if (!allSongsAreTagged) {
-                let throbber = btn.querySelector('.md-autorenew')
-                throbber.removeAttribute("hidden")
-                throbber.classList.add("rotate")
-                await fetchMissingArtists()
-                throbber.classList.remove("rotate")
-                throbber.setAttribute("hidden", "true")
-            }
-            btn.querySelector('.md-library_music').removeAttribute("hidden")
-            document.getElementById('input-placeholder').textContent = `Search songs by artist...`
-            btn.title = "search by title"
-        }
+    const btn = document.getElementById(`search-${mode}`)
+    if (searchModes.has(mode)) {
+        searchModes.delete(mode)
+        btn.classList.remove('active')
     } else {
-        btn.querySelector('.md-person_search').removeAttribute("hidden")
-        btn.querySelector('.md-library_music').setAttribute("hidden", "true")
-        artistMode = false
-        btn.title = "search by artist"
+        if (mode === 'artist' || mode === 'album') {
+            if (autocompArr === "playlists") {
+                const disablepom = dialog.showMessageBoxSync({
+                    message: `Searching by ${mode} is not available in playlist only mode. What do you want to do?`,
+                    type: "question",
+                    buttons: [`Exit playlist-only mode and search by ${mode}`, "Stay in playlist-only mode"],
+                    noLink: true
+                })
+                if (disablepom === 0) {
+                    playlistOnlyToggle()
+                } else {
+                    return
+                }
+            }
+        }
 
-        document.getElementById('input-placeholder').textContent = `Start typing a name of a ${autocompArr === "both" ? "song or playlist" : "playlist"}...`
+        searchModes.add(mode)
+        btn.classList.add('active')
+
+        if ((mode === 'artist' || mode === 'album') && !allSongsAreTagged) {
+            const sprog = document.getElementById("sprog")
+            const inp = document.getElementById('command-line-input')
+            const allBtns = document.querySelectorAll('.search-mode-btn')
+
+            sprog.style.width = `0`
+            sprog.style.opacity = `100%`
+            inp.setAttribute("disabled", "true")
+            allBtns.forEach(b => b.setAttribute("disabled", "true"))
+
+            document.getElementById('input-placeholder').textContent = "Getting tags for each song, please wait..."
+
+            const untagged = songsAndPlaylists.filter(s => s.tag === undefined)
+            const total = songsAndPlaylists.length
+            let done = total - untagged.length
+
+            const BATCH = 12
+            for (let i = 0; i < untagged.length; i += BATCH) {
+                await Promise.allSettled(
+                    untagged.slice(i, i + BATCH).map(song =>
+                        getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+                    )
+                )
+                done = Math.min(done + BATCH, total)
+                sprog.style.width = `${done / total * 100}%`
+                await new Promise(r => setTimeout(r, 0))
+            }
+
+            allSongsAreTagged = true
+            buildGroupObjects()
+            refreshSidebarPlaylists()
+            sprog.style.width = `100%`
+            setTimeout(() => { sprog.style.opacity = `0%` }, 500)
+            setTimeout(() => { sprog.style.width = `0%` }, 1250)
+
+            mainsearch.destroy()
+            inp.removeAttribute("disabled")
+            allBtns.forEach(b => b.removeAttribute("disabled"))
+            setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
+        }
     }
 }
 
-async function fetchMissingArtists() {
-    let inp = document.getElementById('command-line-input')
-    let btn = document.getElementById("mode-toggle")
-    let sprog = document.getElementById("sprog")
-    sprog.style.width = `0`
-    sprog.style.opacity = `100%`
 
-    inp.setAttribute("disabled", "true")
-    btn.setAttribute("disabled", "true")
-
-    document.getElementById('input-placeholder').textContent = "Getting artist for each song, please wait..."
-
-    const untagged = songsAndPlaylists.filter(s => s.tag === undefined)
-    const total = songsAndPlaylists.length
-    let done = total - untagged.length // pre-tagged songs count as already done
-
-    const BATCH = 12
-    for (let i = 0; i < untagged.length; i += BATCH) {
-        await Promise.allSettled(
-            untagged.slice(i, i + BATCH).map(song =>
-                getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
-            )
-        )
-        done = Math.min(done + BATCH, total)
-        sprog.style.width = `${done / total * 100}%`
-        await new Promise(r => setTimeout(r, 0)) // yield to let the browser paint
-    }
-
-    allSongsAreTagged = true
-    sprog.style.width = `100%`
-    setTimeout(() => { sprog.style.opacity = `0%` }, 500)
-    setTimeout(() => { sprog.style.width = `0%` }, 1250)
-
-    mainsearch.destroy()
-    inp.removeAttribute("disabled")
-    btn.removeAttribute("disabled")
-    setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
-}
 
 //preview
 /**
@@ -356,10 +449,12 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
             } else if (song.type === "playlist") {
                 tag = {
                     title: song.filename,
-                    artist: `Playlist ${bull} ${song.songs.length / 2} Songs`,
+                    artist: `Playlist ${bull} ${countPlaylistSongs(song.fullpath, song.songs) ?? '??'} Songs`,
                     album: utils.shortenFilename(song.fullpath, 55),
                     cover: config.comPlaylists[song.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
                 }
+            } else if (song.type === 'artist' || song.type === 'album') {
+                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: 'img/playlist.png' }
             }
             song.tag = tag
             document.getElementById("song-preview").setAttribute("index", song.index.toString())
@@ -419,6 +514,12 @@ function initSettings() {
         document.getElementById('settings-ign-pick').onclick = () => { pickFolderAndFillInput('settings-ign-input') }
 
         document.getElementById('settings-config-import').onclick = () => { importSettings() }
+
+        // set search include checkboxes from config
+        const artChk = document.getElementById('settings-include-artist')
+        const albChk = document.getElementById('settings-include-album')
+        if (artChk) { artChk.checked = !!config.includeArtistResults }
+        if (albChk) { albChk.checked = !!config.includeAlbumResults }
     }
 }
 function closeSettings() {
@@ -427,6 +528,12 @@ function closeSettings() {
 function saveSettings() {
     config.exts = [...document.getElementById("settings-exts").querySelectorAll(".pillval")].map(pill => pill.innerText)
     config.ignore = [...document.getElementById("settings-ign").querySelectorAll(".pillval")].map(pill => pill.innerText)
+
+    // save search include options
+    const artChk = document.getElementById('settings-include-artist')
+    const albChk = document.getElementById('settings-include-album')
+    if (artChk) { config.includeArtistResults = artChk.checked }
+    if (albChk) { config.includeAlbumResults = albChk.checked }
 
     utils.saveConfig("./config.json", config)
 }
@@ -635,7 +742,7 @@ function savePlaylist() { //actually save the playlist
     const existing = songsAndPlaylists.find(p => p.fullpath === savePath)
     if (existing) {
         existing.songs = savedLines
-        existing.tag.artist = `Playlist ${bull} ${savedLines.length / 2} Songs`
+        existing.tag.artist = `Playlist ${bull} ${countPlaylistSongs(savePath, savedLines) ?? '??'} Songs`
     }
 
     document.getElementById("save").classList.add("btn-active")
@@ -668,6 +775,12 @@ function getPlaylistContent() {
                 } else {
                     play.push([relpath, item].join(pslash))
                 }
+            }
+        } else if (song.type === 'artist' || song.type === 'album') {
+            for (const s of song.songs ?? []) {
+                if (!s.tag?.extinf) continue
+                play.push(s.tag.extinf)
+                play.push(s.relativepath.replaceAll(slash, pslash))
             }
         }
     }
@@ -707,6 +820,8 @@ async function addSong(songobj, refocus) {
         imgpath = `covers/cover-${id}.${tag.coverobj !== false ? tag.coverobj.frmt : "png"}`
     } else if (songobj.type === "playlist") {
         imgpath = config.comPlaylists[songobj.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
+    } else if (songobj.type === 'artist' || songobj.type === 'album') {
+        imgpath = 'img/playlist.png'
     }
 
     songElem.className = "songitem"
@@ -781,6 +896,18 @@ async function addSong(songobj, refocus) {
                     }
                     dialog.showMessageBoxSync({
                         message: msg,
+                        type: "info",
+                        noLink: true
+                    })
+                }
+            })
+        } else if (songobj.type === 'artist' || songobj.type === 'album') {
+            opt.menuItems.push({
+                text: "Details",
+                run: () => {
+                    const list = (songobj.songs ?? []).map(s => s.tag?.title ?? s.filename).join("\n")
+                    dialog.showMessageBoxSync({
+                        message: `${songobj.type === 'artist' ? 'Artist' : 'Album'}: ${songobj.filename}\n\n${list}`,
                         type: "info",
                         noLink: true
                     })
@@ -964,20 +1091,19 @@ async function generateM3U(folder, useEXTINF) {
         if (config.exts.includes(songext)) {
 
             if (useEXTINF) {
-                //get info about the song
                 let extinf = await getEXTINF(basedir + slash + song, song, false, true)
                 allsongs.push(extinf.toString())
                 allsongs.push(`${appendname}${filename}`)
             } else {
                 allsongs.push(`${appendname}${filename}`)
             }
-
-
         }
     }
-    //console.log(allsongs)
+    // skip if no actual songs (allsongs only contains the EXTM3U header or is empty)
+    const songCount = useEXTINF ? allsongs.length - 1 : allsongs.length
+    if (songCount <= 0) { return }
+
     let lines = allsongs.join("\n")
-    //console.log(lines)
 
     fs.writeFileSync(`${folder + slash + relativedir}.m3u`, lines)
 }
@@ -992,6 +1118,12 @@ async function generateM3U(folder, useEXTINF) {
  * @param {Boolean} fetchExtraInfo if true, fetch extra info
  */
 async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
+    // --- cache hit path ---
+    if (returnObj) {
+        const cached = db.getTag(song)
+        if (cached) return cached
+    }
+
     const mm = await import('music-metadata')
     var metadata
     try {
@@ -1015,39 +1147,44 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
     if (metadata.common.artists !== undefined && metadata.common.artists.length > 1) {
         artist = metadata.common.artists.join(" / ")
     }
-    if (fetchExtraInfo !== undefined && fetchExtraInfo) {
-        let lstat = fs.lstatSync(song)
+
+    // always build extrainfo when caching so the DB row is always complete;
+    // also satisfies fetchExtraInfo=true callers
+    if (returnObj) {
+        const lstat = fs.lstatSync(song)
         extrainfo.size = (lstat.size / 1000000).toFixed(2).toString() + " MB"
         extrainfo.format = metadata.format.codec
-        extrainfo.bitrate = Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
-        extrainfo.samplerate = metadata.format.sampleRate.toString() + " Hz"
-
+        extrainfo.bitrate = typeof metadata.format.bitrate === 'number'
+            ? Math.round(metadata.format.bitrate / 1000).toString() + " kb/s"
+            : "Unknown"
+        extrainfo.samplerate = metadata.format.sampleRate != null && metadata.format.sampleRate !== "unknown"
+            ? metadata.format.sampleRate.toString() + " Hz"
+            : "Unknown"
         if (metadata.common.genre !== undefined && metadata.common.genre.length !== 0) {
             extrainfo.genre = metadata.common.genre.join(" / ")
         } else {
             extrainfo.genre = "Unknown Genre"
         }
         extrainfo.year = metadata.common.year !== undefined ? metadata.common.year : "Unknown Year"
-
-
-        //console.log(extrainfo)
     }
-
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
+    let cover = ''
+    let coverobj = false
     if (!skipCovers) {
         const pic = mm.selectCover(metadata.common.picture)
-        var cover = ""
         if (pic !== undefined && pic !== null) {
             let frmt = pic.format.replaceAll("image/", "")
 
             cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
             coverobj = { frmt, "data": pic.data }
-        } else {
-            cover = ""
-            coverobj = false
         }
+    }
+
+    // --- cache write ---
+    if (returnObj) {
+        db.upsertTag(song, { artist, title, album, duration, cover, extinf, coverobj, extrainfo })
     }
 
     //console.log(extinf)
@@ -1138,7 +1275,7 @@ async function fetchAllSongs() {
         playlist["type"] = "playlist"
         playlist.tag = {
             title: playlist.filename,
-            artist: `Playlist ${bull} ${playlist.songs.length / 2} Songs`,
+            artist: `Playlist ${bull} ${countPlaylistSongs(playlist.fullpath, playlist.songs) ?? '??'} Songs`,
             album: utils.shortenFilename(playlist.fullpath, 60),
             cover: config.comPlaylists[playlist.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
         }
@@ -1184,7 +1321,7 @@ function refreshSidebarPlaylists() {
                 index: allPlaylists.length.toString(),
                 tag: {
                     title: item,
-                    artist: `Playlist ${bull} ${lines.length / 2} Songs`,
+                    artist: `Playlist ${bull} ${countPlaylistSongs(fp, lines) ?? '??'} Songs`,
                     album: utils.shortenFilename(fp, 60),
                     cover: config.comPlaylists[fp] !== undefined ? "img/generated.png" : "img/playlist.png"
                 }
@@ -1214,14 +1351,29 @@ async function loadPlaylist(playlist, mode) {
         if (autocompArr === "both") { document.getElementById("com").click() } //turn on playlist only mode
 
         let loadPlaylists = config.comPlaylists[playlist.fullpath] //array of playlists this is made of
+        const needsTags = loadPlaylists.some(pl => pl.fullpath.startsWith("__artist__:") || pl.fullpath.startsWith("__album__:"))
+        if (needsTags) { await ensureAllTagsFetched() }
         for (let i = 0; i < loadPlaylists.length; i++) { //for each playlist we wanna add
             const pl = loadPlaylists[i];
             //for loop find the desired playlist, push to currPlaylist and break from for loop
+            let found = false
             for (let j = 0; j < allPlaylists.length; j++) {
                 const compp = allPlaylists[j];
                 if (compp.fullpath === pl.fullpath) {
                     await autocompleteSubmit(compp, false, false)
+                    found = true
                     break;
+                }
+            }
+            if (!found) {
+                // Also check artist and album group objects
+                const allGroupObjs = [...allArtistObjs, ...allAlbumObjs]
+                for (let j = 0; j < allGroupObjs.length; j++) {
+                    const compp = allGroupObjs[j];
+                    if (compp.fullpath === pl.fullpath) {
+                        await autocompleteSubmit(compp, false, false)
+                        break;
+                    }
                 }
             }
         }
@@ -1233,7 +1385,7 @@ async function loadPlaylist(playlist, mode) {
         console.log(onlysongs)
         songobjs = []
         for (let i = 0; i < onlysongs.length; i++) {
-            const song = songsAndPlaylists.filter(s => s.relativepath === onlysongs[i])[0]
+            const song = songsAndPlaylists.find(s => s.relativepath === onlysongs[i])
             if (song === undefined) { console.warn("Song not found in library, skipping:", onlysongs[i]); continue }
             if (song.tag === undefined || song?.tag?.cover === "" || song?.tag?.coverobj?.data === "") {
                 song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
@@ -1247,18 +1399,6 @@ async function loadPlaylist(playlist, mode) {
         }
 
         document.getElementById("playlist-scroll-wrap").scrollTop = 0;
-
-        /*for (let i = 0; i < onlysongs.length; i++) {
-            const song = onlysongs[i];
-            //for loop find a song, push to currPlaylist and break from for loop
-            for (let j = 0; j < songsAndPlaylists.length; j++) {
-                const compsong = songsAndPlaylists[j];
-                if (compsong.relativepath === song) {
-                    await autocompleteSubmit(compsong, false, false)
-                    break;
-                }
-            }
-        }*/
     }
     notReady(false)
     playlistName = lastPlaylistName
@@ -1285,7 +1425,7 @@ function loadPlaylistsSidebar(eplaylists) {
             coverid: "",
             coversrc: "",
             title: title,
-            artist: `${playlist.songs.length / 2} Songs`,
+            artist: `${countPlaylistSongs(playlist.fullpath, playlist.songs) ?? '??'} Songs`,
             album: playlist.tag.album,
             filename: playlist.filename,
             strong: true
@@ -1293,31 +1433,61 @@ function loadPlaylistsSidebar(eplaylists) {
         pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) min-content"
         pElem.innerHTML = generateSongitem(opts)
 
-        if (playlist.mode === "com") {
-            let regenElem = document.createElement("div")
-            regenElem.classList.add("songitem-button")
-            regenElem.setAttribute("title", "re-make / update: generate this playlist again if you added new songs or removed some")
-            regenElem.innerHTML = `<i class="material-icons-round md-autorenew"></i>`
-            regenElem.onclick = async () => {
-                regenElem.classList.add("rotate")
-                let currPlaylist_bak = [...currPlaylist]
-                discardPlaylist()
-                await gen()
-                await fetchAllSongs()
-                await loadPlaylist(playlist, playlist.mode)
-                savePlaylist()
-                discardPlaylist()
-                if (autocompArr === "playlists") { document.getElementById("com").click() }
-                playlistName = lastPlaylistName
-                currPlaylist = [...currPlaylist_bak]
-                regenElem.classList.remove("rotate")
+        let moreElem = document.createElement("div")
+        moreElem.classList.add("songitem-button")
+        moreElem.setAttribute("title", "more options")
+        moreElem.innerHTML = `<i class="material-icons-round md-more_vert"></i>`
+        moreElem.onclick = (event) => {
+            let opt = { event, menuItems: [] }
 
-                loadPlaylistsSidebar(editablePlaylists)
-                window.location.reload()
+            if (playlist.mode === "com") {
+                opt.menuItems.push({
+                    text: "Regenerate",
+                    run: async () => {
+                        moreElem.innerHTML = `<i class="material-icons-round md-autorenew rotate"></i>`
+                        let currPlaylist_bak = [...currPlaylist]
+                        discardPlaylist()
+                        await gen()
+                        await fetchAllSongs()
+                        await loadPlaylist(playlist, playlist.mode)
+                        savePlaylist()
+                        discardPlaylist()
+                        if (autocompArr === "playlists") { document.getElementById("com").click() }
+                        playlistName = lastPlaylistName
+                        currPlaylist = [...currPlaylist_bak]
+                        loadPlaylistsSidebar(editablePlaylists)
+                        window.location.reload()
+                    }
+                })
             }
 
-            //editElem.style.gridColumn = "4 / 5"
-            pElem.querySelector(".songitem-button-wrap").appendChild(regenElem)
+            opt.menuItems.push({
+                text: "Delete",
+                run: () => {
+                    let con = dialog.showMessageBoxSync({
+                        message: `Are you sure you want to delete '${playlist.filename}'?`,
+                        type: "question",
+                        buttons: ["Delete", "Cancel"],
+                        noLink: true
+                    })
+                    if (con === 0) {
+                        fs.unlinkSync(playlist.fullpath)
+                        allPlaylists = allPlaylists.filter(p => p.fullpath !== playlist.fullpath)
+                        songsAndPlaylists = songsAndPlaylists.filter(p => p.fullpath !== playlist.fullpath)
+                        editablePlaylists = editablePlaylists.filter(p => p.fullpath !== playlist.fullpath)
+                        if (config.comPlaylists[playlist.fullpath]) {
+                            delete config.comPlaylists[playlist.fullpath]
+                            utils.saveConfig("./config.json", config)
+                        }
+                        loadPlaylistsSidebar(editablePlaylists)
+                        if (editablePlaylists.length === 0) {
+                            document.getElementById("yourplaylistshr").style.display = "none"
+                        }
+                    }
+                }
+            })
+
+            utils.summonMenu(opt)
         }
 
         editElem.classList.add("songitem-button")
@@ -1341,6 +1511,7 @@ function loadPlaylistsSidebar(eplaylists) {
             }
 
         }
+        pElem.querySelector(".songitem-button-wrap").appendChild(moreElem)
         pElem.querySelector(".songitem-button-wrap").appendChild(editElem)
 
         document.getElementById("sidebar-playlists").appendChild(pElem)

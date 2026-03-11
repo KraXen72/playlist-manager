@@ -1,10 +1,10 @@
 {
   "name": "electron-quick-start",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron ."
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -26,7 +26,9 @@
     "electron": "^41.0.0",
     "fs-walk": "^0.0.2",
     "graceful-fs": "^4.2.11",
-    "music-metadata": "^11.12.1",
-    "roseboxlib": "github:KraXen72/roseboxlib#e23b75ff0633b961d05d71fa3a2abd099e690436"
+    "music-metadata": "^11.12.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }

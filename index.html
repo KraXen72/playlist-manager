@@ -5,7 +5,7 @@
     <title>playlist-manager</title>
     <link rel="stylesheet" href="matter.css">
     <link rel="stylesheet" href="node_modules/@material-icons/font/css/all.css">
-    <link rel="stylesheet" type="text/css" href="./node_modules/roseboxlib/roseboxlib.css">
+    <link rel="stylesheet" type="text/css" href="./roseboxlib/roseboxlib.css">
     <link rel="stylesheet" type="text/css" href="main.css">
     <style id="imgsrc"></style>
   </head>
@@ -54,11 +54,17 @@
             <ul class="autocomplete-result-list"></ul>
           </label>
           <button id = "special" class="matter-button-outlined mdiconbutton mr" title = "find songs with hard to type titles"><i class="material-icons-round md-emoji_symbols"></i></button>
-          <button id = "mode-toggle" class="matter-button-outlined mdiconbutton ml" title = "search by artist">
-            <i class="material-icons-round md-person_search"></i>
-            <i class="material-icons-round md-library_music" hidden></i>
-            <i class="material-icons-round md-autorenew" hidden></i>
-          </button>
+          <div id="search-mode-group" class="search-mode-group">
+            <button id="search-filename" class="matter-button-outlined mdiconbutton search-mode-btn active" title="search by filename">
+              <i class="material-icons-round md-insert_drive_file"></i>
+            </button>
+            <button id="search-artist" class="matter-button-outlined mdiconbutton search-mode-btn" title="search by artist">
+              <i class="material-icons-round md-person"></i>
+            </button>
+            <button id="search-album" class="matter-button-outlined mdiconbutton search-mode-btn" title="search by album">
+              <i class="material-icons-round md-album"></i>
+            </button>
+          </div>
         </div>
         
       </div>
@@ -112,6 +118,12 @@
         <label class="matter-textfield-outlined"><input id="settings-ign-input" placeholder=" "/><span class="noselect">Add more</span></label>
         <button id="settings-ign-pick" class="matter-button-outlined settings-button">Pick folder</button>
         <button id="settings-ign-add" class="matter-button-outlined settings-button">Add</button>
+      </div>
+      <hr>
+      <h3>Search Results</h3>
+      <div class="settings-bar">
+        <label class="settings-checkbox"><input type="checkbox" id="settings-include-artist"> Include artist results</label>
+        <label class="settings-checkbox"><input type="checkbox" id="settings-include-album"> Include album results</label>
       </div>
       <hr>
       <h3>Import config</h3>
