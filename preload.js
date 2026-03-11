@@ -14,8 +14,16 @@ const Autocomplete = require('@trevoreyre/autocomplete-js')
 const slash = process.platform === 'win32' ? "\\" : "/" //desktop file slash
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
-const specialRegex = new RegExp("[^\x00-\x7F]", "gm")
-var config = utils.initOrLoadConfig("./config.json")
+
+
+const AUDIO_EXTS = ['mp3', 'flac']
+
+var config = utils.initOrLoadConfig("./config.json", {
+    "maindir": "",
+    "exts": AUDIO_EXTS,
+    "ignore": [],
+    "comPlaylists": {}
+})
 console.log("config: ", config)
 
 var allSongs = []
@@ -33,8 +41,10 @@ var unsavedChanges = false
 var mainsearch
 var specialMode = false
 var artistMode = false
+var dragSrcEl = null
 var allSongsAreTagged = false
 var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
+var highlightedSong = null //currently highlighted autocomplete result
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -60,15 +70,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('special').addEventListener("click", specialSearch)
     document.getElementById('mode-toggle').addEventListener("click", artistModeToggle)
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
-        if(e.which === 9){
-            let song = {}
-            //get the song index from the index attribute
-            if (autocompArr === "both") {
-                song = songsAndPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])] 
-            } else if (autocompArr === "playlists") {
-                song = allPlaylists[parseInt(e.target.value.replaceAll('<span index="', "").split('"')[0])]
-            }
-            autocompleteSubmit(song, true)
+        if(e.which === 9 && highlightedSong !== null){
+            autocompleteSubmit(highlightedSong, true)
             e.target.focus()
         }
     })
@@ -158,17 +161,20 @@ function setupAutocomplete(message) {
           return specialMode === true || autocompArr === "playlists" || artistMode === true ? res : res.slice(0, 10)
         },
         onUpdate: (results, selectedIndex) => { 
-            if (selectedIndex > -1) { updatePreview(results[selectedIndex], false)} //update the song preview
+            if (selectedIndex > -1) {
+                updatePreview(results[selectedIndex], false) //update the song preview
+                highlightedSong = results[selectedIndex]
+            } else {
+                highlightedSong = null
+            }
         },
         onSubmit: result => { //final pick
             autocompleteSubmit(result, true)
         },
         autoSelect: true,
+        submitOnEnter: true,
         getResultValue: result => {
-            let final = utils.getExtOrFn(result.filename).fn
-            let res = autocompArr === "both" ? songsAndPlaylists : autocompArr === "playlists" ? allPlaylists : []
-
-            return `<span index="${res.indexOf(result)}">${final}${result.type === "playlist" && autocompArr === "both" ? ` (Playlist)` : ""}</span>`
+            return utils.getExtOrFn(result.filename).fn + (result.type === "playlist" && autocompArr === "both" ? " (Playlist)" : "")
         } //show the filename in the result
       })
       mainsearch.destroy = () => {autocompleteDestroy(mainsearch)}
@@ -702,14 +708,56 @@ async function addSong(songobj, refocus) {
     }
     songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index.toString())
+    songElem.dataset.fullpath = songobj.fullpath
+    songElem.setAttribute("draggable", "true")
+
+    songElem.addEventListener("dragstart", (e) => {
+        dragSrcEl = songElem
+        e.dataTransfer.effectAllowed = "move"
+        setTimeout(() => songElem.classList.add("dragging"), 0)
+    })
+    songElem.addEventListener("dragend", () => {
+        songElem.classList.remove("dragging")
+        document.querySelectorAll(".songitem.drag-over").forEach(el => el.classList.remove("drag-over"))
+    })
+    songElem.addEventListener("dragover", (e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+        if (dragSrcEl !== songElem) {
+            document.querySelectorAll(".songitem.drag-over").forEach(el => el.classList.remove("drag-over"))
+            songElem.classList.add("drag-over")
+        }
+    })
+    songElem.addEventListener("dragleave", () => {
+        songElem.classList.remove("drag-over")
+    })
+    songElem.addEventListener("drop", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (dragSrcEl === null || dragSrcEl === songElem) return
+        const pb = document.getElementById("playlist-bar")
+        const children = [...pb.querySelectorAll(".songitem")]
+        const srcIdx = children.indexOf(dragSrcEl)
+        const tgtIdx = children.indexOf(songElem)
+        if (srcIdx < tgtIdx) {
+            pb.insertBefore(dragSrcEl, songElem.nextSibling)
+        } else {
+            pb.insertBefore(dragSrcEl, songElem)
+        }
+        songElem.classList.remove("drag-over")
+        const newOrder = [...pb.querySelectorAll(".songitem")]
+        const oldPlaylist = [...currPlaylist]
+        currPlaylist = newOrder.map(el => oldPlaylist.find(s => s.fullpath === el.dataset.fullpath)).filter(Boolean)
+        notReady(true)
+    })
 
     moreElem.classList.add("songitem-button"/*, "hidden", "vertical-icon-minwidth"*/)
     moreElem.setAttribute("title", "more options")
     let mmfunction = (event) => {
-        let opt = {event, buttons: []}
+        let opt = {event, menuItems: []}
 
         if (songobj.type === "playlist") { //playlist specific
-            opt.buttons.push({
+            opt.menuItems.push({
                 text: "Details",
                 run: () => {
                     let msg = ""
@@ -726,7 +774,7 @@ async function addSong(songobj, refocus) {
                 }
             })
         } else { //song specific
-            opt.buttons.push( 
+            opt.menuItems.push( 
                 {   text: "Details",
                     run: () => {
                         updatePreview(songobj, false, true, true)
@@ -1065,7 +1113,7 @@ async function fetchAllSongs() {
             return false
         }
     }).map(playlist => {
-        let lines = fs.readFileSync(playlist.fullpath, {"encoding": "utf-8"}).split("\n").filter(line => { if (line === "#EXTM3U" /*|| line.includes("#EXTINF:")*/) { return false } else { return true } })
+        let lines = fs.readFileSync(playlist.fullpath, {"encoding": "utf-8"}).split("\n").map(line => line.trim()).filter(line => { if (line === "#EXTM3U" || line === "") { return false } else { return true } })
         //filter out extm3u stuff
 
         playlist.songs = lines
@@ -1138,13 +1186,14 @@ async function loadPlaylist(playlist, mode) {
 		}
         document.getElementById("playlist-scroll-wrap").scrollTop = 0;
 	} else {
-		let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.replaceAll(pslash, slash))
+		let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.trim().replaceAll(pslash, slash))
         //replace all normal slashes for os slashes when loading, so it can actually load the songs.
         console.time("fetchSongObjs")
         console.log(onlysongs)
         songobjs = []
         for (let i = 0; i < onlysongs.length; i++) {
             const song = songsAndPlaylists.filter(s => s.relativepath === onlysongs[i])[0]
+            if (song === undefined) { console.warn("Song not found in library, skipping:", onlysongs[i]); continue }
             if (song.tag === undefined || song?.tag?.cover === "" || song?.tag?.coverobj?.data === "") {
                 song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
             }
@@ -1325,25 +1374,3 @@ function autocompleteDestroy(instance) {
     //autocompleteDestroy(instance.core)
     instance.core = null
 }
-
-//progress bar buttons
-
-/**
- * progress bar using border-bottom
- * @param {String} id id of button
- * @param {Number} percent 0-100 percent of the progress bar
- * @param {String} col1 normal color
- * @param {String} col2 progress bar color
- * @param {Number} width width of the border in px
- */
-/*
-function matterButtonBorder(id, percent, col1, col2, width) {
-    let b = document.getElementById(id)
-
-    let grad = `-webkit-linear-gradient(left, ${col2} ${percent}%, ${col1} ${percent}%, ${col1} 100%)`
-
-    b.style = `-webkit-border-image: ${grad} 0 0 100% 0/0 0 3px 0 stretch;`
-    b.style.borderBottomWidth = `${width}px`
-
-    b.style.borderTopColor = `${col1} !important;`
-}*/
