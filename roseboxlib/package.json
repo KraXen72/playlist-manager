@@ -1,0 +1,14 @@
+{
+  "name": "roseboxlib",
+  "version": "1.0.0",
+  "description": "js (utils) and css (rosebox) libraries used in my projects",
+  "main": "utils.js",
+  "repository": "https://github.com/KraXen72/roseboxlib",
+  "author": "KraXen72 <dpelech1@gmail.com>",
+  "license": "GPLv3",
+  "private": false,
+  "exports": {
+    "require": "./utils.js",
+    "import": "./esm/lib.js"
+  }
+}

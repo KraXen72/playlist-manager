@@ -5,7 +5,7 @@ const electron = require('@electron/remote')
 const dialog = electron.dialog
 const fs = require('fs')
 
-const utils = require('./node_modules/roseboxlib/utils.js')
+const utils = require('./roseboxlib/utils.js')
 
 const walk = require('fs-walk')
 const Autocomplete = require('@trevoreyre/autocomplete-js')
@@ -151,6 +151,32 @@ function buildGroupObjects() {
             tag: { title: row.album, artist: `${row.cnt} Songs`, album: '', cover: 'img/playlist.png' }
         }))
         : []
+}
+
+async function ensureAllTagsFetched() {
+    if (allSongsAreTagged) return
+    const sprog = document.getElementById("sprog")
+    const untagged = songsAndPlaylists.filter(s => s.type === "song" && s.tag === undefined)
+    const total = songsAndPlaylists.filter(s => s.type === "song").length
+    let done = total - untagged.length
+    const BATCH = 12
+    sprog.style.width = `0`
+    sprog.style.opacity = `100%`
+    for (let i = 0; i < untagged.length; i += BATCH) {
+        await Promise.allSettled(
+            untagged.slice(i, i + BATCH).map(song =>
+                getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+            )
+        )
+        done = Math.min(done + BATCH, total)
+        sprog.style.width = `${done / total * 100}%`
+        await new Promise(r => setTimeout(r, 0))
+    }
+    allSongsAreTagged = true
+    buildGroupObjects()
+    sprog.style.width = `100%`
+    setTimeout(() => { sprog.style.opacity = `0%` }, 500)
+    setTimeout(() => { sprog.style.width = `0%` }, 1250)
 }
 
 //autocomplete
@@ -733,6 +759,7 @@ function getPlaylistContent() {
             }
         } else if (song.type === 'artist' || song.type === 'album') {
             for (const s of song.songs ?? []) {
+                if (!s.tag?.extinf) continue
                 play.push(s.tag.extinf)
                 play.push(s.relativepath.replaceAll(slash, pslash))
             }
@@ -1045,15 +1072,13 @@ async function generateM3U(folder, useEXTINF) {
         if (config.exts.includes(songext)) {
 
             if (useEXTINF) {
-                //get info about the song
-                let extinf = getEXTINF(basedir + slash + song, song, false, true)
+                let extinf = await getEXTINF(basedir + slash + song, song, false, true)
                 allsongs.push(extinf.toString())
+                allsongs.push(`${appendname}${filename}`)
                 allsongs.push(`${appendname}${filename}`)
             } else {
                 allsongs.push(`${appendname}${filename}`)
             }
-
-
         }
     }
     // skip if no actual songs (allsongs only contains the EXTM3U header or is empty)
@@ -1308,6 +1333,8 @@ async function loadPlaylist(playlist, mode) {
         if (autocompArr === "both") { document.getElementById("com").click() } //turn on playlist only mode
 
         let loadPlaylists = config.comPlaylists[playlist.fullpath] //array of playlists this is made of
+        const needsTags = loadPlaylists.some(pl => pl.fullpath.startsWith("__artist__:") || pl.fullpath.startsWith("__album__:"))
+        if (needsTags) { await ensureAllTagsFetched() }
         for (let i = 0; i < loadPlaylists.length; i++) { //for each playlist we wanna add
             const pl = loadPlaylists[i];
             //for loop find the desired playlist, push to currPlaylist and break from for loop

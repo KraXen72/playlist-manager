@@ -46,8 +46,14 @@ function getTag(songPath) {
 	if (!stmtGet) return null
 	const row = stmtGet.get(songPath)
 	if (row === undefined) return null
-	if (!fs.existsSync(songPath)) return null
-	const mtime = Math.round(fs.statSync(songPath).mtimeMs)
+	if (row === undefined) return null
+	let mtime
+	try {
+		mtime = Math.round(fs.statSync(songPath).mtimeMs)
+	} catch (err) {
+		if (err.code === 'ENOENT') return null
+		throw err
+	}
 	if (row.mtime !== mtime) return null
 
 	const coverobj = row.cover_data

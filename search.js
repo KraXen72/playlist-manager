@@ -7,7 +7,7 @@ function search(songs, query, options) {
 
         // group objects (artist/album) always match by their own name
         if (song.type === 'artist' || song.type === 'album') {
-            return song.filename.toLowerCase().includes(lowerQuery)
+            return song.filename?.toLowerCase()?.includes(lowerQuery) ?? false;
         }
 
         const matches = [];
