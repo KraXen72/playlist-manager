@@ -312,6 +312,18 @@
     margin-left: 0.3rem;
 }
 
+/* Settings checkbox layout for search include options */
+.settings-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 1rem;
+}
+.settings-checkbox input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+}
+
 /*song preview*/
 #song-preview {
     display: grid;

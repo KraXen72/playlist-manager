@@ -22,7 +22,9 @@ var config = utils.initOrLoadConfig("./config.json", {
     "maindir": "",
     "exts": AUDIO_EXTS,
     "ignore": [],
-    "comPlaylists": {}
+    "comPlaylists": {},
+    "includeArtistResults": false,
+    "includeAlbumResults": false
 })
 console.log("config: ", config)
 
@@ -431,6 +433,12 @@ function initSettings() {
         document.getElementById('settings-ign-pick').onclick = () => { pickFolderAndFillInput('settings-ign-input') }
 
         document.getElementById('settings-config-import').onclick = () => { importSettings() }
+
+        // set search include checkboxes from config
+        const artChk = document.getElementById('settings-include-artist')
+        const albChk = document.getElementById('settings-include-album')
+        if (artChk) { artChk.checked = !!config.includeArtistResults }
+        if (albChk) { albChk.checked = !!config.includeAlbumResults }
     }
 }
 function closeSettings() {
@@ -439,6 +447,12 @@ function closeSettings() {
 function saveSettings() {
     config.exts = [...document.getElementById("settings-exts").querySelectorAll(".pillval")].map(pill => pill.innerText)
     config.ignore = [...document.getElementById("settings-ign").querySelectorAll(".pillval")].map(pill => pill.innerText)
+
+    // save search include options
+    const artChk = document.getElementById('settings-include-artist')
+    const albChk = document.getElementById('settings-include-album')
+    if (artChk) { config.includeArtistResults = artChk.checked }
+    if (albChk) { config.includeAlbumResults = albChk.checked }
 
     utils.saveConfig("./config.json", config)
 }
