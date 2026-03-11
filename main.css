@@ -235,6 +235,26 @@
 .search-mode-btn.active {
     background-color: rgba(165, 117, 98, 0.2);
 }
+.autocomplete-result-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.result-text {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.result-icon-wrap {
+    display: flex;
+    align-items: center;
+    margin-left: 0.5rem;
+}
+.result-icon {
+    font-size: 1.2rem;
+    color: var(--matter-onsurface-rgb);
+}
 
 #button-bar {
     grid-row: 3 / 4;

@@ -178,8 +178,31 @@ function setupAutocomplete(message) {
         autoSelect: true,
         submitOnEnter: true,
         getResultValue: result => {
-            return utils.getExtOrFn(result.filename).fn + (result.type === "playlist" && autocompArr === "both" ? " (Playlist)" : "")
-        } //show the filename in the result
+            return utils.getExtOrFn(result.filename).fn
+        },
+        renderResult: (result, props) => {
+            const filename = utils.getExtOrFn(result.filename).fn
+            let icon = ''
+            let title = ''
+            
+            if (result.type === 'playlist') {
+                icon = '<i class="material-icons-round md-queue_music result-icon"></i>'
+                title = 'Playlist'
+            } else if (result.type === 'artist') {
+                icon = '<i class="material-icons-round md-person result-icon"></i>'
+                title = 'Artist'
+            } else if (result.type === 'album') {
+                icon = '<i class="material-icons-round md-album result-icon"></i>'
+                title = 'Album'
+            }
+            
+            return `
+                <li ${props}>
+                    <span class="result-text">${filename}</span>
+                    ${icon ? `<span class="result-icon-wrap" title="${title}">${icon}</span>` : ''}
+                </li>
+            `
+        }
     })
     mainsearch.destroy = () => { autocompleteDestroy(mainsearch) }
 }
