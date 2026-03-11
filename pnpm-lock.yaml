@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@electron/remote':
+        specifier: ^2.1.2
+        version: 2.1.3(electron@41.0.0)
       '@material-icons/font':
         specifier: ^1.0.36
         version: 1.0.36
@@ -27,7 +30,7 @@ importers:
         specifier: ^11.12.1
         version: 11.12.1
       roseboxlib:
-        specifier: https://github.com/KraXen72/roseboxlib.git
+        specifier: github:KraXen72/roseboxlib#e23b75ff0633b961d05d71fa3a2abd099e690436
         version: https://codeload.github.com/KraXen72/roseboxlib/tar.gz/e23b75ff0633b961d05d71fa3a2abd099e690436
 
 packages:
@@ -38,6 +41,11 @@ packages:
   '@electron/get@2.0.3':
     resolution: {integrity: sha512-Qkzpg2s9GnVV2I2BjRksUi43U5e6+zaQMcjoJy0C+C5oxaKl+fmckGDQFtRpZpZV0NQekuZZ+tGz7EA9TVnQtQ==}
     engines: {node: '>=12'}
+
+  '@electron/remote@2.1.3':
+    resolution: {integrity: sha512-XlpxC8S4ttj/v2d+PKp9na/3Ev8bV7YWNL7Cw5b9MAWgTphEml7iYgbc7V0r9D6yDOfOkj06bchZgOZdlWJGNA==}
+    peerDependencies:
+      electron: '>= 13.0.0'
 
   '@material-icons/font@1.0.36':
     resolution: {integrity: sha512-4+cjH7m5tz1r+uRHjZhEzkyfnbEY1mbMQWgPgnXooFbmuTrjDPdy9BpIcScRE/pXpN+SoSzpetAu7+n5oYDAtg==}
@@ -376,6 +384,10 @@ snapshots:
       global-agent: 3.0.0
     transitivePeerDependencies:
       - supports-color
+
+  '@electron/remote@2.1.3(electron@41.0.0)':
+    dependencies:
+      electron: 41.0.0
 
   '@material-icons/font@1.0.36': {}
 
