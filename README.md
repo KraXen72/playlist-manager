@@ -35,19 +35,23 @@ The best part is, this app uses relative paths in it's playlists, so if you just
 ## Installing
 
 **installing through [pnpm](https://pnpm.io/installation)**
-required: `nodejs` 
+required: `node`, `pnpm`
 run in command prompt:  
-`pnpm add -g github:KraXen72/playlist-manager@2` this will install the app globally 
+```bash
+pnpm add -g github:KraXen72/playlist-manager@2
+``` 
+this will install the app globally.  
 to launch the program, type `playlistm` in terminal or windows search.
 
 **running from source**
 required: `nodejs, git`
 run in command prompt:  
-1. `git clone https://github.com/KraXen72/playlist-manager`
-2. `cd playlist-manager`
-3. `pnpm i`
-4. `pnpm run start` to run the program
-  
+```bash
+git clone https://github.com/KraXen72/playlist-manager
+cd playlist-manager
+pnpm i
+pnpm run start
+```
 
 ## Other Features:
 ### General:
