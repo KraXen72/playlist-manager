@@ -1309,11 +1309,24 @@ async function loadPlaylist(playlist, mode) {
         for (let i = 0; i < loadPlaylists.length; i++) { //for each playlist we wanna add
             const pl = loadPlaylists[i];
             //for loop find the desired playlist, push to currPlaylist and break from for loop
+            let found = false
             for (let j = 0; j < allPlaylists.length; j++) {
                 const compp = allPlaylists[j];
                 if (compp.fullpath === pl.fullpath) {
                     await autocompleteSubmit(compp, false, false)
+                    found = true
                     break;
+                }
+            }
+            if (!found) {
+                // Also check artist and album group objects
+                const allGroupObjs = [...allArtistObjs, ...allAlbumObjs]
+                for (let j = 0; j < allGroupObjs.length; j++) {
+                    const compp = allGroupObjs[j];
+                    if (compp.fullpath === pl.fullpath) {
+                        await autocompleteSubmit(compp, false, false)
+                        break;
+                    }
                 }
             }
         }
