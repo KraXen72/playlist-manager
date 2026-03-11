@@ -9,7 +9,9 @@ Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases)
 
 | Platform | File |
 |---|---|
-| Linux | `.AppImage` |
+| Linux (Fedora/RHEL) | `.rpm` |
+| Linux (Debian/Ubuntu) | `.deb` |
+| Linux (universal) | `.AppImage` |
 | Windows | `.exe` (NSIS installer) |
 | macOS | `.dmg` |
 
@@ -22,7 +24,9 @@ To pin a specific version:
 ```bash
 mise use -g "github:KraXen72/playlist-manager@2.0.2"
 ```
-mise will download and manage the AppImage / executable automatically. Run with `playlist-manager`.
+mise will download and manage the AppImage automatically. Run with `playlist-manager.AppImage`.
+
+> **Note:** On Fedora/RHEL, prefer the `.rpm` package (`sudo dnf install playlist-manager-*.rpm`) for proper system integration including the desktop entry and application icon. The `.rpm` is the only artifact built in nightly releases.
 
 **running from source**  
 required: `nodejs`, `git`, `pnpm`

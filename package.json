@@ -6,6 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
     "dist": "electron-builder --publish never",
+    "dist:rpm": "electron-builder --linux rpm --publish never",
     "dist:dir": "electron-builder --dir"
   },
   "repository": "https://github.com/KraXen72/playlist-manager",
@@ -36,6 +37,7 @@
       "!covers/**",
       "!screenshots/**",
       "!.github/**",
+      "!linux/**",
       "!*.md",
       "!pnpm-lock.yaml",
       "!pnpm-workspace.yaml"
@@ -45,6 +47,20 @@
       "target": [
         {
           "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "rpm",
           "arch": [
             "x64",
             "arm64"

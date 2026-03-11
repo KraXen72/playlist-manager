@@ -1,9 +1,7 @@
 name: Nightly build
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,11 +26,14 @@ jobs:
           node-version: latest
           cache: pnpm
 
+      - name: Install rpm tools
+        run: sudo apt-get install -y rpm
+
       - name: Install dependencies
         run: pnpm install
 
       - name: Build
-        run: pnpm run dist
+        run: pnpm run dist:rpm
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

@@ -28,6 +28,10 @@ jobs:
           node-version: latest
           cache: pnpm
 
+      - name: Install rpm tools (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y rpm
+
       - name: Install dependencies
         run: pnpm install
 

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Playlist Manager
+GenericName=Music Playlist Manager
+Comment=Local music playlist manager
+Exec=playlist-manager
+Icon=playlist-manager
+Categories=Audio;Music;
+Terminal=false
+Keywords=music;playlist;m3u;
