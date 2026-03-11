@@ -54,11 +54,17 @@
             <ul class="autocomplete-result-list"></ul>
           </label>
           <button id = "special" class="matter-button-outlined mdiconbutton mr" title = "find songs with hard to type titles"><i class="material-icons-round md-emoji_symbols"></i></button>
-          <button id = "mode-toggle" class="matter-button-outlined mdiconbutton ml" title = "search by artist">
-            <i class="material-icons-round md-person_search"></i>
-            <i class="material-icons-round md-library_music" hidden></i>
-            <i class="material-icons-round md-autorenew" hidden></i>
-          </button>
+          <div id="search-mode-group">
+            <button id="search-mode-filename" class="matter-button-outlined btn-active mdiconbutton" title="Search by filename">
+              <i class="material-icons-round md-insert_drive_file"></i>
+            </button>
+            <button id="search-mode-artist" class="matter-button-outlined mdiconbutton" title="Search by artist (requires tags)">
+              <i class="material-icons-round md-person"></i>
+            </button>
+            <button id="search-mode-album" class="matter-button-outlined mdiconbutton" title="Search by album (requires tags)">
+              <i class="material-icons-round md-album"></i>
+            </button>
+          </div>
         </div>
         
       </div>
