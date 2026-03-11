@@ -153,6 +153,25 @@ function buildGroupObjects() {
         : []
 }
 
+function countPlaylistSongs(fullpath, songs) {
+    const components = config.comPlaylists[fullpath]
+    if (components) {
+        const needsTags = components.some(pl => pl.fullpath.startsWith("__artist__:") || pl.fullpath.startsWith("__album__:"))
+        if (needsTags && !allSongsAreTagged) return null
+        return components.reduce((total, pl) => {
+            if (pl.fullpath.startsWith("__artist__:")) {
+                return total + db.getPathsByArtist(pl.fullpath.slice("__artist__:".length)).length
+            } else if (pl.fullpath.startsWith("__album__:")) {
+                return total + db.getPathsByAlbum(pl.fullpath.slice("__album__:".length)).length
+            } else {
+                const p = allPlaylists.find(p => p.fullpath === pl.fullpath)
+                return total + (p ? p.songs.filter(s => !s.includes("#EXTINF")).length : 0)
+            }
+        }, 0)
+    }
+    return songs.filter(s => !s.includes("#EXTINF")).length
+}
+
 async function ensureAllTagsFetched() {
     if (allSongsAreTagged) return
     const sprog = document.getElementById("sprog")
@@ -174,6 +193,7 @@ async function ensureAllTagsFetched() {
     }
     allSongsAreTagged = true
     buildGroupObjects()
+    refreshSidebarPlaylists()
     sprog.style.width = `100%`
     setTimeout(() => { sprog.style.opacity = `0%` }, 500)
     setTimeout(() => { sprog.style.width = `0%` }, 1250)
@@ -327,7 +347,7 @@ function playlistOnlyToggle() {
     }
 }
 
-function toggleSearchMode(mode) {
+async function toggleSearchMode(mode) {
     if (searchModes.has(mode) && searchModes.size === 1) {
         return
     }
@@ -353,11 +373,14 @@ function toggleSearchMode(mode) {
             }
         }
 
+        searchModes.add(mode)
+        btn.classList.add('active')
+
         if ((mode === 'artist' || mode === 'album') && !allSongsAreTagged) {
             const sprog = document.getElementById("sprog")
             const inp = document.getElementById('command-line-input')
             const allBtns = document.querySelectorAll('.search-mode-btn')
-            
+
             sprog.style.width = `0`
             sprog.style.opacity = `100%`
             inp.setAttribute("disabled", "true")
@@ -370,33 +393,29 @@ function toggleSearchMode(mode) {
             let done = total - untagged.length
 
             const BATCH = 12
-            ;(async () => {
-                for (let i = 0; i < untagged.length; i += BATCH) {
-                    await Promise.allSettled(
-                        untagged.slice(i, i + BATCH).map(song =>
-                            getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
-                        )
+            for (let i = 0; i < untagged.length; i += BATCH) {
+                await Promise.allSettled(
+                    untagged.slice(i, i + BATCH).map(song =>
+                        getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
                     )
-                    done = Math.min(done + BATCH, total)
-                    sprog.style.width = `${done / total * 100}%`
-                    await new Promise(r => setTimeout(r, 0))
-                }
+                )
+                done = Math.min(done + BATCH, total)
+                sprog.style.width = `${done / total * 100}%`
+                await new Promise(r => setTimeout(r, 0))
+            }
 
-                allSongsAreTagged = true
-                buildGroupObjects()
-                sprog.style.width = `100%`
-                setTimeout(() => { sprog.style.opacity = `0%` }, 500)
-                setTimeout(() => { sprog.style.width = `0%` }, 1250)
+            allSongsAreTagged = true
+            buildGroupObjects()
+            refreshSidebarPlaylists()
+            sprog.style.width = `100%`
+            setTimeout(() => { sprog.style.opacity = `0%` }, 500)
+            setTimeout(() => { sprog.style.width = `0%` }, 1250)
 
-                mainsearch.destroy()
-                inp.removeAttribute("disabled")
-                allBtns.forEach(b => b.removeAttribute("disabled"))
-                setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
-            })()
+            mainsearch.destroy()
+            inp.removeAttribute("disabled")
+            allBtns.forEach(b => b.removeAttribute("disabled"))
+            setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
         }
-
-        searchModes.add(mode)
-        btn.classList.add('active')
     }
 }
 
@@ -430,7 +449,7 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
             } else if (song.type === "playlist") {
                 tag = {
                     title: song.filename,
-                    artist: `Playlist ${bull} ${song.songs.length / 2} Songs`,
+                    artist: `Playlist ${bull} ${countPlaylistSongs(song.fullpath, song.songs) ?? '??'} Songs`,
                     album: utils.shortenFilename(song.fullpath, 55),
                     cover: config.comPlaylists[song.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
                 }
@@ -723,7 +742,7 @@ function savePlaylist() { //actually save the playlist
     const existing = songsAndPlaylists.find(p => p.fullpath === savePath)
     if (existing) {
         existing.songs = savedLines
-        existing.tag.artist = `Playlist ${bull} ${savedLines.length / 2} Songs`
+        existing.tag.artist = `Playlist ${bull} ${countPlaylistSongs(savePath, savedLines) ?? '??'} Songs`
     }
 
     document.getElementById("save").classList.add("btn-active")
@@ -1075,7 +1094,6 @@ async function generateM3U(folder, useEXTINF) {
                 let extinf = await getEXTINF(basedir + slash + song, song, false, true)
                 allsongs.push(extinf.toString())
                 allsongs.push(`${appendname}${filename}`)
-                allsongs.push(`${appendname}${filename}`)
             } else {
                 allsongs.push(`${appendname}${filename}`)
             }
@@ -1257,7 +1275,7 @@ async function fetchAllSongs() {
         playlist["type"] = "playlist"
         playlist.tag = {
             title: playlist.filename,
-            artist: `Playlist ${bull} ${playlist.songs.length / 2} Songs`,
+            artist: `Playlist ${bull} ${countPlaylistSongs(playlist.fullpath, playlist.songs) ?? '??'} Songs`,
             album: utils.shortenFilename(playlist.fullpath, 60),
             cover: config.comPlaylists[playlist.fullpath] !== undefined ? "img/generated.png" : "img/playlist.png"
         }
@@ -1303,7 +1321,7 @@ function refreshSidebarPlaylists() {
                 index: allPlaylists.length.toString(),
                 tag: {
                     title: item,
-                    artist: `Playlist ${bull} ${lines.length / 2} Songs`,
+                    artist: `Playlist ${bull} ${countPlaylistSongs(fp, lines) ?? '??'} Songs`,
                     album: utils.shortenFilename(fp, 60),
                     cover: config.comPlaylists[fp] !== undefined ? "img/generated.png" : "img/playlist.png"
                 }
@@ -1407,7 +1425,7 @@ function loadPlaylistsSidebar(eplaylists) {
             coverid: "",
             coversrc: "",
             title: title,
-            artist: `${playlist.songs.length / 2} Songs`,
+            artist: `${countPlaylistSongs(playlist.fullpath, playlist.songs) ?? '??'} Songs`,
             album: playlist.tag.album,
             filename: playlist.filename,
             strong: true
