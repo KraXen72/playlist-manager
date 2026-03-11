@@ -4,7 +4,7 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "NODE_OPTIONS=--experimental-sqlite electron ."
+    "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron ."
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -28,5 +28,8 @@
     "graceful-fs": "^4.2.11",
     "music-metadata": "^11.12.1",
     "roseboxlib": "github:KraXen72/roseboxlib#e23b75ff0633b961d05d71fa3a2abd099e690436"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }

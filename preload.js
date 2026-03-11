@@ -1056,17 +1056,15 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
+    let cover = ''
+    let coverobj = false
     if (!skipCovers) {
         const pic = mm.selectCover(metadata.common.picture)
-        var cover = ""
         if (pic !== undefined && pic !== null) {
             let frmt = pic.format.replaceAll("image/", "")
 
             cover = `data:${pic.format};base64,${pic.data.toString('base64')}`
             coverobj = { frmt, "data": pic.data }
-        } else {
-            cover = ""
-            coverobj = false
         }
     }
 

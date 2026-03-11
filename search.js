@@ -6,9 +6,9 @@ function search(songs, query, options) {
         if (!filename && !artist && !album) return false;
 
         const matches = [];
-        if (filename) matches.push(song.filename.toLowerCase().includes(lowerQuery));
-        if (artist && song.tag) matches.push(song.tag.artist.toLowerCase().includes(lowerQuery));
-        if (album && song.tag) matches.push(song.tag.album.toLowerCase().includes(lowerQuery));
+        if (filename && song.filename) matches.push(song.filename.toLowerCase().includes(lowerQuery));
+        if (artist && song.tag?.artist) matches.push(song.tag.artist.toLowerCase().includes(lowerQuery));
+        if (album && song.tag?.album) matches.push(song.tag.album.toLowerCase().includes(lowerQuery));
 
         return matches.some(Boolean);
     });

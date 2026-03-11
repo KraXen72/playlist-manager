@@ -253,7 +253,7 @@
 }
 .result-icon {
     font-size: 1.2rem;
-    color: var(--matter-onsurface-rgb);
+    color: rgb(var(--matter-onsurface-rgb));
 }
 
 #button-bar {

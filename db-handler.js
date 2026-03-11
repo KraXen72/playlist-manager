@@ -38,6 +38,7 @@ function getTag(songPath) {
 	if (!stmtGet) return null
 	const row = stmtGet.get(songPath)
 	if (row === undefined) return null
+	if (!fs.existsSync(songPath)) return null
 	const mtime = Math.round(fs.statSync(songPath).mtimeMs)
 	if (row.mtime !== mtime) return null
 
@@ -65,9 +66,16 @@ function getTag(songPath) {
  */
 function upsertTag(songPath, tag) {
 	if (!stmtUpsert) return
+	let mtime
+	try {
+		mtime = Math.round(fs.statSync(songPath).mtimeMs)
+	} catch (err) {
+		if (err.code === 'ENOENT') throw new Error(`File not found: ${songPath}`)
+		throw err
+	}
 	stmtUpsert.run(
 		songPath,
-		Math.round(fs.statSync(songPath).mtimeMs),
+		mtime,
 		tag.artist, tag.title, tag.album, tag.duration,
 		tag.coverobj ? tag.coverobj.data : null,
 		tag.coverobj ? tag.coverobj.frmt : null,
