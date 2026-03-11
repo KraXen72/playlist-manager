@@ -19,6 +19,9 @@ Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases)
 > If you need system-level integration (desktop entry, app icon), build the RPM locally with `pnpm run dist:rpm` and install it with `sudo dnf install dist/playlist-manager-*.rpm`.  
 
 **installing with [mise](https://mise.jdx.dev/) (via github backend)**  
+> **Note:**
+> There are currently some issues with this installation method. Please use a Release or if that doesen't work, build from source.
+
 required: `mise`
 ```bash
 mise use -g "github:KraXen72/playlist-manager"
