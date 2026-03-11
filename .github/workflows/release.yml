@@ -40,7 +40,7 @@ jobs:
       - name: Copy AppImages as raw binaries for mise (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          for appimage in dist/playlist-manager-*-linux-x64.AppImage; do
+          for appimage in dist/playlist-manager-*-linux-x86_64.AppImage; do
             [ -f "$appimage" ] && cp "$appimage" dist/playlist-manager-linux-x64
           done
           for appimage in dist/playlist-manager-*-linux-arm64.AppImage; do
