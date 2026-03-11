@@ -292,35 +292,40 @@ async function artistModeToggle() {
 async function fetchMissingArtists() {
     let inp = document.getElementById('command-line-input')
     let btn = document.getElementById("mode-toggle")
-    let sprog =  document.getElementById("sprog")
+    let sprog = document.getElementById("sprog")
     sprog.style.width = `0`
     sprog.style.opacity = `100%`
-
 
     inp.setAttribute("disabled", "true")
     btn.setAttribute("disabled", "true")
 
     document.getElementById('input-placeholder').textContent = "Getting artist for each song, please wait..."
 
-    for (let i = 0; i < songsAndPlaylists.length; i++) {
-        var song = songsAndPlaylists[i];
-        sprog.style.width = `${i / songsAndPlaylists.length * 100}%`
-        if (song.tag === undefined) {
-            song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
-        } else {
-            continue;
-        }
+    const untagged = songsAndPlaylists.filter(s => s.tag === undefined)
+    const total = songsAndPlaylists.length
+    let done = total - untagged.length // pre-tagged songs count as already done
+
+    const BATCH = 12
+    for (let i = 0; i < untagged.length; i += BATCH) {
+        await Promise.allSettled(
+            untagged.slice(i, i + BATCH).map(song =>
+                getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+            )
+        )
+        done = Math.min(done + BATCH, total)
+        sprog.style.width = `${done / total * 100}%`
+        await new Promise(r => setTimeout(r, 0)) // yield to let the browser paint
     }
+
     allSongsAreTagged = true
     sprog.style.width = `100%`
-    setTimeout(() => {sprog.style.opacity = `0%`}, 500)
-    setTimeout(() => {sprog.style.width = `0%`}, 1250)
+    setTimeout(() => { sprog.style.opacity = `0%` }, 500)
+    setTimeout(() => { sprog.style.width = `0%` }, 1250)
 
     mainsearch.destroy()
     inp.removeAttribute("disabled")
     btn.removeAttribute("disabled")
     setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
-    
 }
 
 //preview
@@ -624,9 +629,17 @@ function savePlaylist() { //actually save the playlist
     lines = removeDuplicatesFromPlaylist(lines)
 
     fs.writeFileSync(savePath, lines.join("\n"))
-    
+
+    // Keep the in-memory entry up-to-date so refreshSidebarPlaylists shows correct song count
+    const savedLines = lines.filter(l => l !== "#EXTM3U" && l.trim() !== "")
+    const existing = songsAndPlaylists.find(p => p.fullpath === savePath)
+    if (existing) {
+        existing.songs = savedLines
+        existing.tag.artist = `Playlist ${bull} ${savedLines.length / 2} Songs`
+    }
+
     document.getElementById("save").classList.add("btn-active")
-    loadPlaylistsSidebar(editablePlaylists)
+    refreshSidebarPlaylists()
     setTimeout(() => {document.getElementById("save").classList.remove("btn-active")}, 1000)
 }
 
@@ -1138,25 +1151,48 @@ async function fetchAllSongs() {
     console.log(songsAndPlaylists)
 
     //created playlists
-    editablePlaylists = fs.readdirSync(config.maindir).filter( //fetch teh maindir for user created playlists
-        item => fs.lstatSync(config.maindir + slash + item).isFile()
-    ).filter(item => { //filter out anything other than m3u
-        let ext = utils.getExtOrFn(item).ext
-        return ext.toLowerCase() === "m3u"
-    }).map(item => { //fetch the playlist data from big songAndPlaylists object
-        let fp = config.maindir + slash + item
-        let p = {}
-        for (let i = 0; i < songsAndPlaylists.length; i++) {
-            const cp = songsAndPlaylists[i];
-            if (cp.fullpath === fp) { p = cp; break; }
-        }
-		p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
-        return p }
-    )
-    loadPlaylistsSidebar(editablePlaylists)
-    if (editablePlaylists.length > 0){document.getElementById("yourplaylistshr").style.display = "block"}
+    refreshSidebarPlaylists()
 
     console.log(editablePlaylists)
+}
+
+// Rebuild editablePlaylists from the top-level m3u files in maindir and re-render the sidebar.
+// For files not yet in songsAndPlaylists (e.g. just saved for the first time), reads them from disk.
+function refreshSidebarPlaylists() {
+    const topLevel = fs.readdirSync(config.maindir).filter(
+        item => fs.lstatSync(config.maindir + slash + item).isFile()
+    ).filter(item => utils.getExtOrFn(item).ext.toLowerCase() === "m3u")
+
+    editablePlaylists = topLevel.map(item => {
+        const fp = config.maindir + slash + item
+        let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
+        if (!p) {
+            // New file – build an entry and register it so the rest of the app can find it
+            const lines = fs.readFileSync(fp, { encoding: "utf-8" })
+                .split("\n").map(l => l.trim()).filter(l => l !== "#EXTM3U" && l !== "")
+            p = {
+                filename: item,
+                fullpath: fp,
+                relativepath: fp.replaceAll(config.maindir + slash, ""),
+                songs: lines,
+                type: "playlist",
+                index: allPlaylists.length.toString(),
+                tag: {
+                    title: item,
+                    artist: `Playlist ${bull} ${lines.length / 2} Songs`,
+                    album: utils.shortenFilename(fp, 60),
+                    cover: config.comPlaylists[fp] !== undefined ? "img/generated.png" : "img/playlist.png"
+                }
+            }
+            allPlaylists.push(p)
+            songsAndPlaylists.push(p)
+        }
+        p.mode = config.comPlaylists[p.fullpath] !== undefined ? "com" : "new"
+        return p
+    })
+
+    loadPlaylistsSidebar(editablePlaylists)
+    if (editablePlaylists.length > 0) { document.getElementById("yourplaylistshr").style.display = "block" }
 }
 
 //load a playlist, "playlist" is an object, mode is new or com
