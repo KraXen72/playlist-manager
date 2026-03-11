@@ -41,6 +41,16 @@ jobs:
       - name: Build
         run: pnpm run dist
 
+      - name: Copy AppImages as raw binaries for mise (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          for appimage in dist/playlist-manager-*-linux-x64.AppImage; do
+            [ -f "$appimage" ] && cp "$appimage" dist/playlist-manager-linux-x64
+          done
+          for appimage in dist/playlist-manager-*-linux-arm64.AppImage; do
+            [ -f "$appimage" ] && cp "$appimage" dist/playlist-manager-linux-arm64
+          done
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
