@@ -226,6 +226,15 @@
     align-items: center;
     padding-right: 0.2rem
 }
+.search-mode-group {
+    display: flex;
+    align-items: center;
+    margin-left: 0.5rem;
+    gap: 0.25rem;
+}
+.search-mode-btn.active {
+    background-color: rgba(165, 117, 98, 0.2);
+}
 
 #button-bar {
     grid-row: 3 / 4;

@@ -42,11 +42,13 @@ var unsavedChanges = false
 
 var mainsearch
 var specialMode = false
-var artistMode = false
+var searchModes = new Set(['filename'])
 var dragSrcEl = null
 var allSongsAreTagged = false
 var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 var highlightedSong = null //currently highlighted autocomplete result
+
+const { search } = require('./search.js')
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -70,7 +72,9 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('titleh').addEventListener("scroll", (event) => { event.target.scrollTop = 0 })
     //search
     document.getElementById('special').addEventListener("click", specialSearch)
-    document.getElementById('mode-toggle').addEventListener("click", artistModeToggle)
+    document.getElementById('search-filename').addEventListener("click", () => toggleSearchMode('filename'))
+    document.getElementById('search-artist').addEventListener("click", () => toggleSearchMode('artist'))
+    document.getElementById('search-album').addEventListener("click", () => toggleSearchMode('album'))
     document.addEventListener("keydown", (e) => { //make tab do the same thing as enter
         if (e.which === 9 && highlightedSong !== null) {
             autocompleteSubmit(highlightedSong, true)
@@ -137,15 +141,12 @@ function setupAutocomplete(message) {
             if (input.length < 1 && !specialMode && autocompArr === "both") { return [] }
             let res = autocompArr === "both" ? songsAndPlaylists : autocompArr === "playlists" ? allPlaylists : []
 
-            if (!artistMode) {
-                res = res.filter(song => { //find matches
-                    return song.filename.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
-                })
-            } else {
-                res = res.filter(song => { //find matches
-                    return song.tag.artist.toLowerCase().includes(input.toLowerCase()) //fuck regex we doin includes
-                })
+            const options = {
+                filename: searchModes.has('filename'),
+                artist: searchModes.has('artist'),
+                album: searchModes.has('album')
             }
+            res = search(res, input, options)
 
             res = res.filter(song => { //filter out things already in playlist to avoid duplicates
                 for (let i = 0; i < currPlaylist.length; i++) { if (song.filename === currPlaylist[i].filename) { return false } }; return true
@@ -160,7 +161,8 @@ function setupAutocomplete(message) {
             res.sort((a, b) => { if (a.type === "playlist" && b.type === "song") { return -1 } else if (a.type === "song" && b.type === "playlist") { return 1 } else { return 0 } })
 
             //if specialmode or playlist only mode then return full results, otherwise first 10
-            return specialMode || autocompArr === "playlists" || artistMode ? res : res.slice(0, 10)
+            const hasArtistOrAlbum = searchModes.has('artist') || searchModes.has('album')
+            return specialMode || autocompArr === "playlists" || hasArtistOrAlbum ? res : res.slice(0, 10)
         },
         onUpdate: (results, selectedIndex) => {
             if (selectedIndex > -1) {
@@ -243,92 +245,79 @@ function playlistOnlyToggle() {
     }
 }
 
-async function artistModeToggle() {
-    let btn = document.getElementById("mode-toggle")
-    if (!artistMode) {
+function toggleSearchMode(mode) {
+    if (searchModes.has(mode) && searchModes.size === 1) {
+        return
+    }
 
-
-        let disablepom = false
-        if (autocompArr === "playlists") {
-            disablepom = dialog.showMessageBoxSync({
-                message: "Searching by artist is not available in playlist only mode. What do you want to do?",
-                type: "question",
-                buttons: ["Exit playlist-only mode and search by artist", "Stay in playlist-only mode"],
-                noLink: true
-            })
-            if (disablepom === 0) {
-                disablepom = true
-                playlistOnlyToggle()
-            } else {
-                disablepom = false
-            }
-        } else {
-            disablepom = true
-        }
-        if (disablepom) {
-            btn.querySelector('.md-person_search').setAttribute("hidden", "true")
-            artistMode = true
-
-            if (!allSongsAreTagged) {
-                let throbber = btn.querySelector('.md-autorenew')
-                throbber.removeAttribute("hidden")
-                throbber.classList.add("rotate")
-                await fetchMissingArtists()
-                throbber.classList.remove("rotate")
-                throbber.setAttribute("hidden", "true")
-            }
-            btn.querySelector('.md-library_music').removeAttribute("hidden")
-            document.getElementById('input-placeholder').textContent = `Search songs by artist...`
-            btn.title = "search by title"
-        }
+    const btn = document.getElementById(`search-${mode}`)
+    if (searchModes.has(mode)) {
+        searchModes.delete(mode)
+        btn.classList.remove('active')
     } else {
-        btn.querySelector('.md-person_search').removeAttribute("hidden")
-        btn.querySelector('.md-library_music').setAttribute("hidden", "true")
-        artistMode = false
-        btn.title = "search by artist"
+        if (mode === 'artist' || mode === 'album') {
+            if (autocompArr === "playlists") {
+                const disablepom = dialog.showMessageBoxSync({
+                    message: `Searching by ${mode} is not available in playlist only mode. What do you want to do?`,
+                    type: "question",
+                    buttons: [`Exit playlist-only mode and search by ${mode}`, "Stay in playlist-only mode"],
+                    noLink: true
+                })
+                if (disablepom === 0) {
+                    playlistOnlyToggle()
+                } else {
+                    return
+                }
+            }
+        }
 
-        document.getElementById('input-placeholder').textContent = `Start typing a name of a ${autocompArr === "both" ? "song or playlist" : "playlist"}...`
+        if ((mode === 'artist' || mode === 'album') && !allSongsAreTagged) {
+            const sprog = document.getElementById("sprog")
+            const inp = document.getElementById('command-line-input')
+            const allBtns = document.querySelectorAll('.search-mode-btn')
+            
+            sprog.style.width = `0`
+            sprog.style.opacity = `100%`
+            inp.setAttribute("disabled", "true")
+            allBtns.forEach(b => b.setAttribute("disabled", "true"))
+
+            document.getElementById('input-placeholder').textContent = "Getting tags for each song, please wait..."
+
+            const untagged = songsAndPlaylists.filter(s => s.tag === undefined)
+            const total = songsAndPlaylists.length
+            let done = total - untagged.length
+
+            const BATCH = 12
+            ;(async () => {
+                for (let i = 0; i < untagged.length; i += BATCH) {
+                    await Promise.allSettled(
+                        untagged.slice(i, i + BATCH).map(song =>
+                            getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+                        )
+                    )
+                    done = Math.min(done + BATCH, total)
+                    sprog.style.width = `${done / total * 100}%`
+                    await new Promise(r => setTimeout(r, 0))
+                }
+
+                allSongsAreTagged = true
+                sprog.style.width = `100%`
+                setTimeout(() => { sprog.style.opacity = `0%` }, 500)
+                setTimeout(() => { sprog.style.width = `0%` }, 1250)
+
+                mainsearch.destroy()
+                inp.removeAttribute("disabled")
+                allBtns.forEach(b => b.removeAttribute("disabled"))
+                setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
+            })()
+        }
+
+        searchModes.add(mode)
+        btn.classList.add('active')
     }
 }
 
-async function fetchMissingArtists() {
-    let inp = document.getElementById('command-line-input')
-    let btn = document.getElementById("mode-toggle")
-    let sprog = document.getElementById("sprog")
-    sprog.style.width = `0`
-    sprog.style.opacity = `100%`
 
-    inp.setAttribute("disabled", "true")
-    btn.setAttribute("disabled", "true")
-
-    document.getElementById('input-placeholder').textContent = "Getting artist for each song, please wait..."
-
-    const untagged = songsAndPlaylists.filter(s => s.tag === undefined)
-    const total = songsAndPlaylists.length
-    let done = total - untagged.length // pre-tagged songs count as already done
-
-    const BATCH = 12
-    for (let i = 0; i < untagged.length; i += BATCH) {
-        await Promise.allSettled(
-            untagged.slice(i, i + BATCH).map(song =>
-                getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
-            )
-        )
-        done = Math.min(done + BATCH, total)
-        sprog.style.width = `${done / total * 100}%`
-        await new Promise(r => setTimeout(r, 0)) // yield to let the browser paint
-    }
-
-    allSongsAreTagged = true
-    sprog.style.width = `100%`
-    setTimeout(() => { sprog.style.opacity = `0%` }, 500)
-    setTimeout(() => { sprog.style.width = `0%` }, 1250)
-
-    mainsearch.destroy()
-    inp.removeAttribute("disabled")
-    btn.removeAttribute("disabled")
-    setupAutocomplete(autocompArr === "both" ? "song or playlist" : "playlist")
-}
 
 //preview
 /**
