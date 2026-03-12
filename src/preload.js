@@ -1431,22 +1431,14 @@ async function loadPlaylist(playlist, mode) {
         dropClass: "drag-over",
         onDragStart: ({ payload }) => { document.body.classList.add('is-dragging') },
         onDragEnd: ({ payload }) => { document.body.classList.remove('is-dragging') },
-        onDrop: (dropResult) => {
-            // Use payload identity and indices to update currPlaylist cleanly
-            const { removedIndex, addedIndex, payload } = dropResult
-            if (removedIndex === null && addedIndex === null) return
+        onDrop: () => {
+            const old = currPlaylist
+            const lookup = new Map(old.map(s => [s.fullpath, s]))
 
-            const newOrder = [...currPlaylist]
-                if (removedIndex !== null && addedIndex !== null) {
-                const [removed] = newOrder.splice(removedIndex, 1)
-                newOrder.splice(addedIndex, 0, removed)
-                } else if (removedIndex !== null) {
-                newOrder.splice(removedIndex, 1)
-            } else if (addedIndex !== null && payload) {
-                newOrder.splice(addedIndex, 0, payload)
-            }
+            const items = document.querySelectorAll("#playlist-bar .songitem")
 
-            currPlaylist = newOrder
+            currPlaylist = Array.from(items).map(el => lookup.get(el.dataset.fullpath))
+
             notReady(true)
         },
         getChildPayload: (index) => {
