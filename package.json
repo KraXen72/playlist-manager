@@ -21,7 +21,8 @@
     "@trevoreyre/autocomplete-js": "^3.0.3",
     "fs-walk": "^0.0.2",
     "graceful-fs": "^4.2.11",
-    "music-metadata": "^11.12.1"
+    "music-metadata": "^11.12.1",
+    "smooth-dnd": "^0.12.1"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

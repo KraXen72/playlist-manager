@@ -10,7 +10,8 @@ const utils = require('./roseboxlib/utils.js')
 
 const walk = require('fs-walk')
 const Autocomplete = require('@trevoreyre/autocomplete-js')
-//const sortable = require('html5sortable/dist/html5sortable.cjs.js')
+
+let SmoothDnD = null
 
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
@@ -61,7 +62,7 @@ let unsavedChanges = false
 let mainsearch
 let specialMode = false
 const searchModes = new Set(['filename'])
-let dragSrcEl = null
+let playlistDnDContainer = null
 let allSongsAreTagged = false
 let allArtistObjs = []
 let allAlbumObjs = []
@@ -266,7 +267,7 @@ function setupAutocomplete(message) {
             }
             res = search(res, input, options)
 
-            res = res.filter(song => !currPlaylist.some(p => p.filename === song.filename))
+            res = res.filter(song => !currPlaylist.some(p => p && p.filename === song.filename)).filter(Boolean)
             if (specialMode) {
                 res = res.filter(song => {
                     const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
@@ -355,6 +356,7 @@ function playlistOnlyToggle() {
     let con = -1
     let onlyContainsPlaylists = true
     for (const song of currPlaylist) {
+        if (!song) continue
         if (song.type === "song") {
             onlyContainsPlaylists = false;
             break;
@@ -725,6 +727,16 @@ function discardPlaylist() {
     notReady(false)
     for (const url of activeBlobUrls) URL.revokeObjectURL(url)
     activeBlobUrls.clear()
+    // dispose the smooth-dnd container before removing DOM nodes, because smooth-dnd is skibidi.
+    if (playlistDnDContainer) {
+        try {
+            playlistDnDContainer.dispose()
+        } catch (e) {
+            console.warn('Error disposing playlistDnDContainer:', e)
+        }
+        playlistDnDContainer = null
+    }
+
     document.getElementById("playlist-bar").querySelectorAll(".songitem").forEach(s => s.remove())
     currPlaylist = []
     document.getElementById("song-preview").style.visibility = "hidden"
@@ -732,6 +744,7 @@ function discardPlaylist() {
     playlistName = "Untitled Playlist"
     document.getElementById("titleh").textContent = playlistName
     if (autocompArr === "playlists") { document.getElementById("com").click() }
+
 }
 
 
@@ -739,6 +752,7 @@ function savePlaylistPrompt() {
     if (currPlaylist.length > 0) {
         let onlyContainsPlaylists = true
         for (const song of currPlaylist) {
+            if (!song) continue
             if (song.type === "song") {
                 onlyContainsPlaylists = false;
                 break;
@@ -761,7 +775,7 @@ function savePlaylistPrompt() {
             dialog.showMessageBoxSync({ "message": "Please name your playlist first" })
         } else {
             if (autocompArr === 'playlists') {
-                const cPlaylist = currPlaylist.map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
+                const cPlaylist = currPlaylist.filter(Boolean).map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
                 config.comPlaylists[path.join(config.maindir, `${playlistName}.m3u`)] = cPlaylist
                 utils.saveConfig(CONFIG_PATH, config)
             }
@@ -881,47 +895,6 @@ async function addSong(songobj, refocus) {
     songElem.innerHTML = generateSongitem(siOptions)
     songElem.setAttribute("index", songobj.index)
     songElem.dataset.fullpath = songobj.fullpath
-    songElem.setAttribute("draggable", "true")
-
-    songElem.addEventListener("dragstart", (e) => {
-        dragSrcEl = songElem
-        e.dataTransfer.effectAllowed = "move"
-        setTimeout(() => songElem.classList.add("dragging"), 0)
-    })
-    songElem.addEventListener("dragend", () => {
-        songElem.classList.remove("dragging")
-        document.querySelectorAll(".songitem.drag-over").forEach(el => el.classList.remove("drag-over"))
-    })
-    songElem.addEventListener("dragover", (e) => {
-        e.preventDefault()
-        e.dataTransfer.dropEffect = "move"
-        if (dragSrcEl !== songElem) {
-            document.querySelectorAll(".songitem.drag-over").forEach(el => el.classList.remove("drag-over"))
-            songElem.classList.add("drag-over")
-        }
-    })
-    songElem.addEventListener("dragleave", () => {
-        songElem.classList.remove("drag-over")
-    })
-    songElem.addEventListener("drop", (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        if (dragSrcEl === null || dragSrcEl === songElem) return
-        const pb = document.getElementById("playlist-bar")
-        const children = [...pb.querySelectorAll(".songitem")]
-        const srcIdx = children.indexOf(dragSrcEl)
-        const tgtIdx = children.indexOf(songElem)
-        if (srcIdx < tgtIdx) {
-            pb.insertBefore(dragSrcEl, songElem.nextSibling)
-        } else {
-            pb.insertBefore(dragSrcEl, songElem)
-        }
-        songElem.classList.remove("drag-over")
-        const newOrder = [...pb.querySelectorAll(".songitem")]
-        const oldPlaylist = [...currPlaylist]
-        currPlaylist = newOrder.map(el => oldPlaylist.find(s => s.fullpath === el.dataset.fullpath)).filter(Boolean)
-        notReady(true)
-    })
 
     moreElem.classList.add("songitem-button"/*, "hidden", "vertical-icon-minwidth"*/)
     moreElem.setAttribute("title", "more options")
@@ -1433,13 +1406,44 @@ async function loadPlaylist(playlist, mode) {
     notReady(false)
     playlistName = lastPlaylistName
     titleh.textContent = lastPlaylistName
-    /*
-    let sopts = {
-        handle: ".songitem-cover-wrap",
-        placeholder: `<hr>`
+    
+    if (playlistDnDContainer) {
+        playlistDnDContainer.dispose()
+        playlistDnDContainer = null
     }
-    sortable('#playlist-bar', sopts)*/
-    //sortable.sortable("#playlist-bar")
+    
+    if (!SmoothDnD) {
+        const smoothDndModule = require('smooth-dnd')
+        SmoothDnD = smoothDndModule.default || smoothDndModule
+    }
+    
+    const pb = document.getElementById("playlist-bar")
+    playlistDnDContainer = SmoothDnD(pb, {
+        orientation: "vertical",
+        behaviour: "move",
+        animationDuration: 250,
+        dragHandleSelector: ".songitem-cover-wrap, .songitem-title, .songitem-aa",
+        nonDragAreaSelector: ".songitem-button-wrap",
+        dragClass: "dragging",
+        dropClass: "drag-over",
+        onDragStart: ({ payload }) => { document.body.classList.add('is-dragging') },
+        onDragEnd: ({ payload }) => { document.body.classList.remove('is-dragging') },
+        onDrop: () => {
+            const old = currPlaylist
+            const lookup = new Map(old.map(s => [s.fullpath, s]))
+
+            const items = document.querySelectorAll("#playlist-bar .songitem")
+
+            currPlaylist = Array.from(items)
+                .map(el => lookup.get(el.dataset.fullpath))
+                .filter(Boolean)
+
+            notReady(true)
+        },
+        getChildPayload: (index) => {
+            return currPlaylist[index]
+        }
+    })
 }
 
 function loadPlaylistsSidebar(eplaylists) {
