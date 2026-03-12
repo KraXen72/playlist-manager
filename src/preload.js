@@ -267,7 +267,7 @@ function setupAutocomplete(message) {
             }
             res = search(res, input, options)
 
-            res = res.filter(song => !currPlaylist.some(p => p && p.filename === song.filename))
+            res = res.filter(song => !currPlaylist.some(p => p && p.filename === song.filename)).filter(Boolean)
             if (specialMode) {
                 res = res.filter(song => {
                     const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
@@ -744,10 +744,7 @@ function discardPlaylist() {
     playlistName = "Untitled Playlist"
     document.getElementById("titleh").textContent = playlistName
     if (autocompArr === "playlists") { document.getElementById("com").click() }
-    if (playlistDnDContainer) {
-        playlistDnDContainer.dispose()
-        playlistDnDContainer = null
-    }
+
 }
 
 
@@ -1437,7 +1434,9 @@ async function loadPlaylist(playlist, mode) {
 
             const items = document.querySelectorAll("#playlist-bar .songitem")
 
-            currPlaylist = Array.from(items).map(el => lookup.get(el.dataset.fullpath))
+            currPlaylist = Array.from(items)
+                .map(el => lookup.get(el.dataset.fullpath))
+                .filter(Boolean)
 
             notReady(true)
         },
