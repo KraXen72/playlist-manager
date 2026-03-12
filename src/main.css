@@ -91,6 +91,15 @@
     height: 100%;
     border-radius: 0.3rem;
 }
+.songitem-cover-wrap:hover { 
+    cursor: grab; 
+    cursor: -webkit-grab; 
+}
+.songitem-cover-wrap:active,
+.smooth-dnd-ghost:hover, .smooth-dnd-ghost:active { 
+    cursor: grabbing;
+    cursor: -webkit-grabbing; 
+}
 .songitem-cover {
     position: absolute;
     z-index: 2;
@@ -162,6 +171,11 @@
     opacity: 1;
     border-radius: 0.25rem;
 }
+.songitem.dragging .songitem-cover-wrap,
+.songitem.dragging .songitem-cover { cursor: grabbing; cursor: -webkit-grabbing; }
+
+/* while dragging, force grabbing cursor globally (added/removed via JS) */
+body.is-dragging, body.is-dragging * { cursor: grabbing !important; cursor: -webkit-grabbing !important; }
 
 
 #playlist-title {

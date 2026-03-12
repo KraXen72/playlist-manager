@@ -267,7 +267,7 @@ function setupAutocomplete(message) {
             }
             res = search(res, input, options)
 
-            res = res.filter(song => !currPlaylist.some(p => p.filename === song.filename))
+            res = res.filter(song => !currPlaylist.some(p => p && p.filename === song.filename))
             if (specialMode) {
                 res = res.filter(song => {
                     const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
@@ -356,6 +356,7 @@ function playlistOnlyToggle() {
     let con = -1
     let onlyContainsPlaylists = true
     for (const song of currPlaylist) {
+        if (!song) continue
         if (song.type === "song") {
             onlyContainsPlaylists = false;
             break;
@@ -754,6 +755,7 @@ function savePlaylistPrompt() {
     if (currPlaylist.length > 0) {
         let onlyContainsPlaylists = true
         for (const song of currPlaylist) {
+            if (!song) continue
             if (song.type === "song") {
                 onlyContainsPlaylists = false;
                 break;
@@ -776,7 +778,7 @@ function savePlaylistPrompt() {
             dialog.showMessageBoxSync({ "message": "Please name your playlist first" })
         } else {
             if (autocompArr === 'playlists') {
-                const cPlaylist = currPlaylist.map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
+                const cPlaylist = currPlaylist.filter(Boolean).map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
                 config.comPlaylists[path.join(config.maindir, `${playlistName}.m3u`)] = cPlaylist
                 utils.saveConfig(CONFIG_PATH, config)
             }
@@ -1427,20 +1429,23 @@ async function loadPlaylist(playlist, mode) {
         nonDragAreaSelector: ".songitem-button-wrap",
         dragClass: "dragging",
         dropClass: "drag-over",
+        onDragStart: ({ payload }) => { document.body.classList.add('is-dragging') },
+        onDragEnd: ({ payload }) => { document.body.classList.remove('is-dragging') },
         onDrop: (dropResult) => {
+            // Use payload identity and indices to update currPlaylist cleanly
             const { removedIndex, addedIndex, payload } = dropResult
             if (removedIndex === null && addedIndex === null) return
-            
+
             const newOrder = [...currPlaylist]
-            if (removedIndex !== null && addedIndex !== null) {
+                if (removedIndex !== null && addedIndex !== null) {
                 const [removed] = newOrder.splice(removedIndex, 1)
                 newOrder.splice(addedIndex, 0, removed)
-            } else if (removedIndex !== null) {
+                } else if (removedIndex !== null) {
                 newOrder.splice(removedIndex, 1)
             } else if (addedIndex !== null && payload) {
                 newOrder.splice(addedIndex, 0, payload)
             }
-            
+
             currPlaylist = newOrder
             notReady(true)
         },
