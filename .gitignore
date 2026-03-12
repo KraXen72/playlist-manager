@@ -3,3 +3,4 @@ config.json
 covers/*
 tagcache.db
 dist
+repomix-output.xml
