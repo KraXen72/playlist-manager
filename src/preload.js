@@ -30,7 +30,7 @@ console.log('[paths]',
 
 const AUDIO_EXTS = ['mp3', 'flac', 'm4a', 'opus', 'ogg']
 
-var config = utils.initOrLoadConfig(CONFIG_PATH, {
+const config = utils.initOrLoadConfig(CONFIG_PATH, {
     "maindir": "",
     "exts": AUDIO_EXTS,
     "ignore": [],
@@ -46,27 +46,27 @@ let mm = null // music-metadata ESM module, loaded lazily on first tag parse
 let previewBlobUrl = null // current blob URL for the preview panel cover
 const activeBlobUrls = new Set() // blob URLs for current playlist items, revoked on remove/discard
 
-var allSongs = []
-var allPlaylists = []
+let allSongs = []
+let allPlaylists = []
 
-var currPlaylist = []
-var editablePlaylists = []
-var songsAndPlaylists = []
+let currPlaylist = []
+let editablePlaylists = []
+let songsAndPlaylists = []
 
-var playlistName = "Untitled Playlist"
-var lastPlaylistName = "" //so we don't have to prompt to save every time
-var savePath = ""
-var unsavedChanges = false
+let playlistName = "Untitled Playlist"
+let lastPlaylistName = "" //so we don't have to prompt to save every time
+let savePath = ""
+let unsavedChanges = false
 
-var mainsearch
-var specialMode = false
-var searchModes = new Set(['filename'])
-var dragSrcEl = null
-var allSongsAreTagged = false
-var allArtistObjs = []
-var allAlbumObjs = []
-var autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
-var highlightedSong = null //currently highlighted autocomplete result
+let mainsearch
+let specialMode = false
+const searchModes = new Set(['filename'])
+let dragSrcEl = null
+let allSongsAreTagged = false
+let allArtistObjs = []
+let allAlbumObjs = []
+let autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
+let highlightedSong = null //currently highlighted autocomplete result
 
 const { search } = require('./search.js')
 
@@ -113,7 +113,7 @@ window.addEventListener('DOMContentLoaded', () => {
 //select main dir
 async function selectfolder(mouseevent, inputconfig) {
     if (typeof inputconfig === "undefined") { //clicked on the pick button
-        pick = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+        const pick = await dialog.showOpenDialog({ properties: ['openDirectory'] })
         console.log(pick)
         if (!pick.canceled) {
             //we need to reload the app when picking a new folder. this checks if user wants to proceed or not
@@ -353,7 +353,7 @@ function specialSearch() {
 
 //playlist only mode
 function playlistOnlyToggle() {
-    let com = document.getElementById("com")
+    const com = document.getElementById("com")
     let con = -1
     let onlyContainsPlaylists = true
     for (let i = 0; i < currPlaylist.length; i++) {
@@ -366,7 +366,7 @@ function playlistOnlyToggle() {
     if (currPlaylist.length === 0 || !unsavedChanges || onlyContainsPlaylists) {
         con = 0
     } else {
-        let act = autocompArr === "both" ? "change to" : "exit from"
+        const act = autocompArr === "both" ? "change to" : "exit from"
         con = dialog.showMessageBoxSync({
             message: `Do you wish to discard current playlist and ${act} Playlist only mode?`,
             type: "question",
@@ -478,8 +478,8 @@ async function toggleSearchMode(mode) {
  * @param {Boolean} extraInfo if we should fetch extra info about the song and display everything
  */
 async function updatePreview(song, empty, updateOverride, extraInfo) {
-    let index = document.getElementById("song-preview").getAttribute("index")
-    let type = document.getElementById("song-preview").getAttribute("type")
+    const index = document.getElementById("song-preview").getAttribute("index")
+    const type = document.getElementById("song-preview").getAttribute("type")
     let tag = {} //artist, title, album, duration, cover, extinf, coverobj
     let update = true //if we should update
     if (updateOverride !== undefined) {
@@ -528,7 +528,7 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
         document.getElementById("sp-album").textContent = tag.album
 
         if (extraInfo !== undefined && extraInfo) {
-            let dur = `${Math.floor(Math.floor(tag.duration) / 1000 / 60)}:${utils.zeropad(Math.floor(tag.duration / 1000) % 60, 2)}` //get min and sec from duration, zeropad it
+            const dur = `${Math.floor(Math.floor(tag.duration) / 1000 / 60)}:${utils.zeropad(Math.floor(tag.duration / 1000) % 60, 2)}` //get min and sec from duration, zeropad it
 
             //TODO rewrite complex preview assignment
             //there probably has to be a better way to do this?
@@ -552,7 +552,7 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
 
 //settings
 function initSettings() {
-    let body = document.getElementById("settings-body")
+    const body = document.getElementById("settings-body")
     //closeSettings()
     if (body.style.display !== "block") {
         body.style.display = "block"
@@ -592,8 +592,8 @@ function saveSettings() {
     utils.saveConfig(CONFIG_PATH, config)
 }
 function importSettings() {
-    let inp = document.getElementById('settings-config-input')
-    let sp = inp.nextElementSibling //span
+    const inp = document.getElementById('settings-config-input')
+    const sp = inp.nextElementSibling //span
 
     let conf = {}
 
@@ -616,7 +616,7 @@ function importSettings() {
 //settings pills
 //add a pill to wrapper
 function addPill(wrapperid, inputid) {
-    add = document.getElementById(inputid).value
+    const add = document.getElementById(inputid).value
     if (document.getElementById(wrapperid).innerText === "Nothing found") { document.getElementById(wrapperid).innerHTML = "" } //clear the nothing found
     if (add !== "") {
         document.getElementById(wrapperid).innerHTML +=
@@ -639,10 +639,10 @@ function fillSettingPills(wrapperid, settingarr) {
 }
 //pick a folder using electron dialog and then add the folder name to the #${inputid} input
 async function pickFolderAndFillInput(inputid) {
-    pick = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    const pick = await dialog.showOpenDialog({ properties: ['openDirectory'] })
     console.log(pick)
     if (!pick.canceled) {
-        let fullpath = pick.filePaths[0]
+        const fullpath = pick.filePaths[0]
         document.getElementById(inputid).value = path.basename(fullpath)
     }
 
@@ -654,8 +654,8 @@ async function pickFolderAndFillInput(inputid) {
  * @param {String} src path to album cover image
  */
 function popCover(src) {
-    let popBody = document.getElementById("coverpop-body")
-    let popImg = document.getElementById("coverdisplay")
+    const popBody = document.getElementById("coverpop-body")
+    const popImg = document.getElementById("coverdisplay")
     document.getElementById("coverpop-close").onclick = () => { popBody.classList.add("hidden-f") }
 
     popBody.classList.remove("hidden-f")
@@ -667,12 +667,12 @@ function popCover(src) {
 /*new playlist*/
 
 function renamePlaylist() {
-    let newbtn = document.getElementById("new")
-    let titleh = document.getElementById("titleh")
-    let inp = document.getElementById("playlist-name-input")
-    let sub = document.getElementById("playlist-name-submit")
-    let canc = document.getElementById("playlist-name-cancel")
-    let wrap = document.getElementById("playlist-name-wrapper")
+    const newbtn = document.getElementById("new")
+    const titleh = document.getElementById("titleh")
+    const inp = document.getElementById("playlist-name-input")
+    const sub = document.getElementById("playlist-name-submit")
+    const canc = document.getElementById("playlist-name-cancel")
+    const wrap = document.getElementById("playlist-name-wrapper")
 
     wrap.style.display = "block"
     sub.style.display = "flex"
@@ -765,7 +765,7 @@ function savePlaylistPrompt() {
             dialog.showMessageBoxSync({ "message": "Please name your playlist first" })
         } else {
             if (autocompArr === 'playlists') {
-                let cPlaylist = currPlaylist.map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
+                const cPlaylist = currPlaylist.map(p => { return { "filename": p.filename, "fullpath": p.fullpath, "relativepath": p.relativepath } })
                 config.comPlaylists[path.join(config.maindir, `${playlistName}.m3u`)] = cPlaylist
                 utils.saveConfig(CONFIG_PATH, config)
             }
@@ -809,7 +809,7 @@ function savePlaylist() { //actually save the playlist
  */
 function getPlaylistContent() {
     //console.log(currPlaylist)
-    let play = []
+    const play = []
 
     play.push("#EXTM3U")
     for (let i = 0; i < currPlaylist.length; i++) {
@@ -818,8 +818,8 @@ function getPlaylistContent() {
             play.push(song.tag.extinf)
             play.push(song.relativepath.replaceAll(path.sep, pslash))
         } else if (song.type === "playlist") {
-            let spl = song.relativepath.split(path.sep)
-            let relpath = spl.slice(0, spl.length - 1).join(pslash) //what does this shit even do??
+            const spl = song.relativepath.split(path.sep)
+            const relpath = spl.slice(0, spl.length - 1).join(pslash) //what does this shit even do??
             //console.log(relpath)
 
             for (let i = 0; i < song.songs.length; i++) {
@@ -859,12 +859,12 @@ function removeDuplicatesFromPlaylist(arr) {
 //add a song to the current playlist
 async function addSong(songobj, refocus) {
     notReady(true)
-    let tag = songobj.tag
+    const tag = songobj.tag
 
-    let songElem = document.createElement("div")
-    let remElem = document.createElement("div")
-    let moreElem = document.createElement("div")
-    let id = Date.now().toString()
+    const songElem = document.createElement("div")
+    const remElem = document.createElement("div")
+    const moreElem = document.createElement("div")
+    const id = Date.now().toString()
 
     let coverBlobUrl = null
     let imgpath = ""
@@ -881,7 +881,7 @@ async function addSong(songobj, refocus) {
     }
 
     songElem.className = "songitem"
-    let siOptions = {
+    const siOptions = {
         coverid: id,
         coversrc: imgpath,
         title: tag.title,
@@ -937,8 +937,8 @@ async function addSong(songobj, refocus) {
 
     moreElem.classList.add("songitem-button"/*, "hidden", "vertical-icon-minwidth"*/)
     moreElem.setAttribute("title", "more options")
-    let mmfunction = (event) => {
-        let opt = { event, menuItems: [] }
+    const mmfunction = (event) => {
+        const opt = { event, menuItems: [] }
 
         if (songobj.type === "playlist") { //playlist specific
             opt.menuItems.push({
@@ -1021,7 +1021,7 @@ async function addSong(songobj, refocus) {
     if (currPlaylist.length === 0) {
         document.getElementById("openspan").style.display = "none"
     }
-    let pb = document.getElementById("playlist-bar")
+    const pb = document.getElementById("playlist-bar")
     pb.appendChild(songElem)
     songElem.scrollIntoView()
 
@@ -1029,8 +1029,8 @@ async function addSong(songobj, refocus) {
     //this briefly selects the image to update it because some images are wierd and don't render on their own
     setTimeout(() => {
         document.getElementById("command-line-input").blur()
-        var s = window.getSelection()
-        var r = document.createRange();
+        const s = window.getSelection()
+        const r = document.createRange();
         s.removeAllRanges()
         r.selectNode(songElem.querySelector(".songitem-cover-wrap"));
         s.addRange(r)
@@ -1052,7 +1052,7 @@ async function addSong(songobj, refocus) {
 }
 //return the innerhtml for a songitem element
 function generateSongitem(val) {
-    let strongtag = val.strong !== undefined && val.strong ? ["<strong>", "</strong>"] : ["", ""];
+    const strongtag = val.strong !== undefined && val.strong ? ["<strong>", "</strong>"] : ["", ""];
     if (val.coversrc.startsWith('file://') && !fs.existsSync(val.coversrc.slice(7))) { val.coversrc = "" }
     const placeholderSrc = `file://${path.join(IMG_PATH, 'placeholder.png').replace(/\\/g, '/')}`;
     return `
@@ -1080,8 +1080,8 @@ function isIgnored(fp) {
 const gen = async () => {
 
     let alldirs = []
-    let gprog = document.getElementById("gprog") //generate progress bar
-    let genbutton = document.getElementById("gen")
+    const gprog = document.getElementById("gprog") //generate progress bar
+    const genbutton = document.getElementById("gen")
     genbutton.setAttribute("disabled", "true")
     gprog.style.width = `0`
     gprog.style.opacity = `100%`
@@ -1114,11 +1114,11 @@ async function generateM3U(folder, useEXTINF) {
     const allsongs = []
 
     if (useEXTINF) { allsongs.push("#EXTM3U") }
-    let relativedir = path.basename(folder)
+    const relativedir = path.basename(folder)
     let appendname = ""
     //console.log(relativedir)
 
-    let walksongs = []
+    const walksongs = []
 
     //find all songs in the folder
     walk.filesSync(folder, (basedir, filename) => {
@@ -1127,11 +1127,11 @@ async function generateM3U(folder, useEXTINF) {
     //loop through all of them
     for (let i = 0; i < walksongs.length; i++) {
         const walksong = walksongs[i];
-        let filename = walksong.filename
-        let basedir = walksong.basedir
+        const filename = walksong.filename
+        const basedir = walksong.basedir
 
-        song = filename
-        songext = utils.getExtOrFn(song).ext
+        const song = filename
+        const songext = utils.getExtOrFn(song).ext
         if (basedir.replace(folder, "").length > 0) { //stupid fucking piece of shit
             appendname = basedir.replace(folder, "").replace(path.sep, "")
             if (appendname.length > 0) { appendname += pslash }
@@ -1140,7 +1140,7 @@ async function generateM3U(folder, useEXTINF) {
         if (config.exts.includes(songext)) {
 
             if (useEXTINF) {
-                let extinf = await getEXTINF(path.join(basedir, song), song, false, true)
+                const extinf = await getEXTINF(path.join(basedir, song), song, false, true)
                 allsongs.push(extinf.toString())
                 allsongs.push(`${appendname}${filename}`)
             } else {
@@ -1152,7 +1152,7 @@ async function generateM3U(folder, useEXTINF) {
     const songCount = useEXTINF ? allsongs.length - 1 : allsongs.length
     if (songCount <= 0) { return }
 
-    let lines = allsongs.join("\n")
+    const lines = allsongs.join("\n")
 
     fs.writeFileSync(path.join(folder, `${relativedir}.m3u`), lines)
 }
@@ -1174,7 +1174,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
     }
 
     if (!mm) mm = await import('music-metadata')
-    var metadata
+    let metadata
     try {
         metadata = await mm.parseFile(song, { "skipCovers": skipCovers, "duration": false })
     } catch (e) {
@@ -1188,7 +1188,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     let extrainfo = {}
 
-    var artist = metadata.common.artist === undefined ? "Unknown Artist" : metadata.common.artist
+    let artist = metadata.common.artist === undefined ? "Unknown Artist" : metadata.common.artist
     const title = metadata.common.title === undefined ? onlysong : metadata.common.title
     const album = metadata.common.album === undefined ? "Unknown Album" : metadata.common.album
     const duration = metadata.format.duration === undefined || parseInt(metadata.format.duration) < 1 ? "000001" : metadata.format.duration.toFixed(3).replaceAll(".", "")
@@ -1261,15 +1261,15 @@ async function fetchAllSongs() {
         }
     }
 
-    let genbutton = document.getElementById("gen")
+    const genbutton = document.getElementById("gen")
     genbutton.setAttribute("disabled", "true")
     let songs = []
     walk.filesSync(config.maindir, (basedir, filename) => {
-        let fp = path.join(basedir, filename)
+        const fp = path.join(basedir, filename)
         songs.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + path.sep, "") })
     })
     songs = songs.filter(song => {
-        let ext = utils.getExtOrFn(song.filename).ext
+        const ext = utils.getExtOrFn(song.filename).ext
         if (config.exts.includes(ext.toLowerCase(ext))) {
             song["type"] = "song"
             return true
@@ -1310,11 +1310,11 @@ async function fetchAllSongs() {
     //playlists
     let playlists = []
     walk.filesSync(config.maindir, (basedir, filename) => {
-        let fp = path.join(basedir, filename)
+        const fp = path.join(basedir, filename)
         playlists.push({ filename, "fullpath": fp, "relativepath": fp.replaceAll(config.maindir + path.sep, "") })
     })
     playlists = playlists.filter(playlist => {
-        let ext = utils.getExtOrFn(playlist.filename).ext
+        const ext = utils.getExtOrFn(playlist.filename).ext
         if (ext.toLowerCase() === "m3u") {
             return true
         } else {
@@ -1326,7 +1326,7 @@ async function fetchAllSongs() {
         playlists = playlists.filter(playlist => !isIgnored(playlist.fullpath))
     }
     playlists = playlists.map(playlist => {
-        let lines = fs.readFileSync(playlist.fullpath, { "encoding": "utf-8" }).split("\n").map(line => line.trim()).filter(line => { if (line === "#EXTM3U" || line === "") { return false } else { return true } })
+        const lines = fs.readFileSync(playlist.fullpath, { "encoding": "utf-8" }).split("\n").map(line => line.trim()).filter(line => { if (line === "#EXTM3U" || line === "") { return false } else { return true } })
         //filter out extm3u stuff
 
         playlist.songs = lines
@@ -1366,7 +1366,7 @@ function refreshSidebarPlaylists() {
 
     editablePlaylists = topLevel.map(item => {
         const fp = path.join(config.maindir, item)
-        let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
+        const p = songsAndPlaylists.find(cp => cp.fullpath === fp)
         if (!p) {
             // New file – build an entry and register it so the rest of the app can find it
             const lines = fs.readFileSync(fp, { encoding: "utf-8" })
@@ -1404,12 +1404,12 @@ async function loadPlaylist(playlist, mode) {
     lastPlaylistName = playlistName
     savePath = playlist.fullpath
 
-    let titleh = document.getElementById("titleh")
+    const titleh = document.getElementById("titleh")
 
     if (mode === "com") {
         if (autocompArr === "both") { document.getElementById("com").click() } //turn on playlist only mode
 
-        let loadPlaylists = config.comPlaylists[playlist.fullpath] //array of playlists this is made of
+        const loadPlaylists = config.comPlaylists[playlist.fullpath] //array of playlists this is made of
         const needsTags = loadPlaylists.some(pl => pl.fullpath.startsWith("__artist__:") || pl.fullpath.startsWith("__album__:"))
         if (needsTags) { await ensureAllTagsFetched() }
         for (let i = 0; i < loadPlaylists.length; i++) { //for each playlist we wanna add
@@ -1438,11 +1438,11 @@ async function loadPlaylist(playlist, mode) {
         }
         document.getElementById("playlist-scroll-wrap").scrollTop = 0;
     } else {
-        let onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.trim().replaceAll(pslash, path.sep))
+        const onlysongs = playlist.songs.filter(s => !s.includes("#EXTINF")).map(s => s.trim().replaceAll(pslash, path.sep))
         //replace all normal slashes for os slashes when loading, so it can actually load the songs.
         console.time("fetchSongObjs")
         console.log(onlysongs)
-        songobjs = []
+        let songobjs = []
         for (let i = 0; i < onlysongs.length; i++) {
             const song = songsAndPlaylists.find(s => s.relativepath === onlysongs[i])
             if (song === undefined) { console.warn("Song not found in library, skipping:", onlysongs[i]); continue }
@@ -1475,12 +1475,12 @@ function loadPlaylistsSidebar(eplaylists) {
     document.getElementById("sidebar-playlists").innerHTML = ""
 
     eplaylists.forEach(playlist => { //make a songitem for each playlist
-        let pElem = document.createElement("div")
-        let editElem = document.createElement("div")
+        const pElem = document.createElement("div")
+        const editElem = document.createElement("div")
         pElem.classList.add("songitem")
         let title = playlist.tag.title
         title = title.slice(0, title.length - 4) //strip .m3u from title
-        let opts = {
+        const opts = {
             coverid: "",
             coversrc: "",
             title: title,
@@ -1492,19 +1492,19 @@ function loadPlaylistsSidebar(eplaylists) {
         pElem.style.gridTemplateColumns = "0rem minmax(0%, 100%) min-content"
         pElem.innerHTML = generateSongitem(opts)
 
-        let moreElem = document.createElement("div")
+        const moreElem = document.createElement("div")
         moreElem.classList.add("songitem-button")
         moreElem.setAttribute("title", "more options")
         moreElem.innerHTML = `<i class="material-icons-round md-more_vert"></i>`
         moreElem.onclick = (event) => {
-            let opt = { event, menuItems: [] }
+            const opt = { event, menuItems: [] }
 
             if (playlist.mode === "com") {
                 opt.menuItems.push({
                     text: "Regenerate",
                     run: async () => {
                         moreElem.innerHTML = `<i class="material-icons-round md-autorenew rotate"></i>`
-                        let currPlaylist_bak = [...currPlaylist]
+                        const currPlaylist_bak = [...currPlaylist]
                         discardPlaylist()
                         await gen()
                         await fetchAllSongs()
@@ -1579,7 +1579,7 @@ function loadPlaylistsSidebar(eplaylists) {
 
 //delete all generated playlists
 function purgePlaylists() {
-    let playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p)).filter(p => {
+    const playlists = [...allPlaylists].filter(p => !editablePlaylists.includes(p)).filter(p => {
         // Only consider a playlist "definitely generated" if its filename stem matches
         // its parent folder name — that's exactly what generateM3U() produces.
         const stem = utils.getExtOrFn(p.filename).fn
@@ -1589,15 +1589,15 @@ function purgePlaylists() {
     if (!unsavedChanges) {
         if (playlists.length > 0) {
 
-            let playliststr = playlists.map(playlist => playlist.filename).join(", ")
-            let prgbtn = document.getElementById("prg")
+            const playliststr = playlists.map(playlist => playlist.filename).join(", ")
+            const prgbtn = document.getElementById("prg")
 
-            let message = `Are you sure you want to delete all these playlists?
+            const message = `Are you sure you want to delete all these playlists?
             ${playliststr}`
 
-            let decision = window.confirm(message)
+            const decision = window.confirm(message)
             if (decision) {
-                let delpaths = playlists.map(p => p.fullpath)
+                const delpaths = playlists.map(p => p.fullpath)
                 delpaths.forEach(p => {
                     fs.unlinkSync(p, (err) => console.log(err))
                 })
@@ -1611,7 +1611,7 @@ function purgePlaylists() {
                 console.log("cancelled deleting")
             )
         } else {
-            let msgc = dialog.showMessageBoxSync({
+            const msgc = dialog.showMessageBoxSync({
                 message: "no playlists found, nothing deleted.",
                 type: "info",
                 buttons: ["Ok"],
@@ -1619,7 +1619,7 @@ function purgePlaylists() {
             })
         }
     } else {
-        let msgc = dialog.showMessageBoxSync({
+        const msgc = dialog.showMessageBoxSync({
             message: "Cannot purge playlists as you have unsaved changes. Either save this playlist (will not be purged) or discard it. Then try to purge again.",
             type: "info",
             buttons: ["Ok"],
