@@ -1072,6 +1072,11 @@ function generateSongitem(val) {
 /*playlist handling - file manipulation etc*/
 
 //walk all directories and then call generateM3U()
+// Returns true if the given file path matches any entry in config.ignore
+function isIgnored(fp) {
+    return config.ignore.some(word => fp.includes(word))
+}
+
 const gen = async () => {
 
     let alldirs = []
@@ -1085,15 +1090,7 @@ const gen = async () => {
         alldirs.push({ basedir, filename, "fullpath": path.join(basedir, filename), stats })
     })
     if (config.ignore.length > 0) { //if there are some folders to ignore, then filter out the folders
-        alldirs = alldirs.filter(dir => {
-            for (let i = 0; i < config.ignore.length; i++) { //traditional for loop so i can return out of filter and not forEach
-                const word = config.ignore[i];
-                if (dir.fullpath.includes(word)) { //if the full path includes the blacklisted word, filter the dir out.
-                    return false
-                }
-            }
-            return true
-        })
+        alldirs = alldirs.filter(dir => !isIgnored(dir.fullpath))
     }
     //console.log(alldirs)
 
@@ -1280,6 +1277,10 @@ async function fetchAllSongs() {
             return false
         }
     })
+    // fully ignore songs in ignored folders
+    if (config.ignore.length > 0) {
+        songs = songs.filter(song => !isIgnored(song.fullpath))
+    }
     for (let i = 0; i < songs.length; i++) {
         const song = songs[i];
         song["index"] = i.toString()
@@ -1319,7 +1320,12 @@ async function fetchAllSongs() {
         } else {
             return false
         }
-    }).map(playlist => {
+    })
+    // fully ignore playlists in ignored folders
+    if (config.ignore.length > 0) {
+        playlists = playlists.filter(playlist => !isIgnored(playlist.fullpath))
+    }
+    playlists = playlists.map(playlist => {
         let lines = fs.readFileSync(playlist.fullpath, { "encoding": "utf-8" }).split("\n").map(line => line.trim()).filter(line => { if (line === "#EXTM3U" || line === "") { return false } else { return true } })
         //filter out extm3u stuff
 
