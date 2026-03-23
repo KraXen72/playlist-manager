@@ -28,13 +28,12 @@ pnpm run start
 ```
 
 ### Note
-> [!NOTE]  
-> `.rpm` and `.deb` packages are not published to releases due to issues with mise (picking the wrong package for the current distro).  
->   
-> If you need system-level integration (desktop entry, app icon):  
-> 1. build the rpm/deb locally with `pnpm run dist:rpm` or `pnpm run dist:deb`  
-> 2. install it with `sudo dnf install dist/playlist-manager-*.rpm` or `sudo apt install ./dist/playlist-manager-*.deb`  
-
+`.rpm` and `.deb` packages are not published to releases due to issues with mise (picking the wrong package for the current distro).  
+  
+If you need system-level integration (desktop entry, app icon):  
+1. build the rpm/deb locally with `pnpm run dist:rpm` or `pnpm run dist:deb`  
+2. install it with `sudo dnf install dist/playlist-manager-*.rpm` or `sudo apt install ./dist/playlist-manager-*.deb`  
+  
 ## Use cases:
 ### 1. you have your music sorted like this:
 ```
