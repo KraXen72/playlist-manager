@@ -1,7 +1,7 @@
 # playlist-manager
-easy to use tool to manage offline music playlists cross-device.
-![app](./screenshots/spectacle_with_shadow.png)
-
+easy to use tool to manage offline music playlists cross-device.  
+![app](./screenshots/spectacle_with_shadow.png)  
+  
 ## Installing
 
 ### Download a release
