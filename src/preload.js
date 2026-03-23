@@ -1,7 +1,12 @@
+// oxlint-disable no-await-in-loop
+// oxlint-disable typescript/no-floating-promises
+// ^ re-enable these later & fix issues
+
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
 
 const electron = require('@electron/remote')
+const { ipcRenderer } = require('electron')
 const dialog = electron.dialog
 const fs = require('fs')
 const path = require('node:path')
@@ -23,10 +28,10 @@ const IMG_PATH = path.join(__dirname, '..', 'img')
 fs.mkdirSync(userData, { recursive: true })
 
 console.log('[paths]',
-	'\n  userData :', userData,
-	'\n  cacheDir :', cacheDir,
-	'\n  config   :', CONFIG_PATH,
-	'\n  db       :', path.join(cacheDir, 'tagcache.db'),
+    '\n  userData :', userData,
+    '\n  cacheDir :', cacheDir,
+    '\n  config   :', CONFIG_PATH,
+    '\n  db       :', path.join(cacheDir, 'tagcache.db'),
 )
 
 const AUDIO_EXTS = ['mp3', 'flac', 'm4a', 'opus', 'ogg']
@@ -44,8 +49,8 @@ console.log("config: ", config)
 const db = require('./db-handler.js')
 
 let mm = null // music-metadata ESM module, loaded lazily on first tag parse
-let previewBlobUrl = null // current blob URL for the preview panel cover
-const activeBlobUrls = new Set() // blob URLs for current playlist items, revoked on remove/discard
+let previewImageId = null // current image id for the preview panel cover
+const activeImageIds = new Set() // image ids for current playlist items, freed on remove/discard
 
 let allSongs = []
 let allPlaylists = []
@@ -253,8 +258,12 @@ function setupAutocomplete(message) {
     document.getElementById("input-placeholder").innerHTML = `Start typing a name of a ${message}...`
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
-            if (input.length < 1 && !specialMode && autocompArr === "both") { return [] }
-            let res = autocompArr === "both" ? songsAndPlaylists : autocompArr === "playlists" ? allPlaylists : []
+            let res = autocompArr === "both"
+                ? songsAndPlaylists
+                : autocompArr === "playlists"
+                    ? allPlaylists
+                    : []
+
             if (autocompArr === "both" && allSongsAreTagged) {
                 if (config.includeArtistResults) res = [...res, ...allArtistObjs]
                 if (config.includeAlbumResults) res = [...res, ...allAlbumObjs]
@@ -265,17 +274,26 @@ function setupAutocomplete(message) {
                 artist: searchModes.has('artist'),
                 album: searchModes.has('album')
             }
-            res = search(res, input, options)
 
-            res = res.filter(song => !currPlaylist.some(p => p && p.filename === song.filename)).filter(Boolean)
+            const specialRegex = /[^\p{ASCII}]/u
+
             if (specialMode) {
-                res = res.filter(song => {
-                    const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
-                    return song.filename.match(regex)
-                })
+                // show all special-character results immediately
+                res = res.filter(song => specialRegex.test(song.filename))
+
+                // then narrow them down only if the user typed something
+                if (input.length > 0) {
+                    res = search(res, input, options)
+                }
+            } else {
+                if (input.length < 1 && autocompArr === "both") return []
+                res = search(res, input, options)
             }
 
-            //if specialmode or playlist only mode then return full results, otherwise first 10
+            res = res
+                .filter(song => !currPlaylist.some(p => p && p.filename === song.filename))
+                .filter(Boolean)
+
             const hasArtistOrAlbum = searchModes.has('artist') || searchModes.has('album')
             return specialMode || autocompArr === "playlists" || hasArtistOrAlbum ? res : res.slice(0, 10)
         },
@@ -302,7 +320,7 @@ function setupAutocomplete(message) {
                 : utils.getExtOrFn(result.filename).fn
             let icon = ''
             let title = ''
-            
+
             if (result.type === 'playlist') {
                 icon = '<i class="material-icons-round md-queue_music result-icon"></i>'
                 title = 'Playlist'
@@ -313,7 +331,7 @@ function setupAutocomplete(message) {
                 icon = '<i class="material-icons-round md-album result-icon"></i>'
                 title = 'Album'
             }
-            
+
             return `
                 <li ${props}>
                     <span class="result-text">${filename}</span>
@@ -498,10 +516,10 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
                     title: song.filename,
                     artist: `Playlist ${bull} ${countPlaylistSongs(song.fullpath, song.songs) ?? '??'} Songs`,
                     album: utils.shortenFilename(song.fullpath, 55),
-                    cover: song.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
+                    cover: song.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png")
                 }
             } else if (song.type === 'artist' || song.type === 'album') {
-                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: path.join(IMG_PATH, "playlist.png")  }
+                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: path.join(IMG_PATH, "playlist.png") }
             }
             song.tag = tag
             document.getElementById("song-preview").setAttribute("index", song.index)
@@ -515,10 +533,11 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
     //console.log(tag)
     if (update) {
         if (document.getElementById("song-preview").style.visibility === "hidden") { document.getElementById("song-preview").style.visibility = "visible" }
-        if (previewBlobUrl) { URL.revokeObjectURL(previewBlobUrl); previewBlobUrl = null }
+        if (previewImageId) { ipcRenderer.send('free-image', previewImageId); previewImageId = null }
         if (tag.coverobj !== undefined && tag.coverobj !== false && tag.coverobj.data) {
-            previewBlobUrl = URL.createObjectURL(new Blob([tag.coverobj.data], { type: 'image/' + tag.coverobj.frmt }))
-            document.getElementById("sp-cover").src = previewBlobUrl
+            previewImageId = `preview-${Date.now()}`
+            ipcRenderer.send('store-image', { id: previewImageId, data: tag.coverobj.data, mime: 'image/' + tag.coverobj.frmt })
+            document.getElementById("sp-cover").src = `mem://${previewImageId}`
         } else {
             document.getElementById("sp-cover").src = tag.cover || ''
         }
@@ -725,8 +744,9 @@ function discardPlaylistPrompt() {
 //discard the current playlist
 function discardPlaylist() {
     notReady(false)
-    for (const url of activeBlobUrls) URL.revokeObjectURL(url)
-    activeBlobUrls.clear()
+    for (const id of activeImageIds) ipcRenderer.send('free-image', id)
+    activeImageIds.clear()
+    if (previewImageId) { ipcRenderer.send('free-image', previewImageId); previewImageId = null }
     // dispose the smooth-dnd container before removing DOM nodes, because smooth-dnd is skibidi.
     if (playlistDnDContainer) {
         try {
@@ -868,18 +888,19 @@ async function addSong(songobj, refocus) {
     const moreElem = document.createElement("div")
     const id = String(Date.now())
 
-    let coverBlobUrl = null
+    let coverImageId = null
     let imgpath = ""
     if (songobj.type === "song") {
         if (tag.coverobj !== false && tag.coverobj.data) {
-            coverBlobUrl = URL.createObjectURL(new Blob([tag.coverobj.data], { type: 'image/' + tag.coverobj.frmt }))
-            activeBlobUrls.add(coverBlobUrl)
-            imgpath = coverBlobUrl
+            coverImageId = `cover-${Date.now()}-${Math.random().toString(36).substring(7)}`
+            ipcRenderer.send('store-image', { id: coverImageId, data: tag.coverobj.data, mime: 'image/' + tag.coverobj.frmt })
+            activeImageIds.add(coverImageId)
+            imgpath = `mem://${coverImageId}`
         }
     } else if (songobj.type === "playlist") {
-        imgpath = songobj.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
+        imgpath = songobj.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png")
     } else if (songobj.type === 'artist' || songobj.type === 'album') {
-        imgpath = path.join(IMG_PATH, "playlist.png") 
+        imgpath = path.join(IMG_PATH, "playlist.png")
     }
 
     songElem.className = "songitem"
@@ -973,7 +994,7 @@ async function addSong(songobj, refocus) {
         if (currPlaylist.length === 0) {
             document.getElementById("openspan").style.display = "block"
         }
-        if (coverBlobUrl) { URL.revokeObjectURL(coverBlobUrl); activeBlobUrls.delete(coverBlobUrl) }
+        if (coverImageId) { ipcRenderer.send('free-image', coverImageId); activeImageIds.delete(coverImageId) }
         songElem.remove()
     }
 
@@ -1003,11 +1024,6 @@ async function addSong(songobj, refocus) {
             }, 3, refocus)
         }, 10, refocus)
     }, 2, refocus)
-
-    if (songobj.type === "song") {
-        // null out the raw buffer now that the blob owns a copy
-        if (songobj.tag.coverobj !== false) songobj.tag.coverobj.data = null
-    }
 
     currPlaylist.push(songobj)
 }
@@ -1181,7 +1197,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
-    // cover stays '' — callers create blob URLs from coverobj.data on demand
+    // cover stays '' — callers use mem:// protocol via IPC
     const cover = ''
     let coverobj = false
     if (!skipCovers) {
@@ -1322,7 +1338,7 @@ function refreshSidebarPlaylists() {
 
     editablePlaylists = topLevel.map(item => {
         const fp = path.join(config.maindir, item)
-        const p = songsAndPlaylists.find(cp => cp.fullpath === fp)
+        let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
         if (!p) {
             // New file – build an entry and register it so the rest of the app can find it
             const lines = fs.readFileSync(fp, { encoding: "utf-8" })
@@ -1406,17 +1422,17 @@ async function loadPlaylist(playlist, mode) {
     notReady(false)
     playlistName = lastPlaylistName
     titleh.textContent = lastPlaylistName
-    
+
     if (playlistDnDContainer) {
         playlistDnDContainer.dispose()
         playlistDnDContainer = null
     }
-    
+
     if (!SmoothDnD) {
         const smoothDndModule = require('smooth-dnd')
         SmoothDnD = smoothDndModule.default || smoothDndModule
     }
-    
+
     const pb = document.getElementById("playlist-bar")
     playlistDnDContainer = SmoothDnD(pb, {
         orientation: "vertical",
