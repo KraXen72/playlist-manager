@@ -1,3 +1,6 @@
+// oxlint-disable typescript/no-floating-promises
+// ^ re-enable these later & fix issues
+
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, protocol, ipcMain } = require('electron')
 const path = require('path')

@@ -1,3 +1,7 @@
+// oxlint-disable no-await-in-loop
+// oxlint-disable typescript/no-floating-promises
+// ^ re-enable these later & fix issues
+
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
 
@@ -254,8 +258,12 @@ function setupAutocomplete(message) {
     document.getElementById("input-placeholder").innerHTML = `Start typing a name of a ${message}...`
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
-            if (input.length < 1 && !specialMode && autocompArr === "both") { return [] }
-            let res = autocompArr === "both" ? songsAndPlaylists : autocompArr === "playlists" ? allPlaylists : []
+            let res = autocompArr === "both"
+                ? songsAndPlaylists
+                : autocompArr === "playlists"
+                    ? allPlaylists
+                    : []
+
             if (autocompArr === "both" && allSongsAreTagged) {
                 if (config.includeArtistResults) res = [...res, ...allArtistObjs]
                 if (config.includeAlbumResults) res = [...res, ...allAlbumObjs]
@@ -266,17 +274,26 @@ function setupAutocomplete(message) {
                 artist: searchModes.has('artist'),
                 album: searchModes.has('album')
             }
-            res = search(res, input, options)
 
-            res = res.filter(song => !currPlaylist.some(p => p && p.filename === song.filename)).filter(Boolean)
+            const specialRegex = /[^\p{ASCII}]/u
+
             if (specialMode) {
-                res = res.filter(song => {
-                    const regex = new RegExp(`[^\\x00-\\x7F]`, 'gi');
-                    return song.filename.match(regex)
-                })
+                // show all special-character results immediately
+                res = res.filter(song => specialRegex.test(song.filename))
+
+                // then narrow them down only if the user typed something
+                if (input.length > 0) {
+                    res = search(res, input, options)
+                }
+            } else {
+                if (input.length < 1 && autocompArr === "both") return []
+                res = search(res, input, options)
             }
 
-            //if specialmode or playlist only mode then return full results, otherwise first 10
+            res = res
+                .filter(song => !currPlaylist.some(p => p && p.filename === song.filename))
+                .filter(Boolean)
+
             const hasArtistOrAlbum = searchModes.has('artist') || searchModes.has('album')
             return specialMode || autocompArr === "playlists" || hasArtistOrAlbum ? res : res.slice(0, 10)
         },
@@ -1321,7 +1338,7 @@ function refreshSidebarPlaylists() {
 
     editablePlaylists = topLevel.map(item => {
         const fp = path.join(config.maindir, item)
-        const p = songsAndPlaylists.find(cp => cp.fullpath === fp)
+        let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
         if (!p) {
             // New file – build an entry and register it so the rest of the app can find it
             const lines = fs.readFileSync(fp, { encoding: "utf-8" })
