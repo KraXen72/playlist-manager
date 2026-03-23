@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, protocol, ipcMain} = require('electron')
+const { app, BrowserWindow, protocol, ipcMain } = require('electron')
 const path = require('path')
 const remoteMain = require('@electron/remote/main')
 
@@ -14,7 +14,7 @@ protocol.registerSchemesAsPrivileged([{
   privileges: { secure: true, supportFetchAPI: true, bypassCSP: true }
 }])
 
-function createWindow () {
+function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -61,7 +61,7 @@ app.whenReady().then(() => {
   })
 
   createWindow()
-  
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
