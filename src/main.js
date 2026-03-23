@@ -1,9 +1,18 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, protocol, ipcMain} = require('electron')
 const path = require('path')
 const remoteMain = require('@electron/remote/main')
 
 remoteMain.initialize()
+
+// In-memory image store
+const imageStore = new Map()
+
+// Must be called before app.whenReady()
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'mem',
+  privileges: { secure: true, supportFetchAPI: true, bypassCSP: true }
+}])
 
 function createWindow () {
   // Create the browser window.
@@ -34,11 +43,26 @@ function createWindow () {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  protocol.handle('mem', (request) => {
+    const id = new URL(request.url).hostname
+    const entry = imageStore.get(id)
+    if (!entry) return new Response(null, { status: 404 })
+    return new Response(entry.data, {
+      headers: { 'Content-Type': entry.mime }
+    })
+  })
+
+  ipcMain.on('store-image', (event, { id, data, mime }) => {
+    imageStore.set(id, { data: Buffer.from(data), mime })
+  })
+
+  ipcMain.on('free-image', (event, id) => {
+    imageStore.delete(id)
+  })
+
   createWindow()
   
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })

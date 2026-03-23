@@ -2,6 +2,7 @@
 // It has the same sandbox as a Chrome extension.
 
 const electron = require('@electron/remote')
+const { ipcRenderer } = require('electron')
 const dialog = electron.dialog
 const fs = require('fs')
 const path = require('node:path')
@@ -44,8 +45,8 @@ console.log("config: ", config)
 const db = require('./db-handler.js')
 
 let mm = null // music-metadata ESM module, loaded lazily on first tag parse
-let previewBlobUrl = null // current blob URL for the preview panel cover
-const activeBlobUrls = new Set() // blob URLs for current playlist items, revoked on remove/discard
+let previewImageId = null // current image id for the preview panel cover
+const activeImageIds = new Set() // image ids for current playlist items, freed on remove/discard
 
 let allSongs = []
 let allPlaylists = []
@@ -515,10 +516,11 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
     //console.log(tag)
     if (update) {
         if (document.getElementById("song-preview").style.visibility === "hidden") { document.getElementById("song-preview").style.visibility = "visible" }
-        if (previewBlobUrl) { URL.revokeObjectURL(previewBlobUrl); previewBlobUrl = null }
+        if (previewImageId) { ipcRenderer.send('free-image', previewImageId); previewImageId = null }
         if (tag.coverobj !== undefined && tag.coverobj !== false && tag.coverobj.data) {
-            previewBlobUrl = URL.createObjectURL(new Blob([tag.coverobj.data], { type: 'image/' + tag.coverobj.frmt }))
-            document.getElementById("sp-cover").src = previewBlobUrl
+            previewImageId = `preview-${Date.now()}`
+            ipcRenderer.send('store-image', { id: previewImageId, data: tag.coverobj.data, mime: 'image/' + tag.coverobj.frmt })
+            document.getElementById("sp-cover").src = `mem://${previewImageId}`
         } else {
             document.getElementById("sp-cover").src = tag.cover || ''
         }
@@ -725,8 +727,9 @@ function discardPlaylistPrompt() {
 //discard the current playlist
 function discardPlaylist() {
     notReady(false)
-    for (const url of activeBlobUrls) URL.revokeObjectURL(url)
-    activeBlobUrls.clear()
+    for (const id of activeImageIds) ipcRenderer.send('free-image', id)
+    activeImageIds.clear()
+    if (previewImageId) { ipcRenderer.send('free-image', previewImageId); previewImageId = null }
     // dispose the smooth-dnd container before removing DOM nodes, because smooth-dnd is skibidi.
     if (playlistDnDContainer) {
         try {
@@ -868,13 +871,14 @@ async function addSong(songobj, refocus) {
     const moreElem = document.createElement("div")
     const id = String(Date.now())
 
-    let coverBlobUrl = null
+    let coverImageId = null
     let imgpath = ""
     if (songobj.type === "song") {
         if (tag.coverobj !== false && tag.coverobj.data) {
-            coverBlobUrl = URL.createObjectURL(new Blob([tag.coverobj.data], { type: 'image/' + tag.coverobj.frmt }))
-            activeBlobUrls.add(coverBlobUrl)
-            imgpath = coverBlobUrl
+            coverImageId = `cover-${Date.now()}-${Math.random().toString(36).substring(7)}`
+            ipcRenderer.send('store-image', { id: coverImageId, data: tag.coverobj.data, mime: 'image/' + tag.coverobj.frmt })
+            activeImageIds.add(coverImageId)
+            imgpath = `mem://${coverImageId}`
         }
     } else if (songobj.type === "playlist") {
         imgpath = songobj.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
@@ -973,7 +977,7 @@ async function addSong(songobj, refocus) {
         if (currPlaylist.length === 0) {
             document.getElementById("openspan").style.display = "block"
         }
-        if (coverBlobUrl) { URL.revokeObjectURL(coverBlobUrl); activeBlobUrls.delete(coverBlobUrl) }
+        if (coverImageId) { ipcRenderer.send('free-image', coverImageId); activeImageIds.delete(coverImageId) }
         songElem.remove()
     }
 
@@ -1003,11 +1007,6 @@ async function addSong(songobj, refocus) {
             }, 3, refocus)
         }, 10, refocus)
     }, 2, refocus)
-
-    if (songobj.type === "song") {
-        // null out the raw buffer now that the blob owns a copy
-        if (songobj.tag.coverobj !== false) songobj.tag.coverobj.data = null
-    }
 
     currPlaylist.push(songobj)
 }
@@ -1181,7 +1180,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     const extinf = `#EXTINF:${duration},${artist} - ${title}`
 
-    // cover stays '' — callers create blob URLs from coverobj.data on demand
+    // cover stays '' — callers use mem:// protocol via IPC
     const cover = ''
     let coverobj = false
     if (!skipCovers) {

@@ -50,7 +50,7 @@ function openTagCache() {
  * @returns {object}
  */
 function rowToTag(row) {
-	// coverobj holds raw Buffer; callers create blob URLs on demand — no base64 in the object
+	// coverobj holds raw Buffer; callers send to main process via IPC for mem:// protocol
 	const coverobj = row.cover_data
 		? { frmt: row.cover_fmt, data: Buffer.from(row.cover_data) }
 		: false
