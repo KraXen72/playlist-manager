@@ -24,10 +24,10 @@ const IMG_PATH = path.join(__dirname, '..', 'img')
 fs.mkdirSync(userData, { recursive: true })
 
 console.log('[paths]',
-	'\n  userData :', userData,
-	'\n  cacheDir :', cacheDir,
-	'\n  config   :', CONFIG_PATH,
-	'\n  db       :', path.join(cacheDir, 'tagcache.db'),
+    '\n  userData :', userData,
+    '\n  cacheDir :', cacheDir,
+    '\n  config   :', CONFIG_PATH,
+    '\n  db       :', path.join(cacheDir, 'tagcache.db'),
 )
 
 const AUDIO_EXTS = ['mp3', 'flac', 'm4a', 'opus', 'ogg']
@@ -303,7 +303,7 @@ function setupAutocomplete(message) {
                 : utils.getExtOrFn(result.filename).fn
             let icon = ''
             let title = ''
-            
+
             if (result.type === 'playlist') {
                 icon = '<i class="material-icons-round md-queue_music result-icon"></i>'
                 title = 'Playlist'
@@ -314,7 +314,7 @@ function setupAutocomplete(message) {
                 icon = '<i class="material-icons-round md-album result-icon"></i>'
                 title = 'Album'
             }
-            
+
             return `
                 <li ${props}>
                     <span class="result-text">${filename}</span>
@@ -499,10 +499,10 @@ async function updatePreview(song, empty, updateOverride, extraInfo) {
                     title: song.filename,
                     artist: `Playlist ${bull} ${countPlaylistSongs(song.fullpath, song.songs) ?? '??'} Songs`,
                     album: utils.shortenFilename(song.fullpath, 55),
-                    cover: song.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
+                    cover: song.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png")
                 }
             } else if (song.type === 'artist' || song.type === 'album') {
-                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: path.join(IMG_PATH, "playlist.png")  }
+                tag = { title: song.tag.title, artist: song.tag.artist, album: '', cover: path.join(IMG_PATH, "playlist.png") }
             }
             song.tag = tag
             document.getElementById("song-preview").setAttribute("index", song.index)
@@ -881,9 +881,9 @@ async function addSong(songobj, refocus) {
             imgpath = `mem://${coverImageId}`
         }
     } else if (songobj.type === "playlist") {
-        imgpath = songobj.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png") 
+        imgpath = songobj.fullpath in config.comPlaylists ? path.join(IMG_PATH, "generated.png") : path.join(IMG_PATH, "playlist.png")
     } else if (songobj.type === 'artist' || songobj.type === 'album') {
-        imgpath = path.join(IMG_PATH, "playlist.png") 
+        imgpath = path.join(IMG_PATH, "playlist.png")
     }
 
     songElem.className = "songitem"
@@ -1405,17 +1405,17 @@ async function loadPlaylist(playlist, mode) {
     notReady(false)
     playlistName = lastPlaylistName
     titleh.textContent = lastPlaylistName
-    
+
     if (playlistDnDContainer) {
         playlistDnDContainer.dispose()
         playlistDnDContainer = null
     }
-    
+
     if (!SmoothDnD) {
         const smoothDndModule = require('smooth-dnd')
         SmoothDnD = smoothDndModule.default || smoothDndModule
     }
-    
+
     const pb = document.getElementById("playlist-bar")
     playlistDnDContainer = SmoothDnD(pb, {
         orientation: "vertical",
