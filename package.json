@@ -7,6 +7,7 @@
     "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
     "dist": "electron-builder --publish never",
     "dist:rpm": "electron-builder --linux rpm --publish never",
+    "dist:deb": "electron-builder --linux deb --publish never",
     "dist:dir": "electron-builder --dir"
   },
   "repository": "https://github.com/KraXen72/playlist-manager",

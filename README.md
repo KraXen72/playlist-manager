@@ -1,23 +1,21 @@
 # playlist-manager
 easy to use tool to manage offline music playlists cross-device.
-![app](./screenshots/Capture_2021_m05.d07_1856.png)
+![app](./screenshots/spectacle_with_shadow.png)
 
 ## Installing
 
-**download a release**  
-Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases) and grab the latest stable release, or use the [nightly release](https://github.com/KraXen72/playlist-manager/releases/tag/nightly) for the latest build from `master`.
+### Download a release
+Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases) and grab the latest stable release, or use the [nightly release](https://github.com/KraXen72/playlist-manager/releases/tag/nightly) for the latest build from `master`.  
+Supported OS/Architectures: Windows (`.exe`, NSIS), MacOS (`.dmg`), Linux (raw binary)
 
-| Platform | File |
-|---|---|
-| Linux (x64) | raw binary |
-| Windows | `.exe` (NSIS installer) |
-| macOS | `.dmg` |
-
-> **Note:**  
+> [!NOTE]  
 > `.rpm` and `.deb` packages are not published to releases due to issues with mise (picking the wrong package for the current distro).  
-> If you need system-level integration (desktop entry, app icon), build the RPM locally with `pnpm run dist:rpm` and install it with `sudo dnf install dist/playlist-manager-*.rpm`.  
+>   
+> If you need system-level integration (desktop entry, app icon):  
+> 1. build the rpm/deb locally with `pnpm run dist:rpm` or `pnpm run dist:deb`  
+> 2. install it with `sudo dnf install dist/playlist-manager-*.rpm` or `sudo apt install ./dist/playlist-manager-*.deb`  
 
-**installing with [mise](https://mise.jdx.dev/) (via github backend)**  
+### Install with [mise](https://mise.jdx.dev/) (via github backend)
 required: `mise`
 ```bash
 mise use -g "github:KraXen72/playlist-manager"
@@ -27,7 +25,7 @@ To pin a specific version:
 mise use -g "github:KraXen72/playlist-manager@2.2.0"
 ```
 
-**running from source**  
+### Run from source
 required: `nodejs`, `git`, `pnpm`
 ```bash
 git clone https://github.com/KraXen72/playlist-manager
