@@ -5,7 +5,7 @@ easy to use tool to manage offline music playlists cross-device.
 ## Installing
 
 ### Download a release
-Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases) and grab the latest stable release, or use the [nightly release](https://github.com/KraXen72/playlist-manager/releases/tag/nightly) for the latest build from `master`.  
+Go to the [releases page](https://github.com/KraXen72/playlist-manager/releases) and grab the latest stable release.  
 Supported OS/Architectures: Windows (`.exe`, NSIS), MacOS (`.dmg`), Linux (raw binary)
 
 ### Install with [mise](https://mise.jdx.dev/) (via github backend)
