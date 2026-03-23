@@ -26,6 +26,9 @@ importers:
       music-metadata:
         specifier: ^11.12.1
         version: 11.12.1
+      smooth-dnd:
+        specifier: ^0.12.1
+        version: 0.12.1
     devDependencies:
       cross-env:
         specifier: ^10.1.0
@@ -1238,6 +1241,9 @@ packages:
   smart-buffer@4.2.0:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
+
+  smooth-dnd@0.12.1:
+    resolution: {integrity: sha512-Dndj/MOG7VP83mvzfGCLGzV2HuK1lWachMtWl/Iuk6zV7noDycIBnflwaPuDzoaapEl3Pc4+ybJArkkx9sxPZg==}
 
   socks-proxy-agent@7.0.0:
     resolution: {integrity: sha512-Fgl0YPZ902wEsAyiQ+idGd1A7rSFx/ayC1CQVMw5P+EQx2V0SgpGtf6OKFhVjPflPUl9YMmEOnmfjCdMUsygww==}
@@ -2856,6 +2862,8 @@ snapshots:
     optional: true
 
   smart-buffer@4.2.0: {}
+
+  smooth-dnd@0.12.1: {}
 
   socks-proxy-agent@7.0.0:
     dependencies:
