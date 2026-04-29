@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": false,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+}

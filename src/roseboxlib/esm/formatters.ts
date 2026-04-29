@@ -5,14 +5,14 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat(undefined, {
     currency: "USD",
     style: "currency",
 })
-const DIVISIONS = [
-    { amount: 60, name: "seconds" },
-    { amount: 60, name: "minutes" },
-    { amount: 24, name: "hours" },
-    { amount: 7, name: "days" },
-    { amount: 4.34524, name: "weeks" },
-    { amount: 12, name: "months" },
-    { amount: Number.POSITIVE_INFINITY, name: "years" },
+const DIVISIONS: Array<{ amount: number, name: Intl.RelativeTimeFormatUnit }> = [
+    { amount: 60, name: "second" },
+    { amount: 60, name: "minute" },
+    { amount: 24, name: "hour" },
+    { amount: 7, name: "day" },
+    { amount: 4.34524, name: "week" },
+    { amount: 12, name: "month" },
+    { amount: Number.POSITIVE_INFINITY, name: "year" },
 ]
 const RELATIVE_DATE_FORMATTER = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" })
 const COMPACT_NUMBER_FORMATTER = new Intl.NumberFormat(undefined, { notation: "compact" })
@@ -39,9 +39,9 @@ export function formatCompactNumber(number) {
  * @returns string of human-readable date
  */
 export function formatRelativeDate(toDate, fromDate = new Date()) {
-    let duration = (toDate - fromDate) / 1000
+    let duration = (toDate.getTime() - fromDate.getTime()) / 1000
 
-    for (let i = 0; i <= DIVISIONS.length; i++) {
+    for (let i = 0; i < DIVISIONS.length; i++) {
         const division = DIVISIONS[i]
         if (Math.abs(duration) < division.amount) {
             return RELATIVE_DATE_FORMATTER.format(Math.round(duration), division.name)
