@@ -1,4 +1,4 @@
-function search(songs, query, options) {
+function search(songs: SearchableEntry[], query: string, options: SearchOptions = {}) {
     const { filename = false, artist = false, album = false } = options;
     const lowerQuery = query.toLowerCase();
 

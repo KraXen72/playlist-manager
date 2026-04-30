@@ -11,7 +11,7 @@ const dialog = electron.dialog
 const fs = require('fs')
 const path = require('node:path')
 
-const utils = require('./roseboxlib/utils.js')
+const utils = require('./roseboxlib/utils')
 
 const walk = require('fs-walk')
 const Autocomplete = require('@trevoreyre/autocomplete-js')
@@ -36,7 +36,7 @@ console.log('[paths]',
 
 const AUDIO_EXTS = ['mp3', 'flac', 'm4a', 'opus', 'ogg']
 
-const config = utils.initOrLoadConfig(CONFIG_PATH, {
+const config: AppConfig = utils.initOrLoadConfig(CONFIG_PATH, {
     "maindir": "",
     "exts": AUDIO_EXTS,
     "ignore": [],
@@ -46,7 +46,7 @@ const config = utils.initOrLoadConfig(CONFIG_PATH, {
 })
 console.log("config: ", config)
 
-const db = require('./db-handler.js')
+const db = require('./db-handler')
 
 let mm = null // music-metadata ESM module, loaded lazily on first tag parse
 let previewImageId = null // current image id for the preview panel cover
@@ -74,7 +74,7 @@ let allAlbumObjs = []
 let autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 let highlightedSong = null //currently highlighted autocomplete result
 
-const { search } = require('./search.js')
+const { search } = require('./search')
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -117,7 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
 })
 
 //select main dir
-async function selectfolder(mouseevent, inputconfig) {
+async function selectfolder(mouseevent, inputconfig?) {
     if (inputconfig === undefined) { //clicked on the pick button
         const pick = await dialog.showOpenDialog({ properties: ['openDirectory'] })
         console.log(pick)
@@ -343,7 +343,7 @@ function setupAutocomplete(message) {
     mainsearch.destroy = () => { autocompleteDestroy(mainsearch) }
 }
 //autocomplete onSubmit
-async function autocompleteSubmit(result, refocus, update) {
+async function autocompleteSubmit(result, refocus, update?) {
     // Lazily populate songs for artist/album group objects on first selection
     if ((result.type === 'artist' || result.type === 'album') && !result.songs) {
         const paths = result.type === 'artist'
@@ -494,10 +494,10 @@ async function toggleSearchMode(mode) {
  * @param {Boolean} updateOverride override if we should update
  * @param {Boolean} extraInfo if we should fetch extra info about the song and display everything
  */
-async function updatePreview(song, empty, updateOverride, extraInfo) {
+async function updatePreview(song, empty, updateOverride?, extraInfo?) {
     const index = document.getElementById("song-preview").getAttribute("index")
     const type = document.getElementById("song-preview").getAttribute("type")
-    let tag = {} //artist, title, album, duration, cover, extinf, coverobj
+    let tag: SongTag | any = {} //artist, title, album, duration, cover, extinf, coverobj
     let update = true //if we should update
     if (updateOverride !== undefined) {
         update = updateOverride
@@ -707,8 +707,8 @@ function renamePlaylist() {
             canc.style.display = "none"
             titleh.style.display = "-webkit-box"
             wrap.style.display = "none"
-            sub.onclick = ""
-            canc.onclick = ""
+            sub.onclick = null
+            canc.onclick = null
             titleh.textContent = playlistName
             newbtn.style.display = "flex"
 
@@ -719,8 +719,8 @@ function renamePlaylist() {
         canc.style.display = "none"
         titleh.style.display = "-webkit-box"
         wrap.style.display = "none"
-        sub.onclick = ""
-        canc.onclick = ""
+        sub.onclick = null
+        canc.onclick = null
         newbtn.style.display = "flex"
     }
 }
@@ -806,7 +806,7 @@ function savePlaylistPrompt() {
                     body: `Your playlist has been saved to:\n${path.join(config.maindir, `${playlistName}.m3u`)}`,
                     icon: path.join(IMG_PATH, "playlist.png"),
                     timeoutType: "default",
-                })
+                } as any)
                 savePath = path.join(config.maindir, `${playlistName}.m3u`)
                 if (savePath !== undefined) { lastPlaylistName = playlistName; savePlaylist() }
             }
@@ -1142,7 +1142,7 @@ async function generateM3U(folder, useEXTINF) {
  * @param {Boolean} skipCovers if true, skip fetching covers (faster)
  * @param {Boolean} fetchExtraInfo if true, fetch extra info
  */
-async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) {
+async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo?) {
     // --- cache hit path ---
     if (returnObj) {
         const cached = db.getTag(song)
@@ -1162,7 +1162,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
     metadata.quality.warnings = metadata.quality.warnings.length //replace warnings array with just the number of warnings
     //console.log("metadata: ",metadata)
 
-    let extrainfo = {}
+    let extrainfo: TagExtraInfo = {}
 
     let artist = metadata.common.artist ?? "Unknown Artist"
     const title = metadata.common.title ?? onlysong
@@ -1199,7 +1199,7 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo) 
 
     // cover stays '' — callers use mem:// protocol via IPC
     const cover = ''
-    let coverobj = false
+    let coverobj: CoverObject | false = false
     if (!skipCovers) {
         const pic = mm.selectCover(metadata.common.picture)
         if (pic != null) {
@@ -1589,7 +1589,7 @@ function purgePlaylists() {
             if (decision) {
                 const delpaths = playlists.map(p => p.fullpath)
                 delpaths.forEach(p => {
-                    fs.unlinkSync(p, (err) => console.log(err))
+                    fs.unlinkSync(p)
                 })
                 console.log("deleted sucessfully")
                 prgbtn.classList.add("btn-active")
