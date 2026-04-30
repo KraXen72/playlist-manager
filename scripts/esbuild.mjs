@@ -23,11 +23,12 @@ const buildConfig = {
   bundle: true,
   external,
   platform: "node",
-  format: "cjs",
+  format: "esm",
   target: "es2022",
   logLevel: "info",
   sourcemap: prod ? false : "inline",
   treeShaking: true,
+  outExtension: { ".js": ".mjs" },
   outdir: "dist"
 }
 

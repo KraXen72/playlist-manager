@@ -1,27 +1,25 @@
-// oxlint-disable no-await-in-loop
-// oxlint-disable typescript/no-floating-promises
-// ^ re-enable these later & fix issues
+import electron from '@electron/remote'
+import Autocomplete from '@trevoreyre/autocomplete-js'
+import { ipcRenderer } from 'electron'
+import walk from 'fs-walk'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-// All of the Node.js APIs are available in the preload process.
-// It has the same sandbox as a Chrome extension.
+import * as db from './db-handler'
+import * as utils from './roseboxlib/lib'
+import { search } from './search'
 
-const electron = require('@electron/remote')
-const { ipcRenderer } = require('electron')
 const dialog = electron.dialog
-const fs = require('fs')
-const path = require('node:path')
-
-const utils = require('./roseboxlib/utils')
-
-const walk = require('fs-walk')
-const Autocomplete = require('@trevoreyre/autocomplete-js')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 let SmoothDnD = null
 
 const pslash = "/" //playlist file slash
 const bull = `&#8226;`
 const userData = electron.app.getPath('userData')
-const cacheDir = path.join(electron.app.getPath('cache'), 'playlist-manager')
+const cacheDir = path.join(electron.app.getPath('cache' as Parameters<typeof electron.app.getPath>[0]), 'playlist-manager')
 const CONFIG_PATH = path.join(userData, 'config.json')
 const IMG_PATH = path.join(__dirname, '..', 'img')
 
@@ -45,8 +43,6 @@ const config: AppConfig = utils.initOrLoadConfig(CONFIG_PATH, {
     "includeAlbumResults": true
 })
 console.log("config: ", config)
-
-const db = require('./db-handler')
 
 let mm = null // music-metadata ESM module, loaded lazily on first tag parse
 let previewImageId = null // current image id for the preview panel cover
@@ -73,8 +69,6 @@ let allArtistObjs = []
 let allAlbumObjs = []
 let autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
 let highlightedSong = null //currently highlighted autocomplete result
-
-const { search } = require('./search')
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -1429,7 +1423,7 @@ async function loadPlaylist(playlist, mode) {
     }
 
     if (!SmoothDnD) {
-        const smoothDndModule = require('smooth-dnd')
+        const smoothDndModule = await import('smooth-dnd')
         SmoothDnD = smoothDndModule.default || smoothDndModule
     }
 

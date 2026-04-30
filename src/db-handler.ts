@@ -1,9 +1,10 @@
-const { DatabaseSync } = require('node:sqlite')
-const fs = require('fs')
-const path = require('node:path')
+import electron from '@electron/remote'
+import fs from 'node:fs'
+import path from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 
-const { app } = require('@electron/remote')
-const cacheDir = path.join(app.getPath('cache'), 'playlist-manager')
+const { app } = electron
+const cacheDir = path.join(app.getPath('cache' as Parameters<typeof app.getPath>[0]), 'playlist-manager')
 fs.mkdirSync(cacheDir, { recursive: true })
 const DB_LOCATION = path.join(cacheDir, 'tagcache.db')
 
@@ -49,7 +50,7 @@ function openTagCache() {
  * @param {object} row row from the tags table
  * @returns {object}
  */
-function rowToTag(row) {
+export function rowToTag(row) {
 	// coverobj holds raw Buffer; callers send to main process via IPC for mem:// protocol
 	const coverobj = row.cover_data
 		? { frmt: row.cover_fmt, data: Buffer.from(row.cover_data) }
@@ -70,7 +71,7 @@ function rowToTag(row) {
  * @param {string} songPath absolute path to the audio file
  * @returns {object|null}
  */
-function getTag(songPath) {
+export function getTag(songPath) {
 	if (!stmtGet) return null
 	const row = stmtGet.get(songPath)
 	if (row === undefined) return null
@@ -91,7 +92,7 @@ function getTag(songPath) {
  * @param {string[]} paths
  * @returns {Map<string, object>}
  */
-function getAllTagsMap(paths) {
+export function getAllTagsMap(paths) {
 	if (!tagDb || paths.length === 0) return new Map()
 	const map = new Map()
 	// SQLite's SQLITE_MAX_VARIABLE_NUMBER is 999 in older builds; chunk to stay safe
@@ -111,7 +112,7 @@ function getAllTagsMap(paths) {
  * @param {object} tag full tag object returned by getEXTINF
  * @param {number} [mtime] pre-fetched mtime in ms to skip a redundant statSync
  */
-function upsertTag(songPath, tag, mtime) {
+export function upsertTag(songPath, tag, mtime) {
 	if (!stmtUpsert) return
 	if (mtime === undefined) {
 		try {
@@ -136,11 +137,9 @@ function upsertTag(songPath, tag, mtime) {
 	)
 }
 
-function getDistinctArtists() { return stmtDistinctArtists ? stmtDistinctArtists.all() : [] }
-function getDistinctAlbums() { return stmtDistinctAlbums ? stmtDistinctAlbums.all() : [] }
-function getPathsByArtist(name) { return stmtPathsByArtist ? stmtPathsByArtist.all(name).map(r => r.path) : [] }
-function getPathsByAlbum(name) { return stmtPathsByAlbum ? stmtPathsByAlbum.all(name).map(r => r.path) : [] }
+export function getDistinctArtists() { return stmtDistinctArtists ? stmtDistinctArtists.all() : [] }
+export function getDistinctAlbums() { return stmtDistinctAlbums ? stmtDistinctAlbums.all() : [] }
+export function getPathsByArtist(name) { return stmtPathsByArtist ? stmtPathsByArtist.all(name).map(r => r.path) : [] }
+export function getPathsByAlbum(name) { return stmtPathsByAlbum ? stmtPathsByAlbum.all(name).map(r => r.path) : [] }
 
 openTagCache()
-
-module.exports = { getTag, getAllTagsMap, rowToTag, upsertTag, getDistinctArtists, getDistinctAlbums, getPathsByArtist, getPathsByAlbum }

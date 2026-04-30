@@ -1,4 +1,5 @@
-// @ts-nocheck
+import fs from 'node:fs'
+import nodepath from 'node:path'
 
 //string manipulation & pmanager specific utils
 
@@ -42,8 +43,7 @@ export function getExtOrFn(filename) { //get the extension or filename from "fil
     return { fn, ext }
 }
 
-export function zeropad(number, finalWidth, customCharacter) {
-    customCharacter = customCharacter || '0';
+export function zeropad(number, finalWidth, customCharacter = '0') {
     number = number + '';
     return number.length >= finalWidth ? number : new Array(finalWidth - number.length + 1).join(customCharacter) + number;
 }
@@ -246,9 +246,8 @@ export function autocompleteDestroy(instance) {
  * @param {{menuItems: {text: string, run: Function},event: Event | null}} options options for moremenu. menuItems is array of {text: "text", run: ()=>{}}, event is used to get client X and Y
  * @param {Event} passedEvent you can pass the event here if it's more convenient that in options 
 */
-export function summonMenu(options, passedEvent) {
-    if (passedEvent === undefined) { passedEvent = options.event } //fallback for how i used it before
-    document.onclick = ""
+export function summonMenu(options, passedEvent = options.event) {
+    document.onclick = void 0;
     let menu = document.getElementById("moremenu")
     menu.querySelector("ul").innerHTML = ""
 
@@ -274,9 +273,9 @@ export function summonMenu(options, passedEvent) {
 
     setTimeout(() => { //put it into an instant settimeout so this more button click doesen't trigger it
         document.onclick = (event) => { //hide the menu again if i click away
-            if (!(event.composedPath?.() ?? event.path ?? []).includes(menu)) {
+            if (!(event.composedPath?.() ?? event?.path ?? []).includes(menu)) {
                 menu.classList.add("hidden")
-                document.onclick = ""
+                document.onclick = void 0;
             }
         }
     }, 0)
@@ -298,3 +297,57 @@ elem.onclick = (event) => {
     summonMenu(opt, event)
 }
 */
+
+// from utils.ts
+
+/**
+ * save the config file
+ * @param {String} filename path to config file (can be relative)
+ * @param {Object} config the object/json you want to write in config
+ * @param {Boolean} minified wether to minify the json or nah
+ * @param {String=} extraMessage optional extra message to log when saving config
+ */
+export function saveConfig(filename: string, config: unknown, minified = false, extraMessage = "") { //save config.json
+    let data = ''
+    if (minified === true) {
+        data = JSON.stringify(config)
+    } else {
+        data = JSON.stringify(config, null, 2)
+    }
+    fs.writeFileSync(filename, data)
+    console.log(`saved config${extraMessage === "" ? "" : ` [${extraMessage}] `}`)
+}
+
+/**
+ * clear a Folder - delete all files (NOT FOLDERS) in a folder
+ * @param {String} path path to folder to clear (can be relative)
+ */
+export function clearFolder(path: string) { //delete all files in a folder
+    let files = fs.readdirSync(path).filter(f => fs.lstatSync(nodepath.join(path, f)).isFile() )
+    files.forEach(f => {
+        fs.unlinkSync(nodepath.join(path, f))
+    })
+}
+
+/**
+ * initialize / Load config file. rememer to modify this to init the way you want
+ * @param {String} filename config.json recommended but filename of the config file.
+ * @param {Object=} schema the skeleton to use for config object if creating
+ * @returns {any} config file
+ */
+export function initOrLoadConfig(filename: string, schema: AppConfig = {
+    "maindir": "",
+    "exts": ["mp3", "m4a", "opus", "ogg"],
+    "ignore": [],
+    "comPlaylists": {}
+}) { //initialize config.json
+    let config: AppConfig
+    if (fs.existsSync(filename)) {
+        config = { ...schema, ...JSON.parse(fs.readFileSync(filename, { encoding: "utf-8" })) }
+    } else {
+        config = schema
+        //make neccesary directories
+        fs.writeFileSync(filename, JSON.stringify(config, null, 2))
+    }
+    return config
+}

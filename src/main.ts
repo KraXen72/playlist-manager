@@ -2,8 +2,14 @@
 // ^ re-enable these later & fix issues
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, protocol, ipcMain } = require('electron')
-const path = require('path')
+import { app, BrowserWindow, ipcMain, protocol } from 'electron'
+import { createRequire } from 'node:module'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const require = createRequire(import.meta.url)
 const remoteMain = require('@electron/remote/main')
 
 remoteMain.initialize()
@@ -29,7 +35,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.mjs')
     }
   })
 
