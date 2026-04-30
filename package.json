@@ -7,9 +7,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit --skipLibCheck",
     "build:ts": "node scripts/esbuild.mjs production",
-    "dev": "run-p dev:build dev:electron",
+    "dev": "node scripts/dev.mjs",
     "dev:build": "node scripts/esbuild.mjs",
-    "dev:electron": "wait-on dist/main.mjs dist/preload.mjs && cross-env NODE_OPTIONS=--experimental-sqlite electronmon .",
+    "dev:electron": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
     "dev:typecheck": "tsc --noEmit --skipLibCheck --watch",
     "start": "pnpm run build:ts && cross-env NODE_OPTIONS=--experimental-sqlite electron .",
     "dist": "pnpm run build:ts && electron-builder --publish never",
