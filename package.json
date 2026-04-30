@@ -2,7 +2,7 @@
   "name": "playlist-manager",
   "version": "2.5.0",
   "description": "local playlist manager",
-  "main": "src/main.js",
+  "main": "dist/main.js",
   "scripts": {
     "typecheck": "tsc --noEmit --skipLibCheck",
     "build:ts": "node scripts/esbuild.mjs production",
