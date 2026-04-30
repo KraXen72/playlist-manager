@@ -1,3 +1,5 @@
+// oxlint-disable no-await-in-loop
+// oxlint-disable typescript/no-floating-promises
 import electron from '@electron/remote'
 import Autocomplete from '@trevoreyre/autocomplete-js'
 import { ipcRenderer } from 'electron'
@@ -34,41 +36,46 @@ console.log('[paths]',
 
 const AUDIO_EXTS = ['mp3', 'flac', 'm4a', 'opus', 'ogg']
 
-const config: AppConfig = utils.initOrLoadConfig(CONFIG_PATH, {
-    "maindir": "",
-    "exts": AUDIO_EXTS,
-    "ignore": [],
-    "comPlaylists": {},
-    "includeArtistResults": true,
-    "includeAlbumResults": true
-})
+const config = utils.initOrLoadConfig<AppConfig>(CONFIG_PATH, {
+  maindir: "",
+  exts: AUDIO_EXTS,
+  ignore: [],
+  comPlaylists: {},
+  includeArtistResults: true,
+  includeAlbumResults: true,
+});
+
 console.log("config: ", config)
 
 let mm = null // music-metadata ESM module, loaded lazily on first tag parse
 let previewImageId = null // current image id for the preview panel cover
 const activeImageIds = new Set() // image ids for current playlist items, freed on remove/discard
 
-let allSongs = []
-let allPlaylists = []
+let allSongs: SongEntry[] = []
+let allPlaylists: PlaylistEntry[] = []
 
-let currPlaylist = []
-let editablePlaylists = []
-let songsAndPlaylists = []
+let currPlaylist: SelectableEntry[] = []
+let editablePlaylists: PlaylistEntry[] = []
+let songsAndPlaylists: LibraryEntry[] = []
 
 let playlistName = "Untitled Playlist"
 let lastPlaylistName = "" //so we don't have to prompt to save every time
 let savePath = ""
 let unsavedChanges = false
 
-let mainsearch
+let mainsearch = null;
 let specialMode = false
 const searchModes = new Set(['filename'])
 let playlistDnDContainer = null
 let allSongsAreTagged = false
-let allArtistObjs = []
-let allAlbumObjs = []
-let autocompArr = "both" //both = songsAndPlaylists, playlists = allPlaylists
-let highlightedSong = null //currently highlighted autocomplete result
+let allArtistObjs: GroupEntry[] = []
+let allAlbumObjs: GroupEntry[] = []
+let autocompArr: "both" | "playlists" = "both" //both = songsAndPlaylists, playlists = allPlaylists
+let highlightedSong: SelectableEntry | null = null //currently highlighted autocomplete result
+
+function isSongEntry(entry: LibraryEntry | undefined): entry is SongEntry {
+    return entry !== undefined && entry.type === "song"
+}
 
 /* ui and other handling */
 window.addEventListener('DOMContentLoaded', () => {
@@ -172,9 +179,9 @@ function buildGroupObjects() {
         : []
 }
 
-function countPlaylistSongs(fullpath, songs) {
+function countPlaylistSongs(fullpath: string, songs: string[]): number | null {
     const components = config.comPlaylists[fullpath]
-    if (components) {
+    if (components) { 
         const needsTags = components.some(pl => pl.fullpath.startsWith("__artist__:") || pl.fullpath.startsWith("__album__:"))
         if (needsTags && !allSongsAreTagged) return null
         return components.reduce((total, pl) => {
@@ -231,7 +238,7 @@ async function ensureAllTagsFetched() {
     for (let i = 0; i < needsParse.length; i += BATCH) {
         await Promise.allSettled(
             needsParse.slice(i, i + BATCH).map(song =>
-                getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+                getSongTag(song.fullpath, song.filename).then(tag => { song.tag = tag })
             )
         )
         done = Math.min(done + BATCH, total)
@@ -248,11 +255,11 @@ async function ensureAllTagsFetched() {
 }
 
 //autocomplete
-function setupAutocomplete(message) {
+function setupAutocomplete(message: string) {
     document.getElementById("input-placeholder").innerHTML = `Start typing a name of a ${message}...`
     mainsearch = new Autocomplete('#autocomplete', {
         search: input => {
-            let res = autocompArr === "both"
+            let res: SelectableEntry[] = autocompArr === "both"
                 ? songsAndPlaylists
                 : autocompArr === "playlists"
                     ? allPlaylists
@@ -337,13 +344,15 @@ function setupAutocomplete(message) {
     mainsearch.destroy = () => { autocompleteDestroy(mainsearch) }
 }
 //autocomplete onSubmit
-async function autocompleteSubmit(result, refocus, update?) {
+async function autocompleteSubmit(result: SelectableEntry, refocus: boolean, update?: boolean) {
     // Lazily populate songs for artist/album group objects on first selection
     if ((result.type === 'artist' || result.type === 'album') && !result.songs) {
         const paths = result.type === 'artist'
             ? db.getPathsByArtist(result.filename)
             : db.getPathsByAlbum(result.filename)
-        result.songs = paths.map(p => songsAndPlaylists.find(s => s.fullpath === p)).filter(Boolean)
+        result.songs = paths
+            .map(p => songsAndPlaylists.find(s => s.fullpath === p))
+            .filter(isSongEntry)
     }
 
     if (update !== undefined) {
@@ -455,7 +464,7 @@ async function toggleSearchMode(mode) {
             for (let i = 0; i < untagged.length; i += BATCH) {
                 await Promise.allSettled(
                     untagged.slice(i, i + BATCH).map(song =>
-                        getEXTINF(song.fullpath, song.filename, true, false).then(tag => { song.tag = tag })
+                        getSongTag(song.fullpath, song.filename).then(tag => { song.tag = tag })
                     )
                 )
                 done = Math.min(done + BATCH, total)
@@ -488,7 +497,7 @@ async function toggleSearchMode(mode) {
  * @param {Boolean} updateOverride override if we should update
  * @param {Boolean} extraInfo if we should fetch extra info about the song and display everything
  */
-async function updatePreview(song, empty, updateOverride?, extraInfo?) {
+async function updatePreview(song: SelectableEntry, empty: boolean, updateOverride?: boolean, extraInfo?: boolean) {
     const index = document.getElementById("song-preview").getAttribute("index")
     const type = document.getElementById("song-preview").getAttribute("type")
     let tag: SongTag | any = {} //artist, title, album, duration, cover, extinf, coverobj
@@ -500,9 +509,9 @@ async function updatePreview(song, empty, updateOverride?, extraInfo?) {
         if (song.index !== index || song.type !== type || update) {
             if (song.type === "song") {
                 if (extraInfo) { //fetch extra info if wanted
-                    tag = await getEXTINF(song.fullpath, song.filename, true, false, true)
+                    tag = await getSongTag(song.fullpath, song.filename)
                 } else {
-                    tag = await getEXTINF(song.fullpath, song.filename, true, false)
+                    tag = await getSongTag(song.fullpath, song.filename)
                 }
                 //console.log(song)
             } else if (song.type === "playlist") {
@@ -833,7 +842,7 @@ function savePlaylist() { //actually save the playlist
  */
 function getPlaylistContent() {
     //console.log(currPlaylist)
-    const play = []
+    const play: string[] = []
 
     play.push("#EXTM3U")
     for (const song of currPlaylist) {
@@ -865,15 +874,15 @@ function getPlaylistContent() {
 }
 /**
  * remove duplicates from an array of m3u lines
- * @param {Array} arr array of lines in extm3u syntax
+ * @param arr array of lines in extm3u syntax
  * @returns array of lines in extm3u syntax without duplicates
  */
-function removeDuplicatesFromPlaylist(arr) {
+function removeDuplicatesFromPlaylist(arr: string[]) {
     return [...new Set(arr)]
 }
 
 //add a song to the current playlist
-async function addSong(songobj, refocus) {
+async function addSong(songobj: SelectableEntry, refocus: boolean) {
     notReady(true)
     const tag = songobj.tag
 
@@ -1045,7 +1054,7 @@ function generateSongitem(val) {
 
 //walk all directories and then call generateM3U()
 // Returns true if the given file path matches any entry in config.ignore
-function isIgnored(fp) {
+function isIgnored(fp: string): boolean {
     return config.ignore.some(word => fp.includes(word))
 }
 
@@ -1110,7 +1119,7 @@ async function generateM3U(folder, useEXTINF) {
         if (config.exts.includes(songext)) {
 
             if (useEXTINF) {
-                const extinf = await getEXTINF(path.join(basedir, filename), filename, false, true)
+                const extinf = await getExtinfLine(path.join(basedir, filename), filename)
                 allsongs.push(extinf)
                 allsongs.push(`${appendname}${filename}`)
             } else {
@@ -1128,21 +1137,12 @@ async function generateM3U(folder, useEXTINF) {
 }
 
 //read the file and get it's metadata
-/**
- * read song file to get metadata
- * @param {String} song full path to file
- * @param {String} onlysong relative path to file (no folder)
- * @param {Boolean} returnObj if true, return full object instead of EXTINF string
- * @param {Boolean} skipCovers if true, skip fetching covers (faster)
- * @param {Boolean} fetchExtraInfo if true, fetch extra info
- */
-async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo?) {
-    // --- cache hit path ---
-    if (returnObj) {
-        const cached = db.getTag(song)
-        if (cached) return cached
-    }
-
+async function parseSongTag(
+    song: string,
+    onlysong: string,
+    skipCovers: boolean,
+    includeExtraInfo: boolean
+): Promise<{ tag: SongTag, mtime?: number }> {
     if (!mm) mm = await import('music-metadata')
     let metadata
     try {
@@ -1167,10 +1167,8 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo?)
         artist = metadata.common.artists.join(" / ")
     }
 
-    // always build extrainfo when caching so the DB row is always complete;
-    // also satisfies fetchExtraInfo=true callers
     let mtime
-    if (returnObj) {
+    if (includeExtraInfo) {
         const lstat = fs.lstatSync(song)
         mtime = Math.round(lstat.mtimeMs)
         extrainfo.size = (lstat.size / 1000000).toFixed(2) + " MB"
@@ -1202,17 +1200,22 @@ async function getEXTINF(song, onlysong, returnObj, skipCovers, fetchExtraInfo?)
         }
     }
 
-    // --- cache write (pass mtime to avoid a second statSync inside upsertTag) ---
-    if (returnObj) {
-        db.upsertTag(song, { artist, title, album, duration, cover, extinf, coverobj, extrainfo }, mtime)
-    }
+    const tagObject: SongTag = { artist, title, album, duration, cover, extinf, coverobj, extrainfo }
+    return { tag: tagObject, mtime }
+}
 
-    //console.log(extinf)
-    if (returnObj) {
-        return { artist, title, album, duration, cover, extinf, coverobj, extrainfo }
-    } else {
-        return extinf
-    }
+async function getSongTag(song: string, onlysong: string): Promise<SongTag> {
+    const cached = db.getTag(song)
+    if (cached) return cached
+
+    const { tag, mtime } = await parseSongTag(song, onlysong, false, true)
+    db.upsertTag(song, tag, mtime)
+    return tag
+}
+
+async function getExtinfLine(song: string, onlysong: string): Promise<string> {
+    const { tag } = await parseSongTag(song, onlysong, true, false)
+    return tag.extinf
 }
 
 async function fetchAllSongs() {
@@ -1238,7 +1241,7 @@ async function fetchAllSongs() {
     })
     songs = songs.filter(song => {
         const ext = utils.getExtOrFn(song.filename).ext
-        if (config.exts.includes(ext.toLowerCase(ext))) {
+        if (config.exts.includes(ext.toLowerCase())) {
             song["type"] = "song"
             return true
         } else {
@@ -1293,7 +1296,11 @@ async function fetchAllSongs() {
         playlists = playlists.filter(playlist => !isIgnored(playlist.fullpath))
     }
     playlists = playlists.map(playlist => {
-        const lines = fs.readFileSync(playlist.fullpath, { "encoding": "utf-8" }).split("\n").map(line => line.trim()).filter(line => { if (line === "#EXTM3U" || line === "") { return false } else { return true } })
+        const lines = fs.readFileSync(playlist.fullpath, { "encoding": "utf-8" })
+            .split("\n")
+            .map(line => line.trim())
+            .filter(line => line !== "#EXTM3U" && line !== "")
+                
         //filter out extm3u stuff
 
         playlist.songs = lines
@@ -1332,7 +1339,7 @@ function refreshSidebarPlaylists() {
 
     editablePlaylists = topLevel.map(item => {
         const fp = path.join(config.maindir, item)
-        let p = songsAndPlaylists.find(cp => cp.fullpath === fp)
+        let p = allPlaylists.find(cp => cp.fullpath === fp)
         if (!p) {
             // New file – build an entry and register it so the rest of the app can find it
             const lines = fs.readFileSync(fp, { encoding: "utf-8" })
@@ -1363,7 +1370,7 @@ function refreshSidebarPlaylists() {
 }
 
 //load a playlist, "playlist" is an object, mode is new or com
-async function loadPlaylist(playlist, mode) {
+async function loadPlaylist(playlist: PlaylistEntry, mode: "new" | "com"): Promise<void> {
     //sdebugger;
     discardPlaylist()
     playlistName = utils.getExtOrFn(playlist.filename).fn
@@ -1396,12 +1403,12 @@ async function loadPlaylist(playlist, mode) {
         //replace all normal slashes for os slashes when loading, so it can actually load the songs.
         console.time("fetchSongObjs")
         console.log(onlysongs)
-        let songobjs = []
+        const songobjs: SongEntry[] = []
         for (const relativepath of onlysongs) {
-            const song = songsAndPlaylists.find(s => s.relativepath === relativepath)
+            const song = songsAndPlaylists.find((s): s is SongEntry => s.type === "song" && s.relativepath === relativepath)
             if (song === undefined) { console.warn("Song not found in library, skipping:", relativepath); continue }
             if (song.tag === undefined || (song.tag.coverobj !== false && song.tag.coverobj.data === null)) {
-                song.tag = await getEXTINF(song.fullpath, song.filename, true, false)
+                song.tag = await getSongTag(song.fullpath, song.filename)
             }
             songobjs.push(song)
         }
@@ -1446,7 +1453,7 @@ async function loadPlaylist(playlist, mode) {
 
             currPlaylist = Array.from(items)
                 .map(el => lookup.get(el.dataset.fullpath))
-                .filter(Boolean)
+                .filter((entry): entry is SelectableEntry => entry !== undefined)
 
             notReady(true)
         },
@@ -1456,7 +1463,7 @@ async function loadPlaylist(playlist, mode) {
     })
 }
 
-function loadPlaylistsSidebar(eplaylists) {
+function loadPlaylistsSidebar(eplaylists: PlaylistEntry[]): void {
     document.getElementById("sidebar-playlists").innerHTML = ""
 
     eplaylists.forEach(playlist => { //make a songitem for each playlist
@@ -1595,7 +1602,7 @@ function purgePlaylists() {
                 console.log("cancelled deleting")
             )
         } else {
-            const msgc = dialog.showMessageBoxSync({
+            dialog.showMessageBoxSync({
                 message: "no playlists found, nothing deleted.",
                 type: "info",
                 buttons: ["Ok"],
@@ -1603,7 +1610,7 @@ function purgePlaylists() {
             })
         }
     } else {
-        const msgc = dialog.showMessageBoxSync({
+        dialog.showMessageBoxSync({
             message: "Cannot purge playlists as you have unsaved changes. Either save this playlist (will not be purged) or discard it. Then try to purge again.",
             type: "info",
             buttons: ["Ok"],

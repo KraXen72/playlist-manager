@@ -24,46 +24,48 @@ declare global {
     extrainfo: TagExtraInfo
   }
 
+  interface EntryTag {
+    artist: string
+    title: string
+    album: string
+    cover: string
+    extinf?: string
+    coverobj?: CoverObject | false
+    extrainfo?: TagExtraInfo
+  }
+
   interface BaseEntry {
     filename: string
     fullpath: string
     relativepath: string | null
     index: string
     type: "song" | "playlist" | "artist" | "album"
-    tag?: SongTag
+    tag?: EntryTag
     songs?: SongEntry[] | string[] | null
     mode?: "new" | "com"
+    [key: string]: unknown
   }
 
   interface SongEntry extends BaseEntry {
     type: "song"
     relativepath: string
+    tag?: SongTag
   }
 
   interface PlaylistEntry extends BaseEntry {
     type: "playlist"
     songs: string[]
+    tag: EntryTag
   }
 
   interface GroupEntry extends BaseEntry {
     type: "artist" | "album"
     songs?: SongEntry[] | null
+    tag: EntryTag
   }
 
-  interface SearchableEntry {
-    filename: string
-    type: "song" | "playlist" | "artist" | "album"
-    tag?: {
-      artist?: string
-      album?: string
-      title?: string
-      cover?: string
-      extinf?: string
-      coverobj?: CoverObject | false
-      extrainfo?: TagExtraInfo
-    }
-    [key: string]: unknown
-  }
+  type LibraryEntry = SongEntry | PlaylistEntry
+  type SelectableEntry = LibraryEntry | GroupEntry
 
   interface SearchOptions {
     filename?: boolean
@@ -103,6 +105,20 @@ declare global {
     ei_year: string | null
   }
 
+  interface TagDistinctArtistRow {
+    artist: string
+    cnt: number
+  }
+
+  interface TagDistinctAlbumRow {
+    album: string
+    cnt: number
+  }
+
+  interface TagPathRow {
+    path: string
+  }
+
   interface EventTarget {
     [key: string]: any
   }
@@ -117,10 +133,6 @@ declare global {
     querySelector(selectors: string): any
     querySelectorAll(selectors: string): any[]
     [key: string]: any
-  }
-
-  interface NotificationOptions {
-    timeoutType?: string
   }
 }
 

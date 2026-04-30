@@ -22,13 +22,19 @@ const handleDevMessage = (message: unknown) => {
   if (!message || typeof message !== 'object') return
   if (!('type' in message) || message.type !== 'renderer-reload') return
 
+  // for (const window of BrowserWindow.getAllWindows()) {
+  //   void window.webContents.executeJavaScript('window.location.reload()').catch((error) => {
+  //     console.error('[dev] Failed renderer reload, falling back to webContents.reload()', error)
+  //     window.webContents.reload()
+  //   })
+  // }
   for (const window of BrowserWindow.getAllWindows()) {
-    void window.webContents.executeJavaScript('window.location.reload()').catch((error) => {
-      console.error('[dev] Failed renderer reload, falling back to webContents.reload()', error)
-      window.webContents.reload()
-    })
+    // window.webContents.reload();
+    window.webContents.reloadIgnoringCache()
   }
 }
+
+
 
 // Must be called before app.whenReady()
 protocol.registerSchemesAsPrivileged([{

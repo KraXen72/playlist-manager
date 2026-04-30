@@ -1,6 +1,6 @@
 const MAX_RESULTS = 100
 const PREFIX_BLOCK_SIZE = 3
-const lowerCache = new WeakMap<SearchableEntry, {
+const lowerCache = new WeakMap<SelectableEntry, {
     filenameRaw: string
     filenameLower: string
     artistRaw?: string
@@ -9,7 +9,7 @@ const lowerCache = new WeakMap<SearchableEntry, {
     albumLower?: string
 }>()
 
-function getLowerValues(song: SearchableEntry) {
+function getLowerValues(song: SelectableEntry) {
     const filenameRaw = song.filename ?? ''
     const artistRaw = song.tag?.artist
     const albumRaw = song.tag?.album
@@ -36,7 +36,7 @@ function getLowerValues(song: SearchableEntry) {
     return next
 }
 
-function getMatchKind(song: SearchableEntry, lowerQuery: string, filename: boolean, artist: boolean, album: boolean): 0 | 1 | -1 {
+function getMatchKind(song: SelectableEntry, lowerQuery: string, filename: boolean, artist: boolean, album: boolean): 0 | 1 | -1 {
     const values = getLowerValues(song)
     let hasSubstringMatch = false
 
@@ -75,13 +75,13 @@ function getMatchKind(song: SearchableEntry, lowerQuery: string, filename: boole
     return hasSubstringMatch ? 1 : -1
 }
 
-export function search(songs: SearchableEntry[], query: string, options: SearchOptions = {}) {
+export function search<T extends SelectableEntry>(songs: T[], query: string, options: SearchOptions = {}): T[] {
     const { filename = false, artist = false, album = false } = options
     if (!filename && !artist && !album) return []
 
     const lowerQuery = query.toLowerCase()
-    const prefixMatches: SearchableEntry[] = []
-    const substringMatches: SearchableEntry[] = []
+    const prefixMatches: T[] = []
+    const substringMatches: T[] = []
 
     for (const song of songs) {
         const matchKind = getMatchKind(song, lowerQuery, filename, artist, album)
@@ -92,7 +92,7 @@ export function search(songs: SearchableEntry[], query: string, options: SearchO
         }
     }
 
-    const results: SearchableEntry[] = []
+    const results: T[] = []
     let p = 0
     let s = 0
 
