@@ -1,14 +1,21 @@
 {
   "name": "playlist-manager",
   "version": "2.5.0",
+  "type": "module",
   "description": "local playlist manager",
-  "main": "src/main.js",
+  "main": "dist/main.mjs",
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
-    "dist": "electron-builder --publish never",
-    "dist:rpm": "electron-builder --linux rpm --publish never",
-    "dist:deb": "electron-builder --linux deb --publish never",
-    "dist:dir": "electron-builder --dir"
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "build:ts": "node scripts/esbuild.mjs production",
+    "dev": "node scripts/esbuild.mjs dev",
+    "dev:build": "node scripts/esbuild.mjs watch",
+    "dev:electron": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
+    "dev:typecheck": "tsc --noEmit --skipLibCheck --watch",
+    "start": "pnpm run build:ts && cross-env NODE_OPTIONS=--experimental-sqlite electron .",
+    "dist": "pnpm run build:ts && electron-builder --publish never",
+    "dist:rpm": "pnpm run build:ts && electron-builder --linux rpm --publish never",
+    "dist:deb": "pnpm run build:ts && electron-builder --linux deb --publish never",
+    "dist:dir": "pnpm run build:ts && electron-builder --dir"
   },
   "repository": "https://github.com/KraXen72/playlist-manager",
   "author": {
@@ -26,9 +33,13 @@
     "smooth-dnd": "^0.12.1"
   },
   "devDependencies": {
+    "@types/node": "^24.7.2",
+    "chokidar": "^4.0.3",
     "cross-env": "^10.1.0",
     "electron": "^41.0.0",
-    "electron-builder": "^25.0.0"
+    "electron-builder": "^25.0.0",
+    "esbuild": "^0.25.11",
+    "typescript": "^5.9.3"
   },
   "build": {
     "appId": "com.kraxen72.playlist-manager",

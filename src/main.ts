@@ -2,14 +2,39 @@
 // ^ re-enable these later & fix issues
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, protocol, ipcMain } = require('electron')
-const path = require('path')
+import { app, BrowserWindow, ipcMain, protocol } from 'electron'
+import { createRequire } from 'node:module'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const require = createRequire(import.meta.url)
 const remoteMain = require('@electron/remote/main')
+const APP_BG_COLOR = '#262626'
 
 remoteMain.initialize()
 
 // In-memory image store
 const imageStore = new Map()
+
+const handleDevMessage = (message: unknown) => {
+  if (!message || typeof message !== 'object') return
+  if (!('type' in message) || message.type !== 'renderer-reload') return
+
+  // for (const window of BrowserWindow.getAllWindows()) {
+  //   void window.webContents.executeJavaScript('window.location.reload()').catch((error) => {
+  //     console.error('[dev] Failed renderer reload, falling back to webContents.reload()', error)
+  //     window.webContents.reload()
+  //   })
+  // }
+  for (const window of BrowserWindow.getAllWindows()) {
+    // window.webContents.reload();
+    window.webContents.reloadIgnoringCache()
+  }
+}
+
+
 
 // Must be called before app.whenReady()
 protocol.registerSchemesAsPrivileged([{
@@ -25,11 +50,12 @@ function createWindow() {
     minWidth: 900,
     minHeight: 490,
     autoHideMenuBar: true,
+    backgroundColor: APP_BG_COLOR,
     icon: path.join(__dirname, '..', 'playlist-manager.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.mjs')
     }
   })
 
@@ -69,6 +95,10 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
+
+if (process.send) {
+  process.on('message', handleDevMessage)
+}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
