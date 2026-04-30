@@ -12,7 +12,7 @@
 		}
 	},
 	"mounts": [
-		"source=${localEnv:HOME}/.copilot/settings.json,target=/home/vscode/.copilot/settings.json,type=bind,Z"
+		"source=${localEnv:HOME}/.copilot,target=/home/vscode/.copilot,type=bind,Z"
 	],
 	"containerEnv":{
 		"PNPM_HOME":"/home/vscode/.local/share/pnpm"

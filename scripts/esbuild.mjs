@@ -1,7 +1,5 @@
 import esbuild from "esbuild"
 import process from "node:process"
-import path from "node:path"
-import { spawn } from "node:child_process"
 import { builtinModules } from "node:module"
 
 const prod = process.argv[2] === "production"
@@ -17,42 +15,7 @@ const external = [
   ...builtinExternal
 ]
 
-const electronBinary = path.join(
-  process.cwd(),
-  "node_modules",
-  ".bin",
-  process.platform === "win32" ? "electron.cmd" : "electron"
-)
-
-let electronProcess = null
-let shouldRestartElectron = false
-
-function startElectron() {
-  electronProcess = spawn(electronBinary, ["."], {
-    stdio: "inherit",
-    env: { ...process.env, NODE_OPTIONS: "--experimental-sqlite" }
-  })
-
-  electronProcess.on("exit", () => {
-    const restart = shouldRestartElectron
-    shouldRestartElectron = false
-    electronProcess = null
-    if (restart) {
-      startElectron()
-    }
-  })
-}
-
-function restartElectron() {
-  if (!electronProcess) {
-    startElectron()
-    return
-  }
-  shouldRestartElectron = true
-  electronProcess.kill()
-}
-
-const context = await esbuild.context({
+const buildConfig = {
   entryPoints: {
     main: "src/main.ts",
     preload: "src/preload.ts"
@@ -65,41 +28,15 @@ const context = await esbuild.context({
   logLevel: "info",
   sourcemap: prod ? false : "inline",
   treeShaking: true,
-  outdir: "dist",
-  plugins: prod
-    ? []
-    : [{
-        name: "electron-reloader",
-        setup(build) {
-          build.onEnd(result => {
-            if (result.errors.length === 0) {
-              restartElectron()
-            }
-          })
-        }
-      }]
-})
+  outdir: "dist"
+}
 
 if (prod) {
+  const context = await esbuild.context(buildConfig)
   await context.rebuild()
   await context.dispose()
   process.exit(0)
 }
 
+const context = await esbuild.context(buildConfig)
 await context.watch()
-
-async function shutdown() {
-  await context.dispose()
-  if (electronProcess) {
-    electronProcess.kill()
-  }
-  process.exit(0)
-}
-
-process.on("SIGINT", () => {
-  void shutdown()
-})
-
-process.on("SIGTERM", () => {
-  void shutdown()
-})
