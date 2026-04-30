@@ -1,9 +1,8 @@
 import esbuild from "esbuild"
 import electronPath from "electron"
 import { spawn } from "node:child_process"
-import { readdir } from "node:fs/promises"
+import chokidar from "chokidar"
 import { builtinModules } from "node:module"
-import path from "node:path"
 import process from "node:process"
 
 const mode = process.argv[2] ?? "watch"
@@ -64,40 +63,13 @@ const runBuildWatch = async () => {
 
 const runDevSupervisor = async () => {
   const pendingChanges = { main: false, renderer: false }
-  const initialBuildDone = { main: false, preload: false, renderer: false }
+  const initialBuildDone = { main: false, preload: false }
   let actionTimer
   let shuttingDown = false
   let restarting = false
   let electronStarted = false
   let electronProcess = null
-  const watchContexts = []
-
-  const rendererAssetRoot = path.join(process.cwd(), "src")
-
-  const collectRendererAssetPaths = async (rootDir) => {
-    const files = []
-    const dirs = []
-    const queue = [rootDir]
-
-    while (queue.length > 0) {
-      const currentDir = queue.pop()
-      dirs.push(currentDir)
-
-      const entries = await readdir(currentDir, { withFileTypes: true })
-      for (const entry of entries) {
-        const fullPath = path.join(currentDir, entry.name)
-        if (entry.isDirectory()) {
-          queue.push(fullPath)
-          continue
-        }
-
-        if (!entry.isFile()) continue
-        if (/\.(html|css)$/i.test(entry.name)) files.push(fullPath)
-      }
-    }
-
-    return { files, dirs }
-  }
+  let assetWatcher
 
   const scheduleFlush = () => {
     if (actionTimer) return
@@ -178,80 +150,42 @@ const runDevSupervisor = async () => {
     spawnElectron()
   }
 
-  const createWatchContext = (kind, buildOptions, changeKind) => {
-    const inheritedPlugins = buildOptions.plugins ?? []
+  const createWatchContext = (kind, entryPoint, changeKind) => {
     return esbuild.context({
-      ...buildOptions,
-      plugins: [
-        ...inheritedPlugins,
-        {
-          name: `dev-${kind}-watch`,
-          setup(build) {
-            build.onEnd((result) => {
-              if (result.errors.length > 0 || shuttingDown) return
+      ...createSingleEntryBuildOptions(entryPoint, "inline"),
+      plugins: [{
+        name: `dev-${kind}-watch`,
+        setup(build) {
+          build.onEnd((result) => {
+            if (result.errors.length > 0 || shuttingDown) return
 
-              if (!initialBuildDone[kind]) {
-                initialBuildDone[kind] = true
-                maybeStartElectron()
-                return
-              }
+            if (!initialBuildDone[kind]) {
+              initialBuildDone[kind] = true
+              maybeStartElectron()
+              return
+            }
 
-              queueChange(changeKind)
-            })
-          }
+            queueChange(changeKind)
+          })
         }
-      ]
+      }]
     })
   }
 
-  const rendererAssetWatchPlugin = {
-    name: "renderer-asset-watch",
-    setup(build) {
-      build.onResolve({ filter: /^renderer-watch:assets$/ }, () => {
-        return { path: "renderer-watch:assets", namespace: "renderer-watch" }
-      })
-
-      build.onLoad({ filter: /^renderer-watch:assets$/, namespace: "renderer-watch" }, async () => {
-        const { files, dirs } = await collectRendererAssetPaths(rendererAssetRoot)
-        return {
-          contents: "export {}",
-          loader: "js",
-          watchFiles: files,
-          watchDirs: dirs
-        }
-      })
-    }
+  const watchRendererAssets = () => {
+    assetWatcher = chokidar.watch("src", { ignoreInitial: true })
+    assetWatcher.on("all", (event, filePath) => {
+      if (event !== "add" && event !== "change" && event !== "unlink") return
+      if (!/\.(html|css)$/i.test(filePath)) return
+      queueChange("renderer")
+    })
   }
 
-  const mainContext = await createWatchContext(
-    "main",
-    createSingleEntryBuildOptions("src/main.ts", "inline"),
-    "main"
-  )
-  const preloadContext = await createWatchContext(
-    "preload",
-    createSingleEntryBuildOptions("src/preload.ts", "inline"),
-    "renderer"
-  )
-  const rendererContext = await createWatchContext(
-    "renderer",
-    {
-      bundle: true,
-      write: false,
-      logLevel: "silent",
-      stdin: {
-        contents: 'import "renderer-watch:assets"; export {}',
-        resolveDir: process.cwd(),
-        sourcefile: "renderer-watch-entry.js",
-        loader: "js"
-      },
-      plugins: [rendererAssetWatchPlugin]
-    },
-    "renderer"
-  )
+  const mainContext = await createWatchContext("main", "src/main.ts", "main")
+  const preloadContext = await createWatchContext("preload", "src/preload.ts", "renderer")
 
-  watchContexts.push(mainContext, preloadContext, rendererContext)
-  await Promise.all(watchContexts.map((context) => context.watch()))
+  await Promise.all([mainContext.watch(), preloadContext.watch()])
+  watchRendererAssets()
 
   const shutdown = async () => {
     if (shuttingDown) return
@@ -262,7 +196,8 @@ const runDevSupervisor = async () => {
       actionTimer = undefined
     }
 
-    await Promise.allSettled(watchContexts.map((context) => context.dispose()))
+    await assetWatcher?.close()
+    await Promise.allSettled([mainContext.dispose(), preloadContext.dispose()])
     await stopElectron()
     process.exit(0)
   }
