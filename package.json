@@ -7,8 +7,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit --skipLibCheck",
     "build:ts": "node scripts/esbuild.mjs production",
-    "dev": "node scripts/dev.mjs",
-    "dev:build": "node scripts/esbuild.mjs",
+    "dev": "node scripts/esbuild.mjs dev",
+    "dev:build": "node scripts/esbuild.mjs watch",
     "dev:electron": "cross-env NODE_OPTIONS=--experimental-sqlite electron .",
     "dev:typecheck": "tsc --noEmit --skipLibCheck --watch",
     "start": "pnpm run build:ts && cross-env NODE_OPTIONS=--experimental-sqlite electron .",
@@ -37,11 +37,8 @@
     "cross-env": "^10.1.0",
     "electron": "^41.0.0",
     "electron-builder": "^25.0.0",
-    "electronmon": "^2.0.4",
     "esbuild": "^0.25.11",
-    "npm-run-all2": "^8.0.4",
-    "typescript": "^5.9.3",
-    "wait-on": "^8.0.5"
+    "typescript": "^5.9.3"
   },
   "build": {
     "appId": "com.kraxen72.playlist-manager",
