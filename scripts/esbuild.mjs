@@ -1,10 +1,8 @@
 import esbuild from "esbuild"
 import electronPath from "electron"
 import { spawn } from "node:child_process"
-import { watch } from "node:fs"
-import { readdir } from "node:fs/promises"
+import chokidar from "chokidar"
 import { builtinModules } from "node:module"
-import path from "node:path"
 import process from "node:process"
 
 const mode = process.argv[2] ?? "watch"
@@ -65,13 +63,13 @@ const runBuildWatch = async () => {
 
 const runDevSupervisor = async () => {
   const pendingChanges = { main: false, renderer: false }
-  const staticWatchers = []
   const initialBuildDone = { main: false, preload: false }
   let actionTimer
   let shuttingDown = false
   let restarting = false
   let electronStarted = false
   let electronProcess = null
+  let assetWatcher
 
   const scheduleFlush = () => {
     if (actionTimer) return
@@ -174,32 +172,20 @@ const runDevSupervisor = async () => {
     })
   }
 
-  const watchRendererAssets = async (rootDir) => {
-    const directories = [rootDir]
-    while (directories.length > 0) {
-      const currentDir = directories.pop()
-      const entries = await readdir(currentDir, { withFileTypes: true })
-
-      for (const entry of entries) {
-        if (entry.isDirectory()) directories.push(path.join(currentDir, entry.name))
-      }
-
-      const watcher = watch(currentDir, (eventType, filename) => {
-        if (!filename) return
-        if (eventType !== "change" && eventType !== "rename") return
-
-        const extension = path.extname(String(filename)).toLowerCase()
-        if (extension === ".html" || extension === ".css") queueChange("renderer")
-      })
-      staticWatchers.push(watcher)
-    }
+  const watchRendererAssets = () => {
+    assetWatcher = chokidar.watch("src", { ignoreInitial: true })
+    assetWatcher.on("all", (event, filePath) => {
+      if (event !== "add" && event !== "change" && event !== "unlink") return
+      if (!/\.(html|css)$/i.test(filePath)) return
+      queueChange("renderer")
+    })
   }
 
   const mainContext = await createWatchContext("main", "src/main.ts", "main")
   const preloadContext = await createWatchContext("preload", "src/preload.ts", "renderer")
 
   await Promise.all([mainContext.watch(), preloadContext.watch()])
-  await watchRendererAssets(path.join(process.cwd(), "src"))
+  watchRendererAssets()
 
   const shutdown = async () => {
     if (shuttingDown) return
@@ -210,7 +196,7 @@ const runDevSupervisor = async () => {
       actionTimer = undefined
     }
 
-    for (const watcher of staticWatchers) watcher.close()
+    await assetWatcher?.close()
     await Promise.allSettled([mainContext.dispose(), preloadContext.dispose()])
     await stopElectron()
     process.exit(0)
