@@ -24,6 +24,7 @@
 		"--cap-drop=ALL",
 		"--cap-add=SETUID",
 		"--cap-add=SETGID",
+		"--cap-add=SYS_CHROOT",
 		"--security-opt=no-new-privileges",
 		"--tmpfs=/tmp:exec,mode=1777",
 		"--pids-limit=2048",
