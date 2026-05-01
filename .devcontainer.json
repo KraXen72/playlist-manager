@@ -20,6 +20,7 @@
 		"PATH":"${containerEnv:PNPM_HOME}:${containerEnv:PATH}"
 	},
 	"runArgs":[
+		"--publish=${localEnv:DCMAN_SSH_PORT}:2222",
 		"--cap-drop=ALL",
 		"--cap-add=SETUID",
 		"--cap-add=SETGID",
