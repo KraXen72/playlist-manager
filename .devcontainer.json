@@ -8,7 +8,7 @@
 		"ghcr.io/kraxen72/devcontainer-features/common-utils-bash-prompt:1": {},
 		"ghcr.io/kraxen72/devcontainer-features/pnpm:1": {},
 		"ghcr.io/kraxen72/devcontainer-features/copilot-cli:1": { "version": "latest" },
-		"ghcr.io/kraxen72/devcontainer-features/ssh-zed:1": {}
+		"ghcr.io/kraxen72/devcontainer-features/ssh-zed:2": {}
 	},
 	"mounts": [
 		"source=${localEnv:HOME}/.copilot,target=/home/vscode/.copilot,type=bind,Z"
@@ -24,7 +24,6 @@
 		"--cap-drop=ALL",
 		"--cap-add=SETUID",
 		"--cap-add=SETGID",
-		"--cap-add=SYS_CHROOT",
 		"--security-opt=no-new-privileges",
 		"--tmpfs=/tmp:exec,mode=1777",
 		"--pids-limit=2048",
