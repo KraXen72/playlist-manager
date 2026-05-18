@@ -25,6 +25,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@electron/remote": "^2.1.2",
+    "@leeoniya/ufuzzy": "^1.0.19",
     "@material-icons/font": "^1.0.36",
     "@trevoreyre/autocomplete-js": "^3.0.3",
     "fs-walk": "^0.0.2",

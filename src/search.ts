@@ -1,109 +1,54 @@
+import uFuzzy from '@leeoniya/ufuzzy'
+
 const MAX_RESULTS = 100
-const PREFIX_BLOCK_SIZE = 3
-const lowerCache = new WeakMap<SelectableEntry, {
-    filenameRaw: string
-    filenameLower: string
-    artistRaw?: string
-    artistLower?: string
-    albumRaw?: string
-    albumLower?: string
-}>()
+const SEP = '\x00'
+const uFuzzyInstance = new uFuzzy()
 
-function getLowerValues(song: SelectableEntry) {
-    const filenameRaw = song.filename ?? ''
-    const artistRaw = song.tag?.artist
-    const albumRaw = song.tag?.album
-    const cached = lowerCache.get(song)
+function toSearchText(
+    entry: SelectableEntry,
+    filename: boolean,
+    artist: boolean,
+    album: boolean
+): string | null {
+    if (entry.type === 'artist') return artist ? entry.filename : null
+    if (entry.type === 'album') return album ? entry.filename : null
 
-    if (
-        cached &&
-        cached.filenameRaw === filenameRaw &&
-        cached.artistRaw === artistRaw &&
-        cached.albumRaw === albumRaw
-    ) {
-        return cached
-    }
+    const parts: string[] = []
 
-    const next = {
-        filenameRaw,
-        filenameLower: filenameRaw.toLowerCase(),
-        artistRaw,
-        artistLower: artistRaw ? artistRaw.toLowerCase() : undefined,
-        albumRaw,
-        albumLower: albumRaw ? albumRaw.toLowerCase() : undefined
-    }
-    lowerCache.set(song, next)
-    return next
-}
+    if (filename) parts.push(entry.filename)
+    if (artist && entry.tag?.artist) parts.push(entry.tag.artist)
+    if (album && entry.tag?.album) parts.push(entry.tag.album)
 
-function getMatchKind(song: SelectableEntry, lowerQuery: string, filename: boolean, artist: boolean, album: boolean): 0 | 1 | -1 {
-    const values = getLowerValues(song)
-    let hasSubstringMatch = false
-
-    if (song.type === 'artist') {
-        if (!artist) return -1
-        const idx = values.filenameLower.indexOf(lowerQuery)
-        if (idx === 0) return 0
-        return idx > 0 ? 1 : -1
-    }
-
-    if (song.type === 'album') {
-        if (!album) return -1
-        const idx = values.filenameLower.indexOf(lowerQuery)
-        if (idx === 0) return 0
-        return idx > 0 ? 1 : -1
-    }
-
-    if (filename) {
-        const idx = values.filenameLower.indexOf(lowerQuery)
-        if (idx === 0) return 0
-        if (idx > 0) hasSubstringMatch = true
-    }
-
-    if (artist && values.artistLower) {
-        const idx = values.artistLower.indexOf(lowerQuery)
-        if (idx === 0) return 0
-        if (idx > 0) hasSubstringMatch = true
-    }
-
-    if (album && values.albumLower) {
-        const idx = values.albumLower.indexOf(lowerQuery)
-        if (idx === 0) return 0
-        if (idx > 0) hasSubstringMatch = true
-    }
-
-    return hasSubstringMatch ? 1 : -1
+    return parts.length > 0 ? parts.join(SEP) : null
 }
 
 export function search<T extends SelectableEntry>(songs: T[], query: string, options: SearchOptions = {}): T[] {
     const { filename = false, artist = false, album = false } = options
     if (!filename && !artist && !album) return []
 
-    const lowerQuery = query.toLowerCase()
-    const prefixMatches: T[] = []
-    const substringMatches: T[] = []
+    const candidates: T[] = []
+    const haystack: string[] = []
 
-    for (const song of songs) {
-        const matchKind = getMatchKind(song, lowerQuery, filename, artist, album)
-        if (matchKind === 0) {
-            if (prefixMatches.length < MAX_RESULTS) prefixMatches.push(song)
-        } else if (matchKind === 1) {
-            if (substringMatches.length < MAX_RESULTS) substringMatches.push(song)
-        }
+    for (let i = 0; i < songs.length; i++) {
+        const song = songs[i]
+        const text = toSearchText(song, filename, artist, album)
+        if (text == null) continue
+        candidates.push(song)
+        haystack.push(text)
     }
 
-    const results: T[] = []
-    let p = 0
-    let s = 0
+    if (candidates.length === 0) return []
 
-    while (results.length < MAX_RESULTS && (p < prefixMatches.length || s < substringMatches.length)) {
-        for (let i = 0; i < PREFIX_BLOCK_SIZE && p < prefixMatches.length && results.length < MAX_RESULTS; i++) {
-            results.push(prefixMatches[p++])
-        }
-        if (s < substringMatches.length && results.length < MAX_RESULTS) {
-            results.push(substringMatches[s++])
-        }
+    const needle = query.trim()
+    if (needle === '') return candidates.slice(0, MAX_RESULTS)
+
+    const [, info, order] = uFuzzyInstance.search(haystack, needle)
+    if (info == null || order == null) return []
+
+    const out: T[] = []
+    for (let i = 0; i < order.length && out.length < MAX_RESULTS; i++) {
+        out.push(candidates[info.idx[order[i]]])
     }
 
-    return results
+    return out
 }

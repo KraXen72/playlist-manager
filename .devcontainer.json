@@ -7,9 +7,8 @@
 	"features": {
 		"ghcr.io/kraxen72/devcontainer-features/common-utils-bash-prompt:1": {},
 		"ghcr.io/kraxen72/devcontainer-features/pnpm:1": {},
-		"ghcr.io/kraxen72/devcontainer-features/copilot-cli:1": {
-			"version": "latest"
-		}
+		"ghcr.io/kraxen72/devcontainer-features/copilot-cli:1": { "version": "latest" },
+		"ghcr.io/kraxen72/devcontainer-features/ssh-zed:2": {}
 	},
 	"mounts": [
 		"source=${localEnv:HOME}/.copilot,target=/home/vscode/.copilot,type=bind,Z"
@@ -21,7 +20,10 @@
 		"PATH":"${containerEnv:PNPM_HOME}:${containerEnv:PATH}"
 	},
 	"runArgs":[
+		"--publish=${localEnv:DCMAN_SSH_PORT}:2222",
 		"--cap-drop=ALL",
+		"--cap-add=SETUID",
+		"--cap-add=SETGID",
 		"--security-opt=no-new-privileges",
 		"--tmpfs=/tmp:exec,mode=1777",
 		"--pids-limit=2048",
